@@ -34,7 +34,7 @@ export default async function Hero() {
           <path d="M0 30 C140 70 300 100 560 112 L560 120 L0 120 Z" fill="url(#swoosh)" />
         </svg>
 
-        <div className="mx-auto flex max-w-[1320px] flex-col justify-center px-4 max-sm:pb-4 max-sm:pt-6 sm:h-full sm:px-6">
+        <div className="mx-auto flex max-w-[1320px] flex-col justify-center px-4 max-sm:pb-3 max-sm:pt-5 sm:h-full sm:px-6">
           <span className="mb-3 block h-[2px] w-[53px] bg-brand sm:mb-4" />
           <h2 className="max-w-[470px] font-serif text-[32px] font-extrabold leading-[1.05] tracking-[-0.03em] text-ink sm:text-[46px] md:max-w-[560px] md:text-[54px]">
             {hero.heading}
@@ -66,10 +66,10 @@ export default async function Hero() {
       </div>
 
       {/* phone: hero fills the screen (100svh minus the 58px sticky navbar); the photo takes the space left under the text, fading into the sky, with a blue wave at the bottom */}
-      <div className="relative h-[270px] shrink-0 sm:hidden">
+      <div className="relative h-[255px] shrink-0 sm:hidden">
         {/* plain <img>: fills the remaining height, cropped from the top so the church / palms at the bottom stay visible */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={homeImageProps(hero.imageMobile, 900).src} alt={hero.imageAlt} className="absolute inset-0 block h-full w-full object-cover object-[50%_67%]" loading="eager" decoding="async" />
+        <img src={homeImageProps(hero.imageMobile, 900).src} alt={hero.imageAlt} className="absolute inset-0 block h-full w-full object-cover object-[50%_64%]" loading="eager" decoding="async" />
         <div className="absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-[#e4f1fd] via-[#e4f1fd]/70 to-transparent" aria-hidden="true" />
         <svg aria-hidden="true" viewBox="0 0 390 70" preserveAspectRatio="none" className="absolute inset-x-0 bottom-0 h-[52px] w-full">
           <defs>
