@@ -81,7 +81,6 @@ export default function NavbarClient({ phone = "0832–2743300", tel = "tel:+918
             </li>
             );
           })}
-          <li className="ml-4 h-[28px] w-[2px] bg-white/80" />
         </ul>
 
         <button

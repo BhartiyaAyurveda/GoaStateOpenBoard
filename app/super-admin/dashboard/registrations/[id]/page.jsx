@@ -2,7 +2,11 @@
 
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
-import { Pencil, Save, X as XIcon } from "lucide-react";
+import { Pencil, Save, CheckCircle2, XCircle, AlertTriangle, GraduationCap, MessageSquarePlus, Eye } from "lucide-react";
+import AdminPageShell from "@/components/admin/AdminPageShell";
+import Modal from "@/components/ui/Modal";
+import Select from "@/components/ui/Select";
+import { useConfirm } from "@/components/ui/ConfirmDialog";
 
 const QUERY_FIELD_OPTIONS = [
   { value: "candidate_name", label: "Candidate Name / उमेदवाराचें नांव" },
@@ -41,10 +45,10 @@ function StatusBadge({ status }) {
 }
 
 function DocLink({ url, label }) {
-  if (!url) return <span className="text-[15px] text-red-500 italic">Not uploaded</span>;
+  if (!url) return <span className="text-[14px] italic text-red-500">Not uploaded</span>;
   return (
     <a href={url} target="_blank" rel="noopener noreferrer"
-      className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-[#082a63] text-white text-[15px] font-semibold rounded hover:bg-[#06204f] transition-colors">
+      className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-[#082a63] px-4 text-[14px] font-bold text-white transition-colors hover:bg-[#0b3a85]">
       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
       </svg>
@@ -55,6 +59,7 @@ function DocLink({ url, label }) {
 
 export default function RegistrationDetailPage({ params }) {
   const { id } = use(params);
+  const [confirm, confirmDialog] = useConfirm();
   const [reg, setReg] = useState(null);
   const [queries, setQueries] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -156,8 +161,15 @@ export default function RegistrationDetailPage({ params }) {
   };
 
   const handleAction = async (action) => {
-    const label = action === "approve" ? "APPROVE" : "REJECT";
-    if (!confirm(`Are you sure you want to ${label} this registration?`)) return;
+    const approve = action === "approve";
+    if (!(await confirm({
+      title: approve ? "Approve this registration?" : "Reject this registration?",
+      message: approve
+        ? "The student's enrollment becomes valid and the enrollment card and admit card become available."
+        : "The college is told the application was rejected. This cannot be undone.",
+      confirmLabel: approve ? "Approve" : "Reject",
+      danger: !approve,
+    }))) return;
     setActionLoading(true);
     setActionErr(null);
     setActionMsg(null);
@@ -194,376 +206,311 @@ export default function RegistrationDetailPage({ params }) {
 
   const isTerminal = reg.status === "approved" || reg.status === "rejected";
   const edu = reg.education || {};
+  const fmtDate = (d) => (d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—");
+
+  const fieldCls = "h-11 w-full min-w-0 rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] px-3.5 text-[15px] text-[#082a63] outline-none placeholder:text-[#8a97b3] focus:border-[#1b57d8] focus:bg-white focus:ring-2 focus:ring-[#1b57d8]/15";
+  const labelCls = "mb-1.5 block text-[13.5px] font-bold text-[#082a63]";
+  const setEdit = (key) => (e) => setEditForm((p) => ({ ...p, [key]: e.target.value }));
+
+  const actions = (
+    <div className="flex items-center gap-2">
+      <button onClick={openEdit} className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-[#d3e1f5] bg-white px-3 text-[14px] font-bold text-[#082a63] transition hover:bg-[#f4f8fe]">
+        <Pencil className="h-4 w-4" /> <span className="hidden sm:inline">Edit data</span>
+      </button>
+      <button onClick={() => handleAction("approve")} disabled={actionLoading || isTerminal}
+        className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 text-[14px] font-bold text-white transition hover:bg-emerald-700 disabled:opacity-40">
+        <CheckCircle2 className="h-4 w-4" /> Approve
+      </button>
+      <button onClick={() => handleAction("reject")} disabled={actionLoading || isTerminal}
+        className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-red-600 px-3.5 text-[14px] font-bold text-white transition hover:bg-red-700 disabled:opacity-40">
+        <XCircle className="h-4 w-4" /> Reject
+      </button>
+    </div>
+  );
+
+  const Info = ({ label, value, mono }) => (
+    <div className="min-w-0">
+      <span className="block text-[13px] font-semibold text-[#6b7ea3]">{label}</span>
+      <span className={`block break-words text-[16px] font-bold text-[#082a63] ${mono ? "font-mono" : ""}`}>{value || "—"}</span>
+    </div>
+  );
+
+  const Section = ({ n, title, right, children, flush }) => (
+    <section className="overflow-hidden rounded-2xl border border-[#d3e1f5] bg-white shadow-sm">
+      <div className="flex items-center justify-between gap-3 border-b border-[#d3e1f5] bg-[#f4f8fe] px-4 py-3.5 sm:px-5">
+        <h3 className="flex min-w-0 items-center gap-2.5 text-[15.5px] font-bold text-[#082a63]">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#082a63] text-[13px] font-extrabold text-white">{n}</span>
+          <span className="min-w-0">{title}</span>
+        </h3>
+        {right}
+      </div>
+      <div className={flush ? "" : "p-4 sm:p-5"}>{children}</div>
+    </section>
+  );
+
+  const docs = [
+    { label: "Aadhaar Card", url: reg.aadhaar_url },
+    { label: "10th Marksheet", url: reg.tenth_marksheet_url || reg.marksheet_10th_url },
+    { label: "12th Marksheet", url: reg.twelfth_marksheet_url || reg.marksheet_12th_url },
+    { label: "Other Document", url: reg.affidavit_url || reg.other_doc_url },
+  ];
 
   return (
-    <div className="min-h-screen bg-[#f4f8fe]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-6 flex flex-col md:flex-row md:items-start justify-between gap-4">
-          <div>
-            <nav className="flex items-center gap-2 text-[15px] text-[#6B7280] mb-2">
-              <Link href="/super-admin/dashboard" className="hover:text-[#082a63] font-medium">Dashboard</Link>
-              <span>/</span>
-              <span className="font-mono font-bold text-[#082a63]">{reg.enrollment_no || reg.roll_no || id.slice(0, 8)}</span>
-            </nav>
-            <div className="flex items-center gap-3 flex-wrap mb-1">
-              <h1 className="text-2xl sm:text-3xl font-black text-[#082a63] tracking-tight">{reg.candidate_name}</h1>
-              <StatusBadge status={reg.status} />
-              {reg.status === "approved" && (
-                <Link href={`/super-admin/dashboard/admit-cards/${reg.id}`}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#082a63] text-white text-[15px] font-bold rounded shadow-xs">
-                  🎓 Admit Card
-                </Link>
-              )}
-            </div>
-            <p className="text-[15px] text-[#6B7280]">
-              College: <strong className="text-[#374151]">{reg.colleges?.college_name || "—"}</strong> •
-              Applied: {reg.created_at ? new Date(reg.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <Link href="/super-admin/dashboard"
-              className="px-3 py-2 bg-[#eaf2fd] hover:bg-[#e3edfa] text-[#374151] text-[15px] font-bold rounded border border-[#d3e1f5] transition-colors">
-              Back
+    <AdminPageShell
+      title={reg.candidate_name || "Registration"}
+      subtitle={`${reg.enrollment_no || reg.roll_no || id.slice(0, 8)} · ${reg.colleges?.college_name || "—"}`}
+      backHref="/super-admin/dashboard?tab=applications"
+      backLabel="Applications"
+      actions={actions}
+    >
+      <div className="space-y-5">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <StatusBadge status={reg.status} />
+          <span className="text-[14.5px] text-[#3d5688]">Applied on <b className="text-[#082a63]">{fmtDate(reg.created_at)}</b></span>
+          {reg.status === "approved" && (
+            <Link href={`/super-admin/dashboard/admit-cards/${reg.id}`}
+              className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-[#082a63] px-3.5 text-[14px] font-bold text-white transition hover:bg-[#0b3a85]">
+              <GraduationCap className="h-4 w-4" /> Admit Card
             </Link>
-            <button onClick={openEdit}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#1b57d8] hover:bg-[#1245b8] text-white text-[15px] font-bold rounded shadow-md transition-all cursor-pointer">
-              <Pencil className="w-3.5 h-3.5" /> Edit Data
-            </button>
-            <button onClick={() => handleAction("approve")} disabled={actionLoading || isTerminal}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[15px] font-bold rounded shadow-md transition-all disabled:opacity-40 cursor-pointer">
-              ✓ Approve
-            </button>
-            <button onClick={() => handleAction("reject")} disabled={actionLoading || isTerminal}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-[15px] font-bold rounded shadow-md transition-all disabled:opacity-40 cursor-pointer">
-              ✕ Reject
-            </button>
-          </div>
+          )}
         </div>
 
-        {actionMsg && <div className="mb-5 p-4 bg-emerald-50 border-l-4 border-emerald-500 rounded-r text-emerald-800 text-[17px] font-semibold">{actionMsg}</div>}
-        {actionErr && <div className="mb-5 p-4 bg-red-50 border-l-4 border-red-500 rounded-r text-red-800 text-[17px] font-semibold">{actionErr}</div>}
+        {actionMsg && <div role="status" className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3.5 text-[15px] font-semibold text-emerald-800"><CheckCircle2 className="h-4 w-4 shrink-0" /> {actionMsg}</div>}
+        {actionErr && <div role="alert" className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3.5 text-[15px] font-semibold text-red-800"><AlertTriangle className="h-4 w-4 shrink-0" /> {actionErr}</div>}
 
-        {/* Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left: Details */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Personal Info */}
-            <div className="bg-white rounded-xl shadow-xs border border-[#d3e1f5] overflow-hidden">
-              <div className="bg-[#082a63] px-5 py-3 text-white border-b-2 border-[#1b57d8] flex items-center justify-between">
-                <h3 className="text-[15px] font-bold uppercase tracking-wider">1. Personal & Contact Information</h3>
-                <span className="text-[15px] font-mono text-[#1b57d8] font-bold">{reg.session_label || reg.academic_session || "—"}</span>
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+          {/* Left: details */}
+          <div className="min-w-0 space-y-5 lg:col-span-2">
+            <Section n="1" title="Personal & contact information" right={<span className="shrink-0 rounded-full bg-[#eaf2fd] px-2.5 py-0.5 font-mono text-[12.5px] font-bold text-[#1245b8]">{reg.session_label || reg.academic_session || "—"}</span>}>
+              <div className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 xl:grid-cols-3">
+                <Info label="Candidate name / नांव" value={reg.candidate_name} />
+                <Info label="Father's name / बापायचें नांव" value={reg.father_name} />
+                <Info label="Mother's name / आवयचें नांव" value={reg.mother_name} />
+                <Info label="Date of birth / जल्मतारीख" value={reg.dob} />
+                <Info label="Gender / लिंग" value={reg.gender?.toUpperCase()} />
+                <Info label="Category / वर्ग" value={reg.category?.toUpperCase()} />
+                <Info label="Mobile / मोबाइल" value={reg.phone} />
+                <Info label="Email / ईमेल" value={reg.email} />
               </div>
-              <div className="p-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-[15px]">
-                {[
-                  ["Candidate Name / नांव", reg.candidate_name],
-                  ["Father's Name / बापायचें नांव", reg.father_name],
-                  ["Mother's Name / आवयचें नांव", reg.mother_name],
-                  ["Date of Birth / जल्मतारीख", reg.dob],
-                  ["Gender / लिंग", reg.gender?.toUpperCase()],
-                  ["Category / वर्ग", reg.category?.toUpperCase()],
-                  ["Mobile / मोबाइल", reg.phone],
-                  ["Email / ईमेल", reg.email],
-                ].map(([label, val]) => (
-                  <div key={label}>
-                    <span className="text-[#9CA3AF] block font-medium">{label}</span>
-                    <span className="font-bold text-[#1F2937] text-[17px]">{val || "—"}</span>
-                  </div>
-                ))}
-                {reg.address && (
-                  <div className="sm:col-span-3 pt-2 border-t border-[#eaf2fd]">
-                    <span className="text-[#9CA3AF] block font-medium">Full Address / कायमचो पत्तो</span>
-                    <span className="font-semibold text-[#1F2937]">{reg.address}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Course */}
-            <div className="bg-white rounded-xl shadow-xs border border-[#d3e1f5] overflow-hidden">
-              <div className="bg-[#082a63] px-5 py-3 text-white border-b-2 border-[#1b57d8]">
-                <h3 className="text-[15px] font-bold uppercase tracking-wider">2. Enrolled Course / अभ्यासक्रम</h3>
-              </div>
-              <div className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <span className="text-[15px] text-[#9CA3AF] block font-medium">Course Name</span>
-                  <span className="text-lg font-black text-[#082a63]">{reg.courses?.course_name || reg.course_name || "—"}</span>
+              {reg.address && (
+                <div className="mt-4 border-t border-dashed border-[#c9daf2] pt-4">
+                  <Info label="Full address / कायमचो पत्तो" value={reg.address} />
                 </div>
-                <div className="bg-[#eaf2fd] border border-[#d3e1f5] px-3 py-2 rounded-lg text-[15px]">
-                  <span className="text-[#9CA3AF] block">Academic Session</span>
-                  <span className="font-bold text-[#1b57d8]">{reg.session_label || reg.academic_session || "—"}</span>
+              )}
+            </Section>
+
+            <Section n="2" title="Enrolled course / अभ्यासक्रम">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <Info label="Course name" value={reg.courses?.course_name || reg.course_name} />
+                <div className="rounded-xl border border-[#d3e1f5] bg-[#eaf2fd] px-4 py-2.5">
+                  <span className="block text-[13px] font-semibold text-[#6b7ea3]">Academic session</span>
+                  <span className="text-[16px] font-bold text-[#1245b8]">{reg.session_label || reg.academic_session || "—"}</span>
                 </div>
               </div>
-            </div>
+            </Section>
 
-            {/* Education */}
-            <div className="bg-white rounded-xl shadow-xs border border-[#d3e1f5] overflow-hidden">
-              <div className="bg-[#082a63] px-5 py-3 text-white border-b-2 border-[#1b57d8]">
-                <h3 className="text-[15px] font-bold uppercase tracking-wider">3. Educational Qualifications / शैक्षणीक पात्रता</h3>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-[15px]">
-                  <thead>
-                    <tr className="bg-[#eaf2fd] text-[#374151] font-bold border-b border-[#d3e1f5] uppercase">
-                      {["Examination", "Board / University", "Passing Year", "Max Marks", "Obtained", "Percentage"].map((h) => (
-                        <th key={h} className="py-2.5 px-4">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#eaf2fd] text-[#1F2937]">
-                    {[
-                      ["10th / High School", edu.high_school],
-                      ["12th / Intermediate", edu.intermediate],
-                      ["Graduation", edu.graduation],
-                      ["Other", edu.other],
-                    ].filter(([, d]) => d?.board).map(([label, d]) => (
-                      <tr key={label}>
-                        <td className="py-2.5 px-4 font-bold">{label}</td>
-                        <td className="py-2.5 px-4">{d.board || "—"}</td>
-                        <td className="py-2.5 px-4">{d.year || "—"}</td>
-                        <td className="py-2.5 px-4">{d.total || "—"}</td>
-                        <td className="py-2.5 px-4">{d.obtained || "—"}</td>
-                        <td className="py-2.5 px-4 font-bold text-[#082a63]">{d.percentage ? `${d.percentage}%` : "—"}</td>
+            <Section n="3" title="Educational qualifications / शैक्षणीक पात्रता" flush>
+              {[["10th / High School", edu.high_school], ["12th / Intermediate", edu.intermediate], ["Graduation", edu.graduation], ["Other", edu.other]].filter(([, d]) => d?.board).length === 0 ? (
+                <p className="px-5 py-8 text-center text-[14.5px] text-[#6b7ea3]">No qualifications entered.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[34rem] text-left text-[15px]">
+                    <thead className="border-b border-[#d3e1f5]">
+                      <tr className="text-[12.5px] font-bold uppercase tracking-wider text-[#4a6090]">
+                        {["Examination", "Board / University", "Year", "Max", "Obtained", "%"].map((h) => (
+                          <th key={h} className="px-4 py-3">{h}</th>
+                        ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                    </thead>
+                    <tbody className="divide-y divide-[#e4edf9] text-[#082a63]">
+                      {[["10th / High School", edu.high_school], ["12th / Intermediate", edu.intermediate], ["Graduation", edu.graduation], ["Other", edu.other]]
+                        .filter(([, d]) => d?.board)
+                        .map(([label, d]) => (
+                          <tr key={label}>
+                            <td className="px-4 py-3 font-bold">{label}</td>
+                            <td className="px-4 py-3">{d.board || "—"}</td>
+                            <td className="px-4 py-3">{d.year || "—"}</td>
+                            <td className="px-4 py-3">{d.total || "—"}</td>
+                            <td className="px-4 py-3">{d.obtained || "—"}</td>
+                            <td className="px-4 py-3 font-bold">{d.percentage ? `${d.percentage}%` : "—"}</td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </Section>
 
-            {/* Documents */}
-            <div className="bg-white rounded-xl shadow-xs border border-[#d3e1f5] overflow-hidden">
-              <div className="bg-[#082a63] px-5 py-3 text-white border-b-2 border-[#1b57d8]">
-                <h3 className="text-[15px] font-bold uppercase tracking-wider">4. Uploaded Documents / दस्तावेज</h3>
-              </div>
-              <div className="p-5 grid grid-cols-2 sm:grid-cols-3 gap-4">
-                {/* Photo */}
-                <div className="p-3 bg-[#eaf2fd] border border-[#d3e1f5] rounded-lg text-center">
-                  <span className="text-[15px] font-bold text-[#374151] block mb-2">Passport Photo</span>
+            <Section n="4" title="Uploaded documents / दस्तावेज">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                <div className="flex flex-col items-center gap-2 rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] p-3 text-center">
+                  <span className="text-[14px] font-bold text-[#082a63]">Passport photo</span>
                   {reg.photo_url ? (
-                    <div onClick={() => setPreviewImg({ src: reg.photo_url, title: "Passport Photo" })}
-                      className="w-24 h-28 mx-auto bg-[#d3e1f5] rounded overflow-hidden cursor-pointer hover:opacity-90 border border-[#bccbe6] shadow-xs">
-                      <img src={reg.photo_url} alt="Photo" className="w-full h-full object-cover" />
-                    </div>
-                  ) : <span className="text-[15px] text-red-500 italic">Not uploaded</span>}
+                    <button type="button" onClick={() => setPreviewImg({ src: reg.photo_url, title: "Passport Photo" })} className="h-28 w-24 overflow-hidden rounded-lg border border-[#bccbe6] bg-[#d3e1f5] shadow-sm transition hover:opacity-90" aria-label="Preview passport photo">
+                      <img src={reg.photo_url} alt="Passport photo" className="h-full w-full object-cover" />
+                    </button>
+                  ) : <span className="text-[14px] italic text-red-500">Not uploaded</span>}
                 </div>
-
-                {/* Signature */}
-                <div className="p-3 bg-[#eaf2fd] border border-[#d3e1f5] rounded-lg text-center">
-                  <span className="text-[15px] font-bold text-[#374151] block mb-2">Signature</span>
+                <div className="flex flex-col items-center gap-2 rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] p-3 text-center">
+                  <span className="text-[14px] font-bold text-[#082a63]">Signature</span>
                   {reg.signature_url ? (
-                    <div onClick={() => setPreviewImg({ src: reg.signature_url, title: "Signature" })}
-                      className="w-28 h-14 mx-auto bg-white rounded overflow-hidden cursor-pointer hover:opacity-90 border border-[#bccbe6] shadow-xs my-2">
-                      <img src={reg.signature_url} alt="Signature" className="w-full h-full object-contain p-1" />
-                    </div>
-                  ) : <span className="text-[15px] text-red-500 italic">Not uploaded</span>}
+                    <button type="button" onClick={() => setPreviewImg({ src: reg.signature_url, title: "Signature" })} className="h-14 w-28 overflow-hidden rounded-lg border border-[#bccbe6] bg-white shadow-sm transition hover:opacity-90" aria-label="Preview signature">
+                      <img src={reg.signature_url} alt="Signature" className="h-full w-full object-contain p-1" />
+                    </button>
+                  ) : <span className="text-[14px] italic text-red-500">Not uploaded</span>}
                 </div>
-
-                {[
-                  { label: "Aadhaar Card", url: reg.aadhaar_url },
-                  { label: "10th Marksheet", url: reg.tenth_marksheet_url || reg.marksheet_10th_url },
-                  { label: "12th Marksheet", url: reg.twelfth_marksheet_url || reg.marksheet_12th_url },
-                  { label: "Other Document", url: reg.affidavit_url || reg.other_doc_url },
-                ].map(({ label, url }) => (
-                  <div key={label} className="p-3 bg-[#eaf2fd] border border-[#d3e1f5] rounded-lg text-center flex flex-col gap-2">
-                    <span className="text-[15px] font-bold text-[#374151]">{label}</span>
-                    <DocLink url={url} label={`View`} />
+                {docs.map(({ label, url }) => (
+                  <div key={label} className="flex flex-col items-center justify-between gap-2 rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] p-3 text-center">
+                    <span className="text-[14px] font-bold text-[#082a63]">{label}</span>
+                    <DocLink url={url} label="View" />
                   </div>
                 ))}
               </div>
-            </div>
+            </Section>
           </div>
 
-          {/* Right: Query panel */}
-          <div className="space-y-6">
-            {/* Raise Query */}
-            <div className="bg-white rounded-xl shadow-xs border border-[#d3e1f5] overflow-hidden">
-              <div className="bg-amber-500 px-5 py-3 text-white flex items-center gap-2">
-                <span>⚠</span>
-                <h3 className="text-[15px] font-bold uppercase tracking-wider">Raise Query / आक्षेप नोंद करात</h3>
+          {/* Right: queries */}
+          <div className="min-w-0 space-y-5">
+            <section className="overflow-hidden rounded-2xl border border-[#d3e1f5] bg-white shadow-sm">
+              <div className="flex items-center gap-2.5 border-b border-amber-200 bg-amber-50 px-4 py-3.5 sm:px-5">
+                <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600" />
+                <h3 className="text-[15.5px] font-bold text-amber-900">Raise query / आक्षेप नोंद करात</h3>
               </div>
-              <form onSubmit={handleRaiseQuery} className="p-5 space-y-4">
-                {querySuccess && <div className="p-3 bg-emerald-50 border border-emerald-300 rounded text-[15px] text-emerald-800 font-medium">{querySuccess}</div>}
-                {queryError && <div className="p-3 bg-red-50 border border-red-300 rounded text-[15px] text-red-800 font-medium">{queryError}</div>}
-
+              <form onSubmit={handleRaiseQuery} className="space-y-4 p-4 sm:p-5">
+                {querySuccess && <div role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-[14px] font-semibold text-emerald-800">{querySuccess}</div>}
+                {queryError && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-[14px] font-semibold text-red-800">{queryError}</div>}
                 <div>
-                  <label className="block text-[15px] font-bold text-[#374151] uppercase tracking-wider mb-1">
-                    Target Field <span className="text-red-500">*</span>
-                  </label>
-                  <select value={selectedField} onChange={(e) => setSelectedField(e.target.value)} disabled={isTerminal}
-                    className="w-full px-3 py-2 bg-[#eaf2fd] border border-[#bccbe6] rounded text-[15px] font-medium text-[#1F2937] focus:ring-2 focus:ring-[#1b57d8] focus:outline-none disabled:opacity-50">
-                    {QUERY_FIELD_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                  </select>
+                  <span className={labelCls}>Target field <span className="text-red-500">*</span></span>
+                  <Select size="lg" ariaLabel="Target field" value={selectedField} onChange={setSelectedField} disabled={isTerminal}
+                    options={QUERY_FIELD_OPTIONS.map((o) => ({ value: o.value, label: o.label }))} />
                 </div>
-
-                <div>
-                  <label className="block text-[15px] font-bold text-[#374151] uppercase tracking-wider mb-1">
-                    Query Message <span className="text-red-500">*</span>
-                  </label>
+                <label className="block">
+                  <span className={labelCls}>Query message <span className="text-red-500">*</span></span>
                   <textarea rows={4} value={queryMessage} onChange={(e) => setQueryMessage(e.target.value)} disabled={isTerminal}
-                    placeholder="Explain clearly what needs to be corrected..."
-                    className="w-full px-3 py-2 bg-[#eaf2fd] border border-[#bccbe6] rounded text-[15px] text-[#1F2937] placeholder:text-[#9CA3AF] focus:ring-2 focus:ring-[#1b57d8] focus:outline-none disabled:opacity-50" />
-                </div>
-
+                    placeholder="Explain clearly what needs to be corrected…"
+                    className="w-full rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] px-3.5 py-2.5 text-[15px] text-[#082a63] outline-none placeholder:text-[#8a97b3] focus:border-[#1b57d8] focus:bg-white focus:ring-2 focus:ring-[#1b57d8]/15 disabled:opacity-50" />
+                </label>
                 <button type="submit" disabled={submittingQuery || isTerminal}
-                  className="w-full py-2.5 px-4 bg-amber-600 hover:bg-amber-700 text-white text-[15px] font-bold uppercase tracking-wider rounded shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer">
-                  {submittingQuery ? "Submitting..." : "Submit Query to College"}
+                  className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-amber-500 text-[15px] font-bold text-white transition hover:bg-amber-600 disabled:opacity-50">
+                  <MessageSquarePlus className="h-4 w-4" /> {submittingQuery ? "Submitting…" : "Send query to college"}
                 </button>
-                {isTerminal && <p className="text-[15px] text-[#9CA3AF] italic text-center">Queries cannot be raised on approved/rejected applications.</p>}
+                {isTerminal && <p className="text-center text-[13.5px] italic text-[#6b7ea3]">Queries cannot be raised on approved or rejected applications.</p>}
               </form>
-            </div>
+            </section>
 
-            {/* Query History */}
-            <div className="bg-white rounded-xl shadow-xs border border-[#d3e1f5] overflow-hidden">
-              <div className="bg-[#082a63] px-5 py-3 text-white border-b border-[#1b57d8]/40">
-                <h3 className="text-[15px] font-bold uppercase tracking-wider">Query History ({queries.length})</h3>
+            <section className="overflow-hidden rounded-2xl border border-[#d3e1f5] bg-white shadow-sm">
+              <div className="flex items-center justify-between gap-3 border-b border-[#d3e1f5] bg-[#f4f8fe] px-4 py-3.5 sm:px-5">
+                <h3 className="text-[15.5px] font-bold text-[#082a63]">Query history</h3>
+                <span className="rounded-full bg-[#082a63] px-2.5 py-0.5 text-[12.5px] font-bold text-white">{queries.length}</span>
               </div>
-              <div className="p-4 divide-y divide-[#eaf2fd] max-h-96 overflow-y-auto">
+              <div className="max-h-96 divide-y divide-[#e4edf9] overflow-y-auto p-4 sm:px-5">
                 {queries.length === 0 ? (
-                  <p className="text-[15px] text-[#9CA3AF] text-center py-4 italic">No queries raised yet.</p>
+                  <p className="py-4 text-center text-[14.5px] italic text-[#6b7ea3]">No queries raised yet.</p>
                 ) : queries.map((q) => (
                   <div key={q.id} className="py-3 first:pt-0 last:pb-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-mono text-[15px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">{q.field_name}</span>
-                      <span className={`text-[14px] font-bold uppercase px-2 py-0.5 rounded ${q.status === "resolved" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>
-                        {q.status}
-                      </span>
+                    <div className="mb-1 flex items-center justify-between gap-2">
+                      <span className="min-w-0 break-all rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 font-mono text-[12.5px] font-bold text-amber-800">{q.field_name}</span>
+                      <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[12px] font-bold uppercase ${q.status === "resolved" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>{q.status}</span>
                     </div>
-                    <p className="text-[15px] text-[#374151] font-medium my-1">{q.message}</p>
-                    <span className="text-[14px] text-[#9CA3AF] block">
-                      {q.created_at ? new Date(q.created_at).toLocaleString("en-IN") : "—"}
-                    </span>
+                    <p className="my-1 break-words text-[14.5px] font-medium text-[#082a63]">{q.message}</p>
+                    <span className="block text-[13px] text-[#6b7ea3]">{q.created_at ? new Date(q.created_at).toLocaleString("en-IN") : "—"}</span>
                   </div>
                 ))}
               </div>
-            </div>
+            </section>
           </div>
         </div>
       </div>
 
-      {/* Edit Data Modal */}
-      {editOpen && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 p-4 overflow-y-auto" onClick={() => setEditOpen(false)}>
-          <div className="bg-white rounded-xl max-w-2xl w-full my-8 shadow-2xl" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#d3e1f5] bg-[#082a63] rounded-t-xl">
-              <h4 className="text-[17px] font-bold text-white flex items-center gap-2"><Pencil className="w-4 h-4 text-[#1b57d8]" /> Edit Registration Data</h4>
-              <button onClick={() => setEditOpen(false)} className="text-white/60 hover:text-white"><XIcon className="w-5 h-5" /></button>
+      {/* Edit data */}
+      <Modal
+        open={editOpen}
+        onClose={() => { setEditOpen(false); setEditMsg(null); }}
+        busy={editSaving}
+        icon={Pencil}
+        title="Edit registration data"
+        subtitle="Changes are saved directly to the database. Use carefully."
+        size="sm:max-w-2xl"
+        onSubmit={handleSaveEdit}
+        footer={
+          <>
+            <button type="button" onClick={() => { setEditOpen(false); setEditMsg(null); }} disabled={editSaving}
+              className="h-11 rounded-xl border border-[#d3e1f5] bg-white px-6 text-[15px] font-bold text-[#082a63] transition hover:bg-[#f4f8fe] disabled:opacity-60">Cancel</button>
+            <button type="submit" disabled={editSaving}
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#1b57d8] px-7 text-[15px] font-bold text-white transition hover:bg-[#1245b8] disabled:opacity-60">
+              <Save className="h-4 w-4" /> {editSaving ? "Saving…" : "Save changes"}
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-6">
+          {editMsg && (
+            <div role={editMsg.type === "error" ? "alert" : "status"} className={`rounded-xl border px-3.5 py-2.5 text-[14.5px] font-semibold ${editMsg.type === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-red-200 bg-red-50 text-red-800"}`}>
+              {editMsg.text}
             </div>
-            <form onSubmit={handleSaveEdit} className="p-6 space-y-5">
-              {editMsg && (
-                <div className={`p-3 rounded text-[15px] font-semibold ${editMsg.type === "success" ? "bg-emerald-50 text-emerald-800 border border-emerald-200" : "bg-red-50 text-red-800 border border-red-200"}`}>
-                  {editMsg.text}
-                </div>
-              )}
-              <p className="text-[15px] text-[#4a6090]">Changes are saved directly to the database. Use carefully.</p>
+          )}
 
-              {/* Personal */}
+          <section>
+            <h4 className="mb-3 text-[12.5px] font-extrabold uppercase tracking-wider text-[#4a6090]">Personal information</h4>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {[
+                { key: "candidate_name", label: "Candidate name", type: "text" },
+                { key: "father_name", label: "Father's name", type: "text" },
+                { key: "mother_name", label: "Mother's name", type: "text" },
+                { key: "dob", label: "Date of birth", type: "date" },
+              ].map(({ key, label, type }) => (
+                <label key={key} className="block min-w-0">
+                  <span className={labelCls}>{label}</span>
+                  <input type={type} value={editForm[key] || ""} onChange={setEdit(key)} className={fieldCls} />
+                </label>
+              ))}
               <div>
-                <h5 className="text-[15px] font-bold text-[#374151] uppercase tracking-wider mb-3 pb-1 border-b border-[#eaf2fd]">Personal Information</h5>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {[
-                    { key: "candidate_name", label: "Candidate Name", type: "text" },
-                    { key: "father_name", label: "Father's Name", type: "text" },
-                    { key: "mother_name", label: "Mother's Name", type: "text" },
-                    { key: "dob", label: "Date of Birth", type: "date" },
-                  ].map(({ key, label, type }) => (
-                    <div key={key}>
-                      <label className="block text-[15px] font-bold text-[#374151] mb-1">{label}</label>
-                      <input type={type} value={editForm[key] || ""} onChange={e => setEditForm(p => ({ ...p, [key]: e.target.value }))}
-                        className="w-full px-3 py-2 bg-[#eaf2fd] border border-[#bccbe6] rounded text-[15px] text-[#1F2937] focus:ring-2 focus:ring-[#1b57d8] focus:outline-none" />
-                    </div>
-                  ))}
-                  <div>
-                    <label className="block text-[15px] font-bold text-[#374151] mb-1">Gender</label>
-                    <select value={editForm.gender || ""} onChange={e => setEditForm(p => ({ ...p, gender: e.target.value }))}
-                      className="w-full px-3 py-2 bg-[#eaf2fd] border border-[#bccbe6] rounded text-[15px] text-[#1F2937] focus:ring-2 focus:ring-[#1b57d8] focus:outline-none">
-                      <option value="">—</option>
-                      {["Male","Female","Other"].map(o => <option key={o} value={o.toLowerCase()}>{o}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[15px] font-bold text-[#374151] mb-1">Category</label>
-                    <select value={editForm.category || ""} onChange={e => setEditForm(p => ({ ...p, category: e.target.value }))}
-                      className="w-full px-3 py-2 bg-[#eaf2fd] border border-[#bccbe6] rounded text-[15px] text-[#1F2937] focus:ring-2 focus:ring-[#1b57d8] focus:outline-none">
-                      <option value="">—</option>
-                      {["General","OBC","SC","ST"].map(o => <option key={o} value={o}>{o}</option>)}
-                    </select>
-                  </div>
-                </div>
+                <span className={labelCls}>Gender</span>
+                <Select size="lg" ariaLabel="Gender" placeholder="Select" value={editForm.gender || ""} onChange={(v) => setEditForm((p) => ({ ...p, gender: v }))}
+                  options={[{ value: "", label: "Not set" }, ...["Male", "Female", "Other"].map((o) => ({ value: o.toLowerCase(), label: o }))]} />
               </div>
-
-              {/* Contact */}
               <div>
-                <h5 className="text-[15px] font-bold text-[#374151] uppercase tracking-wider mb-3 pb-1 border-b border-[#eaf2fd]">Contact Details</h5>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {[
-                    { key: "phone", label: "Mobile Number", type: "text" },
-                    { key: "email", label: "Email Address", type: "email" },
-                  ].map(({ key, label, type }) => (
-                    <div key={key}>
-                      <label className="block text-[15px] font-bold text-[#374151] mb-1">{label}</label>
-                      <input type={type} value={editForm[key] || ""} onChange={e => setEditForm(p => ({ ...p, [key]: e.target.value }))}
-                        className="w-full px-3 py-2 bg-[#eaf2fd] border border-[#bccbe6] rounded text-[15px] text-[#1F2937] focus:ring-2 focus:ring-[#1b57d8] focus:outline-none" />
-                    </div>
-                  ))}
-                  <div className="sm:col-span-2">
-                    <label className="block text-[15px] font-bold text-[#374151] mb-1">Address</label>
-                    <textarea rows={2} value={editForm.address || ""} onChange={e => setEditForm(p => ({ ...p, address: e.target.value }))}
-                      className="w-full px-3 py-2 bg-[#eaf2fd] border border-[#bccbe6] rounded text-[15px] text-[#1F2937] focus:ring-2 focus:ring-[#1b57d8] focus:outline-none resize-none" />
-                  </div>
-                </div>
+                <span className={labelCls}>Category</span>
+                <Select size="lg" ariaLabel="Category" placeholder="Select" value={editForm.category || ""} onChange={(v) => setEditForm((p) => ({ ...p, category: v }))}
+                  options={[{ value: "", label: "Not set" }, ...["General", "OBC", "SC", "ST"].map((o) => ({ value: o, label: o }))]} />
               </div>
+            </div>
+          </section>
 
-              {/* Enrollment */}
-              <div>
-                <h5 className="text-[15px] font-bold text-[#374151] uppercase tracking-wider mb-3 pb-1 border-b border-[#eaf2fd]">Enrollment & Roll</h5>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {[
-                    { key: "enrollment_no", label: "Enrollment No." },
-                    { key: "roll_no", label: "Roll Number" },
-                    { key: "session_label", label: "Academic Session" },
-                  ].map(({ key, label }) => (
-                    <div key={key}>
-                      <label className="block text-[15px] font-bold text-[#374151] mb-1">{label}</label>
-                      <input type="text" value={editForm[key] || ""} onChange={e => setEditForm(p => ({ ...p, [key]: e.target.value }))}
-                        className="w-full px-3 py-2 bg-[#eaf2fd] border border-[#bccbe6] rounded text-[15px] text-[#1F2937] focus:ring-2 focus:ring-[#1b57d8] focus:outline-none" />
-                    </div>
-                  ))}
-                </div>
-              </div>
+          <section>
+            <h4 className="mb-3 text-[12.5px] font-extrabold uppercase tracking-wider text-[#4a6090]">Contact details</h4>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <label className="block min-w-0"><span className={labelCls}>Mobile number</span><input type="text" inputMode="tel" value={editForm.phone || ""} onChange={setEdit("phone")} className={fieldCls} /></label>
+              <label className="block min-w-0"><span className={labelCls}>Email address</span><input type="email" value={editForm.email || ""} onChange={setEdit("email")} className={fieldCls} /></label>
+              <label className="block min-w-0 sm:col-span-2">
+                <span className={labelCls}>Address</span>
+                <textarea rows={2} value={editForm.address || ""} onChange={setEdit("address")}
+                  className="w-full resize-none rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] px-3.5 py-2.5 text-[15px] text-[#082a63] outline-none focus:border-[#1b57d8] focus:bg-white focus:ring-2 focus:ring-[#1b57d8]/15" />
+              </label>
+            </div>
+          </section>
 
-              <div className="flex gap-3 pt-2">
-                <button type="submit" disabled={editSaving}
-                  className="flex-1 py-2.5 bg-[#082a63] hover:bg-[#06204f] text-white text-[15px] font-bold rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
-                  {editSaving ? "Saving..." : <><Save className="w-3.5 h-3.5" /> Save Changes</>}
-                </button>
-                <button type="button" onClick={() => setEditOpen(false)}
-                  className="px-6 py-2.5 bg-[#eaf2fd] hover:bg-[#e3edfa] text-[#374151] text-[15px] font-bold rounded-lg border border-[#d3e1f5] transition-colors">
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
+          <section>
+            <h4 className="mb-3 text-[12.5px] font-extrabold uppercase tracking-wider text-[#4a6090]">Enrollment &amp; roll</h4>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              {[{ key: "enrollment_no", label: "Enrollment no." }, { key: "roll_no", label: "Roll number" }, { key: "session_label", label: "Academic session" }].map(({ key, label }) => (
+                <label key={key} className="block min-w-0"><span className={labelCls}>{label}</span><input type="text" value={editForm[key] || ""} onChange={setEdit(key)} className={fieldCls} /></label>
+              ))}
+            </div>
+          </section>
         </div>
-      )}
+      </Modal>
 
-      {/* Image Preview Modal */}
-      {previewImg && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setPreviewImg(null)}>
-          <div className="bg-white rounded-xl max-w-lg w-full p-4 relative shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between pb-3 border-b border-[#d3e1f5] mb-3">
-              <h4 className="text-[17px] font-bold text-[#1F2937]">{previewImg.title}</h4>
-              <button onClick={() => setPreviewImg(null)} className="text-[#9CA3AF] hover:text-[#374151] text-xl font-bold">✕</button>
-            </div>
-            <div className="relative w-full h-80 bg-[#eaf2fd] rounded flex items-center justify-center overflow-hidden">
-              <img src={previewImg.src} alt={previewImg.title} className="max-w-full max-h-full object-contain" />
-            </div>
+      {/* Image preview */}
+      <Modal open={!!previewImg} onClose={() => setPreviewImg(null)} icon={Eye} title={previewImg?.title || "Preview"} size="sm:max-w-lg">
+        {previewImg && (
+          <div className="flex h-80 w-full items-center justify-center overflow-hidden rounded-xl bg-[#eaf2fd]">
+            <img src={previewImg.src} alt={previewImg.title} className="max-h-full max-w-full object-contain" />
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </Modal>
+
+      {confirmDialog}
+    </AdminPageShell>
   );
 }

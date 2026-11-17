@@ -3,10 +3,11 @@ import { ArrowLeft } from "lucide-react";
 
 // Page frame for the standalone Super Admin sub-pages (they sit outside the dashboard sidebar):
 // sticky top bar with a way back, and a padded, centred content area.
+// The bar and the padding disappear when printing, so printable pages (admit cards) print clean.
 export default function AdminPageShell({ title, subtitle, backHref = "/super-admin/dashboard", backLabel = "Dashboard", actions, children }) {
   return (
-    <div className="min-h-screen bg-[#f0f5fd]">
-      <header className="sticky top-0 z-30 border-b border-[#d3e1f5] bg-white/95 backdrop-blur">
+    <div className="min-h-screen bg-[#f0f5fd] print:min-h-0 print:bg-white">
+      <header className="sticky top-0 z-30 border-b border-[#d3e1f5] bg-white/95 backdrop-blur print:hidden">
         <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:px-6">
           <Link
             href={backHref}
@@ -21,7 +22,7 @@ export default function AdminPageShell({ title, subtitle, backHref = "/super-adm
           {actions && <div className="shrink-0">{actions}</div>}
         </div>
       </header>
-      <main className="mx-auto w-full min-w-0 max-w-7xl px-4 py-5 sm:px-6 sm:py-6">{children}</main>
+      <main className="mx-auto w-full min-w-0 max-w-7xl px-4 py-5 sm:px-6 sm:py-6 print:max-w-none print:p-0">{children}</main>
     </div>
   );
 }

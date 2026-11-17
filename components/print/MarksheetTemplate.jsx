@@ -45,7 +45,7 @@ export default function MarksheetTemplate({ data, showPageBreak = false }) {
             <Image src="/images/logo.png" alt="Logo" fill sizes="64px" className="object-contain" />
           </div>
           <div className="flex-1 text-center">
-            <p className="text-[9px] font-bold tracking-[0.2em] uppercase text-[#1245b8]">Government Recognized Body</p>
+            <p className="text-[9px] font-bold tracking-[0.2em] uppercase text-[#1245b8]">Open Schooling | Flexible Learning</p>
             <h1 lang="kok" className="font-devanagari text-lg font-bold text-[#0B1E36] leading-tight mt-0.5">
               गोंय राज्य मुक्त शाळा
             </h1>

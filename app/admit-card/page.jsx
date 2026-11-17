@@ -5,6 +5,7 @@ import TopBar from "@/components/TopBar";
 import Header from "@/components/Header";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import SamplePdfCard from "@/components/SamplePdfCard";
 import AdmitCardLookup from "@/components/AdmitCardLookup";
 
 export const revalidate = 60; // contact details (header menu, footer, help boxes) come from the dashboard
@@ -59,6 +60,8 @@ export default async function AdmitCardPage() {
               </ul>
             </Panel>
 
+
+            <SamplePdfCard title="admit card" file="Sample-Admit-Card.pdf" />
 
             <div className="card-shadow flex items-center gap-4 rounded-lg bg-gradient-to-r from-navy-deep to-[#164a9e] p-5 text-white">
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/15 ring-2 ring-white/30">

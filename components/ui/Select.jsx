@@ -20,7 +20,11 @@ export default function Select({
   ariaLabel,
   disabled = false,
   align = "left", // which edge of the button the list lines up with
-  size = "md", // "md" (toolbar, 40px) | "lg" (form field, 44px)
+  size = "md", // dashboard variant: "md" (toolbar, 40px) | "lg" (form field, 44px)
+  variant = "dashboard", // "dashboard" | "form" (registration / admin forms, 50px) | "public" (public website forms, 48px)
+  withIcon = false, // a field icon is drawn on the left by the parent: leave room for it
+  invalid = false, // red border (public / form variants)
+  id,
   placeholder = "", // when set, shown if `value` matches no option (otherwise the first option is shown)
   className = "",
 }) {
@@ -141,6 +145,22 @@ export default function Select({
     }
   }
 
+  const base = "flex w-full items-center justify-between gap-2 border text-left outline-none transition disabled:opacity-50";
+  let buttonCls;
+  if (variant === "public") {
+    buttonCls = `${base} h-[48px] rounded-md ${withIcon ? "pl-11 pr-3" : "pl-3.5 pr-3"} text-[14.5px] font-medium text-ink ${
+      invalid ? "border-[#e0242b] bg-[#fff8f8]" : open ? "border-brand bg-white ring-4 ring-brand/15" : "border-[#b9cbe6] bg-[#fbfdff] hover:border-[#7fa0d6]"
+    }`;
+  } else if (variant === "form") {
+    buttonCls = `${base} h-[50px] rounded-xl ${withIcon ? "pl-10 pr-3.5" : "px-4"} text-[15px] font-medium text-[#082a63] ${
+      invalid ? "border-red-400 bg-red-50" : open ? "border-[#1b57d8] bg-white ring-4 ring-[#1b57d8]/15" : "border-[#d3e1f5] bg-[#f4f8fe] hover:border-[#a9bde0]"
+    }`;
+  } else {
+    buttonCls = `${base} rounded-xl bg-white font-semibold text-[#082a63] ${size === "lg" ? "h-11 px-3.5 text-[15px]" : "h-10 px-3 text-[14px]"} ${
+      open ? "border-[#1b57d8] ring-2 ring-[#1b57d8]/15" : "border-[#d3e1f5] hover:border-[#a9bde0] focus-visible:border-[#1b57d8]"
+    }`;
+  }
+
   const listStyle = pos
     ? {
         position: "fixed",
@@ -155,6 +175,7 @@ export default function Select({
     <div ref={rootRef} className={`relative ${className}`}>
       <button
         ref={btnRef}
+        id={id}
         type="button"
         disabled={disabled}
         onClick={() => (open ? setOpen(false) : openList())}
@@ -163,11 +184,9 @@ export default function Select({
         aria-expanded={open}
         aria-controls={`${uid}-list`}
         aria-label={ariaLabel}
-        className={`flex w-full items-center justify-between gap-2 rounded-xl border bg-white text-left font-semibold text-[#082a63] outline-none transition disabled:opacity-50 ${
-          size === "lg" ? "h-11 px-3.5 text-[15px]" : "h-10 px-3 text-[14px]"
-        } ${open ? "border-[#1b57d8] ring-2 ring-[#1b57d8]/15" : "border-[#d3e1f5] hover:border-[#a9bde0] focus-visible:border-[#1b57d8]"}`}
+        className={buttonCls}
       >
-        <span className={`truncate ${selected ? "" : "font-medium text-[#8a97b3]"}`}>{selected ? selected.label : placeholder}</span>
+        <span className={`truncate ${selected ? "" : "font-normal text-[#8a97b3]"}`}>{selected ? selected.label : placeholder}</span>
         <ChevronDown className={`h-4 w-4 shrink-0 text-[#4a6090] transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 

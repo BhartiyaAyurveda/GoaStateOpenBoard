@@ -9,7 +9,7 @@ import SocialLinks from "@/components/SocialLinks";
 
 export const metadata = {
   title: "Contact Us | Goa State Open School",
-  description: "Contact Goa State Open School, Directorate of Education, Government of Goa – address, phone, email and enquiry form.",
+  description: "Contact Goa State Open School – address, phone, email and enquiry form.",
 };
 
 

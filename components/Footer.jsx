@@ -31,16 +31,8 @@ export default async function Footer() {
       <div className="bg-navy text-white">
         <div className="mx-auto grid max-w-[1320px] grid-cols-1 gap-6 px-4 py-14 sm:px-6 md:grid-cols-2 lg:grid-cols-[1.1fr_0.8fr_1.05fr_1.1fr] lg:gap-0">
           <div className="flex flex-col items-start gap-4 lg:pr-8">
-            {/* same logos as the header, on a white plate so they stay legible on the navy footer */}
+            {/* same logo as the header, on a white plate so it stays legible on the navy footer */}
             <div className="flex items-center gap-3 rounded-md bg-white px-4 py-3 shadow-sm">
-              <Image
-                src="/images/emblem-top.png"
-                alt="Emblem of India"
-                width={240}
-                height={360}
-                className="h-[72px] w-auto mix-blend-multiply"
-              />
-              <span className="h-[56px] w-px bg-[#c4cde0]" aria-hidden="true" />
               <Image
                 src="/images/logo.png"
                 alt="Goa State Open School logo"
@@ -52,8 +44,7 @@ export default async function Footer() {
             <div className="leading-snug">
               <p className="text-[20px] font-bold tracking-wide">GOA STATE OPEN SCHOOL</p>
               <p lang="kok" className="font-devanagari text-[15px] font-semibold">गोंय राज्य मुक्त शाळा</p>
-              <p className="mt-1 text-[14px] font-medium">Directorate of Education</p>
-              <p className="text-[14px] font-medium">Government of Goa</p>
+              <p className="mt-1 text-[14px] font-medium">Open Schooling | Flexible Learning</p>
             </div>
           </div>
 

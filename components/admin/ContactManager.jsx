@@ -18,12 +18,14 @@ const DEFAULT_CONTACT = {
   country:             "India",
   workingHoursWeekday: "Monday – Saturday: 10:00 AM – 5:00 PM",
   workingHoursSunday:  "Closed on Sundays and public holidays",
+  registrationNote:    "",
+  registrationUrl:     "",
 };
 
 const SITE_DEFAULTS = {
   phone: "0832–2743300",
   email: "support@goaopenschool.in",
-  address: ["Goa State Open School,", "Directorate of Education,", "Panaji, Goa – 403001"],
+  address: ["Goa State Open School,", "Panaji, Goa – 403001"],
   hoursWeekday: "Monday – Friday: 10:00 AM – 5:30 PM",
   hoursOther: "Closed on Saturday, Sunday & public holidays",
 };
@@ -47,6 +49,7 @@ function validate(d) {
     if (d[k] && !e[k] && !validEmail(d[k].trim())) e[k] = "Enter a valid email address.";
   }
   if (d.pincode && !/^\d{6}$/.test(d.pincode)) e.pincode = "Pincode must be 6 digits.";
+  if (d.registrationUrl && !/^https?:\/\/\S+\.\S+/i.test(d.registrationUrl.trim())) e.registrationUrl = "Enter a full link starting with https://";
   return e;
 }
 
@@ -220,7 +223,7 @@ export default function ContactManager({ onShowToast }) {
           <Section icon={<MapPin className="h-5 w-5" />} tone="bg-emerald-50 text-emerald-700" title="Address" subtitle="Shown on the Contact page and in the footer. The address (with country) also drives the map.">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label="Street address / area" icon={MapPin} className="sm:col-span-2">
-                {text("addressLine1", { placeholder: "e.g. Directorate of Education, Porvorim", maxLength: 200 })}
+                {text("addressLine1", { placeholder: "e.g. Street / building, Porvorim", maxLength: 200 })}
               </Field>
               <Field label="City">{text("city", { placeholder: "City", maxLength: 80 })}</Field>
               <Field label="State">{text("state", { placeholder: "State", maxLength: 80 })}</Field>
@@ -235,6 +238,20 @@ export default function ContactManager({ onShowToast }) {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label="Weekdays" icon={Clock}>{text("workingHoursWeekday", { placeholder: "e.g. Monday – Saturday: 10:00 AM – 5:00 PM", maxLength: 120 })}</Field>
               <Field label="Sunday / holidays" icon={Clock}>{text("workingHoursSunday", { placeholder: "e.g. Closed on Sundays and public holidays", maxLength: 120 })}</Field>
+            </div>
+          </Section>
+
+          <Section icon={<Check className="h-5 w-5" />} tone="bg-emerald-50 text-emerald-700" title="Registration line" subtitle="A small line under the school name in the website header. Empty = nothing is shown.">
+            <div className="grid grid-cols-1 gap-4">
+              <Field label="Text" hint="(max 140 characters)">
+                {text("registrationNote", { placeholder: "e.g. Registered on NGO-DARPAN (NITI Aayog) · Unique ID: XX/2025/0000000", maxLength: 140 })}
+              </Field>
+              <Field label="Verification link" hint="(optional)" icon={ExternalLink} error={showErr("registrationUrl")}>
+                {text("registrationUrl", { type: "url", placeholder: "https://… (page where visitors can verify it)", maxLength: 300, autoComplete: "off" })}
+              </Field>
+              <p className="rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-[13.5px] font-medium leading-relaxed text-amber-900">
+                Write only a registration your organisation actually holds, with its number, so visitors can check it. Do not use the NITI Aayog, MSME or any government logo here.
+              </p>
             </div>
           </Section>
         </div>

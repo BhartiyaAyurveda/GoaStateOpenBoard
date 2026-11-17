@@ -53,8 +53,8 @@ export default function PrivacyPolicyPage() {
 
       <PolicySection n="5" heading="Sharing of information">
         <p>
-          Your personal information is not sold or rented. It is shared only with the officials of Goa State Open School and the Directorate
-          of Education who need it to serve you, or where disclosure is required by law.
+          Your personal information is not sold or rented. It is shared only with the officials of Goa State Open School
+          who need it to serve you, or where disclosure is required by law.
         </p>
       </PolicySection>
 

@@ -83,7 +83,7 @@ export default async function NoticesPage() {
           {/* heading band with summary */}
           <div className="mt-4 flex flex-col gap-5 border-l-[6px] border-navy bg-gradient-to-r from-[#e3edfa] to-white px-5 py-5 sm:px-7 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-[13px] font-bold uppercase tracking-[0.18em] text-[#44557a]">Goa State Open School</p>
+              <p className="text-[13px] font-bold uppercase tracking-[0.18em] text-[#44557a]">Goa State Open School <span lang="kok" className="font-devanagari normal-case tracking-normal"> · गोंय राज्य मुक्त शाळा</span></p>
               <h1 className="mt-1 flex items-center gap-3 text-[26px] font-extrabold leading-tight tracking-tight text-ink sm:text-[34px]">
                 <Megaphone size={30} strokeWidth={1.8} className="text-navy" aria-hidden="true" />
                 Notices &amp; Circulars

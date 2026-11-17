@@ -2,35 +2,17 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import {
-  GraduationCap,
-  Search,
-  RefreshCw,
-  UserPlus,
-  Award,
-  CheckCircle2,
-  Hash,
-  ExternalLink,
-  Eye,
-  X,
-} from "lucide-react";
+import { GraduationCap, Search, RefreshCw, UserPlus, CheckCircle2, Hash, ExternalLink, Eye, X, ChevronRight } from "lucide-react";
+import Select from "@/components/ui/Select";
 import { useDashboard } from "../DashboardContext";
 
 export default function EnrolledStudentsPage() {
-  const {
-    enrolled,
-    enrolledLoading,
-    loadEnrolled,
-    enrolledSearch,
-    setEnrolledSearch,
-    courses,
-    openDetail
-  } = useDashboard();
+  const { enrolled, enrolledLoading, loadEnrolled, enrolledSearch, setEnrolledSearch, courses, openDetail } = useDashboard();
 
   const [selectedCourse, setSelectedCourse] = useState("all");
-  const [rollFilter, setRollFilter]         = useState("all");
+  const [rollFilter, setRollFilter] = useState("all");
 
-  const withRollCount    = useMemo(() => enrolled.filter((s) => Boolean(s.roll_no)).length, [enrolled]);
+  const withRollCount = useMemo(() => enrolled.filter((s) => Boolean(s.roll_no)).length, [enrolled]);
   const withoutRollCount = useMemo(() => enrolled.filter((s) => !s.roll_no).length, [enrolled]);
 
   const filtered = useMemo(() => {
@@ -47,329 +29,250 @@ export default function EnrolledStudentsPage() {
       }
       // Course filter
       if (selectedCourse !== "all") {
-        if (s.course_id !== selectedCourse && s.courses?.id !== selectedCourse) {
-          return false;
-        }
+        if (s.course_id !== selectedCourse && s.courses?.id !== selectedCourse) return false;
       }
       // Roll status filter
       if (rollFilter === "assigned" && !s.roll_no) return false;
       if (rollFilter === "unassigned" && Boolean(s.roll_no)) return false;
-
       return true;
     });
   }, [enrolled, enrolledSearch, selectedCourse, rollFilter]);
 
+  const hasFilters = enrolledSearch || selectedCourse !== "all" || rollFilter !== "all";
+  const clearFilters = () => {
+    setEnrolledSearch("");
+    setSelectedCourse("all");
+    setRollFilter("all");
+  };
+
+  const cards = [
+    { key: "all", label: "Total enrolled students", short: "Enrolled", sub: "Board-approved admissions", count: enrolled.length, Icon: GraduationCap, tone: "bg-[#eaf2fd] text-[#1245b8]", bar: "bg-[#082a63]", next: () => setRollFilter("all") },
+    { key: "assigned", label: "Roll numbers issued", short: "Roll no. issued", sub: "Assigned & exam-ready", count: withRollCount, Icon: CheckCircle2, tone: "bg-emerald-50 text-emerald-700", bar: "bg-emerald-500", next: () => setRollFilter(rollFilter === "assigned" ? "all" : "assigned") },
+    { key: "unassigned", label: "Awaiting roll no.", short: "Awaiting", sub: "Requires college assignment", count: withoutRollCount, Icon: Hash, tone: "bg-amber-50 text-amber-700", bar: "bg-amber-500", next: () => setRollFilter(rollFilter === "unassigned" ? "all" : "unassigned") },
+  ];
+
+  const sessionOf = (s) => s.session_label || s.academic_session || "2026-27";
+
   return (
-    <div className="space-y-6 max-w-6xl">
-      {/* ── Page Header ── */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[13px] font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-800 border border-emerald-300">
-              <Award className="w-3.5 h-3.5 text-emerald-600" />
-              Verified Academic Records
-            </span>
-            <span className="text-[13px] sm:text-[15px] text-[#3d5688] font-semibold">
-              Enrolled: {enrolled.length}
-            </span>
-          </div>
-          <h1 className="text-xl sm:text-2xl font-bold text-[#082a63] tracking-tight">
-            Enrolled Students Register
-          </h1>
-          <p className="text-[13px] sm:text-[15px] text-[#3d5688]">
-            Official council-ratified candidates eligible for examination hall tickets, admit cards, and certifications.
+    <div className="min-w-0 space-y-5">
+      {/* Header */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-[24px] font-bold tracking-tight text-[#082a63] sm:text-[28px]">Enrolled Students Register</h1>
+          <p className="text-[14.5px] text-[#3d5688] sm:text-[15.5px]">
+            {enrolled.length} enrolled · Board-approved candidates eligible for admit cards and examinations.
           </p>
         </div>
-
-        <div className="flex items-center gap-2.5 shrink-0">
+        <div className="grid grid-cols-1 gap-2.5 sm:flex sm:shrink-0 sm:items-center">
           <Link
             href="/admit-card"
             target="_blank"
-            className="hidden sm:inline-flex items-center gap-1.5 text-[13px] sm:text-[15px] text-[#082a63] hover:text-[#1b57d8] font-semibold bg-white px-3.5 py-2 rounded-xl border border-[#d3e1f5] hover:border-[#1b57d8] shadow-xs transition-all"
+            rel="noopener noreferrer"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-[#d3e1f5] bg-white px-4 text-[14.5px] font-bold text-[#082a63] shadow-sm transition hover:border-[#1b57d8] hover:bg-[#f4f8fe]"
           >
-            <span>Admit Card Portal</span>
-            <ExternalLink className="w-3.5 h-3.5 text-[#1b57d8]" />
+            Admit Card Portal <ExternalLink className="h-3.5 w-3.5 text-[#1b57d8]" />
           </Link>
-
           <Link
             href="/college/dashboard/register"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#082a63] hover:bg-[#0b3a85] active:scale-95 text-white font-bold text-[15px] transition-all shadow-sm"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#1b57d8] px-5 text-[15px] font-bold text-white shadow-sm transition hover:bg-[#1245b8] active:scale-95"
           >
-            <UserPlus className="w-4 h-4 text-[#1b57d8]" />
-            <span>New Admission</span>
+            <UserPlus className="h-4 w-4" /> New admission
           </Link>
         </div>
       </div>
 
-      {/* ── 3 Metric Summary Cards ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {/* Total Enrolled */}
-        <button
-          onClick={() => setRollFilter("all")}
-          className={`p-4 sm:p-4.5 rounded-2xl border text-left transition-all flex items-center justify-between ${
-            rollFilter === "all"
-              ? "bg-[#082a63] text-white border-[#082a63] shadow-sm"
-              : "bg-white text-[#082a63] border-[#d3e1f5] hover:border-[#1b57d8] hover:shadow-xs"
-          }`}
-        >
-          <div className="space-y-0.5">
-            <p className={`text-[13px] font-bold uppercase tracking-wider ${rollFilter === "all" ? "text-[#5db0f4]" : "text-[#3d5688]"}`}>
-              Total Enrolled Students
-            </p>
-            <p className="text-2xl font-extrabold tracking-tight">{enrolled.length}</p>
-            <p className={`text-[13px] ${rollFilter === "all" ? "text-white/70" : "text-[#8a97b3]"}`}>
-              Board-approved admissions
-            </p>
-          </div>
-          <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${rollFilter === "all" ? "bg-white/10 text-[#5db0f4]" : "bg-emerald-50 text-emerald-700"}`}>
-            <GraduationCap className="w-4 h-4" />
-          </div>
-        </button>
-
-        {/* Roll Numbers Issued */}
-        <button
-          onClick={() => setRollFilter(rollFilter === "assigned" ? "all" : "assigned")}
-          className={`p-4 sm:p-4.5 rounded-2xl border text-left transition-all flex items-center justify-between ${
-            rollFilter === "assigned"
-              ? "bg-[#082a63] text-white border-[#082a63] shadow-sm"
-              : "bg-white text-[#082a63] border-[#d3e1f5] hover:border-emerald-400 hover:shadow-xs"
-          }`}
-        >
-          <div className="space-y-0.5">
-            <p className={`text-[13px] font-bold uppercase tracking-wider ${rollFilter === "assigned" ? "text-[#5db0f4]" : "text-emerald-700"}`}>
-              Roll Numbers Issued
-            </p>
-            <p className="text-2xl font-extrabold tracking-tight text-emerald-600">{withRollCount}</p>
-            <p className={`text-[13px] ${rollFilter === "assigned" ? "text-white/70" : "text-[#8a97b3]"}`}>
-              Assigned &amp; exam-ready
-            </p>
-          </div>
-          <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${rollFilter === "assigned" ? "bg-white/10 text-[#5db0f4]" : "bg-emerald-50 text-emerald-700"}`}>
-            <CheckCircle2 className="w-4 h-4" />
-          </div>
-        </button>
-
-        {/* Roll No Pending */}
-        <button
-          onClick={() => setRollFilter(rollFilter === "unassigned" ? "all" : "unassigned")}
-          className={`p-4 sm:p-4.5 rounded-2xl border text-left transition-all flex items-center justify-between ${
-            rollFilter === "unassigned"
-              ? "bg-[#082a63] text-white border-[#082a63] shadow-sm"
-              : "bg-white text-[#082a63] border-[#d3e1f5] hover:border-amber-400 hover:shadow-xs"
-          }`}
-        >
-          <div className="space-y-0.5">
-            <p className={`text-[13px] font-bold uppercase tracking-wider ${rollFilter === "unassigned" ? "text-[#5db0f4]" : "text-amber-700"}`}>
-              Awaiting Roll No
-            </p>
-            <p className="text-2xl font-extrabold tracking-tight text-amber-600">{withoutRollCount}</p>
-            <p className={`text-[13px] ${rollFilter === "unassigned" ? "text-white/70" : "text-[#8a97b3]"}`}>
-              Requires college assignment
-            </p>
-          </div>
-          <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${rollFilter === "unassigned" ? "bg-white/10 text-[#5db0f4]" : "bg-amber-50 text-amber-700"}`}>
-            <Hash className="w-4 h-4" />
-          </div>
-        </button>
+      {/* Metric / filter cards */}
+      <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+        {cards.map(({ key, label, short, sub, count, Icon, tone, bar, next }) => {
+          const isActive = rollFilter === key;
+          return (
+            <button
+              key={key}
+              onClick={next}
+              aria-pressed={isActive}
+              className={`relative flex flex-col gap-2 overflow-hidden rounded-2xl border p-3 text-left transition sm:p-4 ${
+                isActive ? "border-[#082a63] bg-[#082a63] text-white shadow-md" : "border-[#d3e1f5] bg-white text-[#082a63] hover:border-[#1b57d8] hover:shadow-sm"
+              }`}
+            >
+              {!isActive && <span className={`absolute inset-x-0 top-0 h-1 ${bar}`} aria-hidden="true" />}
+              <p className={`text-[12px] font-bold uppercase tracking-wide sm:text-[12.5px] sm:tracking-wider ${isActive ? "text-[#bcd8fb]" : "text-[#3d5688]"}`}>
+                <span className="sm:hidden">{short}</span>
+                <span className="hidden sm:inline">{label}</span>
+              </p>
+              <div className="flex items-end justify-between gap-2">
+                <span className="text-[28px] font-extrabold leading-none tracking-tight sm:text-[32px]">{count}</span>
+                <span className={`hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:flex ${isActive ? "bg-white/15 text-white" : tone}`}>
+                  <Icon className="h-5 w-5" />
+                </span>
+              </div>
+              <p className={`hidden text-[13.5px] sm:block ${isActive ? "text-white/75" : "text-[#6b7ea3]"}`}>{sub}</p>
+            </button>
+          );
+        })}
       </div>
 
-      {/* ── Search & Filter Toolbar ── */}
-      <div className="bg-white rounded-2xl border border-[#d3e1f5] p-3.5 sm:p-4 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="flex flex-1 items-center gap-2.5 w-full">
-          {/* Search Box */}
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#3d5688]" />
-            <input
-              value={enrolledSearch}
-              onChange={(e) => setEnrolledSearch(e.target.value)}
-              placeholder="Search by candidate name, enrollment no, roll no…"
-              className="w-full pl-10 pr-9 py-2.5 text-[15px] rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] text-[#082a63] placeholder-[#8a97b3] focus:outline-none focus:ring-4 focus:ring-[#1b57d8]/15 focus:border-[#1b57d8] focus:bg-white transition-all font-medium"
-            />
-            {enrolledSearch && (
-              <button
-                onClick={() => setEnrolledSearch("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
-
-          {/* Course Filter Dropdown */}
-          {courses?.length > 0 && (
-            <div className="relative hidden md:block w-52 shrink-0">
-              <select
-                value={selectedCourse}
-                onChange={(e) => setSelectedCourse(e.target.value)}
-                className="w-full py-2.5 px-3 text-[15px] rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] text-[#082a63] focus:outline-none focus:ring-2 focus:ring-[#1b57d8] font-medium"
-              >
-                <option value="all">All Courses</option>
-                {courses.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.course_name}
-                  </option>
-                ))}
-              </select>
-            </div>
+      {/* Search & filter */}
+      <div className="flex flex-col gap-3 rounded-2xl border border-[#d3e1f5] bg-white p-3 shadow-sm lg:flex-row lg:items-center">
+        <div className="relative min-w-0 flex-1" title="Search by name, enrollment no, roll no or course">
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#3d5688]" />
+          <input
+            value={enrolledSearch}
+            onChange={(e) => setEnrolledSearch(e.target.value)}
+            placeholder="Search enrolled students…"
+            className="h-11 w-full rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] pl-10 pr-10 text-[15px] font-medium text-[#082a63] outline-none transition placeholder:text-[#8a97b3] focus:border-[#1b57d8] focus:bg-white focus:ring-4 focus:ring-[#1b57d8]/15"
+          />
+          {enrolledSearch && (
+            <button onClick={() => setEnrolledSearch("")} aria-label="Clear search" className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-[#4a6090] hover:bg-[#eaf2fd]">
+              <X className="h-4 w-4" />
+            </button>
           )}
         </div>
 
-        {/* Toolbar Right */}
-        <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto text-[13px] sm:text-[15px] text-[#3d5688]">
-          <span className="font-semibold text-[#082a63]">
-            {filtered.length} {filtered.length === 1 ? "student" : "students"} listed
-          </span>
+        <div className="grid grid-cols-[1fr_auto] items-center gap-3 lg:flex">
+          {courses?.length > 0 && (
+            <Select
+              size="lg"
+              ariaLabel="Filter by course"
+              className="min-w-0 lg:w-60"
+              value={selectedCourse}
+              onChange={setSelectedCourse}
+              options={[{ value: "all", label: "All courses" }, ...courses.map((c) => ({ value: c.id, label: c.course_name }))]}
+            />
+          )}
           <button
             onClick={loadEnrolled}
             disabled={enrolledLoading}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#f4f8fe] border border-[#d3e1f5] hover:border-[#082a63] text-[#082a63] transition-all shadow-xs"
-            title="Refresh Enrolled List"
+            title="Refresh enrolled list"
+            className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl border border-[#d3e1f5] bg-white px-4 text-[14.5px] font-bold text-[#082a63] transition hover:bg-[#f4f8fe] disabled:opacity-60"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${enrolledLoading ? "animate-spin" : ""}`} />
-            <span className="font-bold text-[13px] sm:text-[15px]">Refresh</span>
+            <RefreshCw className={`h-4 w-4 ${enrolledLoading ? "animate-spin" : ""}`} /> <span className="hidden sm:inline">Refresh</span>
           </button>
         </div>
       </div>
 
-      {/* ── Enrolled Table Card ── */}
-      <div className="rounded-3xl bg-white border border-[#d3e1f5] shadow-xs overflow-hidden">
+      {/* List */}
+      <div className="overflow-hidden rounded-2xl border border-[#d3e1f5] bg-white shadow-sm">
         {enrolledLoading ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-3">
-            <div className="w-8 h-8 border-3 border-[#082a63]/20 border-t-[#082a63] rounded-full animate-spin" />
-            <p className="text-[15px] font-semibold text-[#3d5688]">Loading verified enrolled records…</p>
+          <div className="flex flex-col items-center justify-center gap-3 py-20">
+            <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#082a63]/20 border-t-[#082a63]" />
+            <p className="text-[15px] font-semibold text-[#3d5688]">Loading enrolled records…</p>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-[#3d5688] space-y-3">
-            <div className="w-14 h-14 rounded-2xl bg-[#f4f8fe] border border-[#d3e1f5] flex items-center justify-center text-[#1245b8]">
-              <GraduationCap className="w-7 h-7 opacity-40" />
-            </div>
-            <div className="text-center space-y-1">
-              <p className="text-base font-bold text-[#082a63]">No enrolled students found</p>
-              <p className="text-[13px] sm:text-[15px] text-[#3d5688] max-w-sm">
-                {enrolledSearch || selectedCourse !== "all" || rollFilter !== "all"
-                  ? "No matching records found. Try clearing your search or filter options."
-                  : "Students will appear here once their admission applications have been approved by the council."}
-              </p>
-            </div>
-            {(enrolledSearch || selectedCourse !== "all" || rollFilter !== "all") && (
-              <button
-                onClick={() => {
-                  setEnrolledSearch("");
-                  setSelectedCourse("all");
-                  setRollFilter("all");
-                }}
-                className="text-[13px] sm:text-[15px] font-bold text-[#082a63] underline hover:text-[#1b57d8] transition-colors"
-              >
+          <div className="flex flex-col items-center justify-center px-4 py-14 text-center sm:py-16">
+            <span className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-[#eaf2fd] text-[#8fb0e6]"><GraduationCap className="h-8 w-8" /></span>
+            <p className="text-[17px] font-bold text-[#082a63]">{hasFilters ? "No records match your filters" : "No enrolled students yet"}</p>
+            <p className="mt-1 max-w-sm text-[14.5px] text-[#3d5688]">
+              {hasFilters ? "Try a different search or clear the filters." : "Students appear here once the Board approves their admission."}
+            </p>
+            {hasFilters && (
+              <button onClick={clearFilters} className="mt-5 h-11 rounded-xl border border-[#d3e1f5] px-6 text-[14.5px] font-bold text-[#082a63] transition hover:bg-[#f4f8fe]">
                 Clear all filters
               </button>
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] text-left text-[13px] sm:text-[15px]">
-              <thead className="bg-[#f4f8fe] text-[#082a63] uppercase font-bold tracking-wider border-b border-[#d3e1f5] text-[13px]">
-                <tr>
-                  <th className="py-3.5 px-5">#</th>
-                  <th className="py-3.5 px-6">Candidate Details</th>
-                  <th className="py-3.5 px-4">Program Course</th>
-                  <th className="py-3.5 px-4">Enrollment Number</th>
-                  <th className="py-3.5 px-4">College Roll No</th>
-                  <th className="py-3.5 px-4">Academic Session</th>
-                  <th className="py-3.5 px-4">Status</th>
-                  <th className="py-3.5 px-6 text-right">Dossier</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#d3e1f5]/70">
-                {filtered.map((s, i) => (
-                  <tr
-                    key={s.id}
-                    className="hover:bg-[#f4f8fe]/60 transition-colors group"
-                  >
-                    <td className="py-4 px-5 font-mono text-[#3d5688] font-bold">
-                      {i + 1}
-                    </td>
-
-                    {/* Candidate */}
-                    <td className="py-4 px-6">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-[15px] flex items-center justify-center shrink-0 border border-emerald-300">
-                          {s.candidate_name?.charAt(0) || "S"}
-                        </div>
-                        <div>
-                          <p className="font-bold text-[#082a63] text-[15px] leading-snug">
-                            {s.candidate_name}
-                          </p>
-                          <p className="text-[13px] text-[#3d5688] mt-0.5">
-                            {s.father_name ? `F: ${s.father_name}` : ""}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Course */}
-                    <td className="py-4 px-4 text-[#3d5688] font-semibold">
-                      <p className="text-[15px] text-[#082a63] font-semibold">
-                        {s.courses?.course_name || "—"}
-                      </p>
-                      {s.courses?.duration_label && (
-                        <p className="text-[13px] text-[#3d5688] mt-0.5">
-                          {s.courses.duration_label}
-                        </p>
-                      )}
-                    </td>
-
-                    {/* Enrollment No */}
-                    <td className="py-4 px-4 font-mono text-[15px]">
-                      {s.enrollment_no ? (
-                        <span className="bg-[#f4f8fe] text-[#082a63] px-3 py-1 rounded-md border border-[#d3e1f5] font-bold tracking-wide">
-                          {s.enrollment_no}
-                        </span>
-                      ) : (
-                        <span className="text-[#a9bde0] font-normal text-[13px]">—</span>
-                      )}
-                    </td>
-
-                    {/* Roll No */}
-                    <td className="py-4 px-4 font-mono text-[15px]">
-                      {s.roll_no ? (
-                        <span className="bg-emerald-50 text-emerald-800 px-3 py-1 rounded-md border border-emerald-200 font-bold">
-                          {s.roll_no}
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-[13px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-md">
-                          Pending Assignment
-                        </span>
-                      )}
-                    </td>
-
-                    {/* Session */}
-                    <td className="py-4 px-4 text-[#3d5688] font-semibold text-[13px] sm:text-[15px]">
-                      {s.session_label || s.academic_session || "2026-27"}
-                    </td>
-
-                    {/* Status */}
-                    <td className="py-4 px-4">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[13px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span>Enrolled &amp; Verified</span>
-                      </span>
-                    </td>
-
-                    {/* Action */}
-                    <td className="py-4 px-6 text-right">
-                      <button
-                        onClick={() => openDetail(s)}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#f4f8fe] hover:bg-[#082a63] text-[#082a63] hover:text-white border border-[#d3e1f5] hover:border-[#082a63] text-[13px] sm:text-[15px] font-bold transition-all shadow-2xs active:scale-95"
-                      >
-                        <Eye className="w-4 h-4" />
-                        <span>View</span>
-                      </button>
-                    </td>
+          <>
+            {/* table (laptops) */}
+            <div className="hidden overflow-x-auto lg:block">
+              <table className="w-full text-left text-[15px]">
+                <thead className="border-b border-[#d3e1f5] bg-[#f4f8fe]">
+                  <tr className="text-[12.5px] font-bold uppercase tracking-wider text-[#4a6090]">
+                    <th className="px-5 py-3.5">#</th>
+                    <th className="whitespace-nowrap px-4 py-3.5">Candidate</th>
+                    <th className="whitespace-nowrap px-4 py-3.5">Course</th>
+                    <th className="whitespace-nowrap px-4 py-3.5">Enrollment no.</th>
+                    <th className="whitespace-nowrap px-4 py-3.5">Roll no.</th>
+                    <th className="whitespace-nowrap px-4 py-3.5">Session</th>
+                    <th className="whitespace-nowrap px-4 py-3.5">Status</th>
+                    <th className="whitespace-nowrap px-5 py-3.5 text-right">Details</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-[#e4edf9]">
+                  {filtered.map((s, i) => (
+                    <tr key={s.id} className="transition-colors hover:bg-[#f4f8fe]">
+                      <td className="px-5 py-3.5 font-mono font-bold text-[#6b7ea3]">{i + 1}</td>
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-3">
+                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-[15px] font-extrabold text-emerald-800">{s.candidate_name?.charAt(0) || "S"}</span>
+                          <div className="min-w-0">
+                            <p className="font-bold leading-snug text-[#082a63]">{s.candidate_name}</p>
+                            {s.father_name && <p className="text-[13.5px] text-[#3d5688]">F: {s.father_name}</p>}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <p className="font-semibold leading-snug text-[#082a63]">{s.courses?.course_name || "—"}</p>
+                        {s.courses?.duration_label && <p className="text-[13.5px] text-[#3d5688]">{s.courses.duration_label}</p>}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3.5">
+                        {s.enrollment_no ? <span className="rounded-md bg-[#f4f8fe] px-2.5 py-1 font-mono text-[13.5px] font-bold text-[#082a63]">{s.enrollment_no}</span> : <span className="text-[#a9bde0]">—</span>}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3.5">
+                        {s.roll_no ? (
+                          <span className="rounded-md bg-emerald-50 px-2.5 py-1 font-mono text-[13.5px] font-bold text-emerald-800">{s.roll_no}</span>
+                        ) : (
+                          <span className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1 text-[12.5px] font-bold text-amber-700">Pending</span>
+                        )}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3.5 font-semibold text-[#3d5688]">{sessionOf(s)}</td>
+                      <td className="whitespace-nowrap px-4 py-3.5">
+                        <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-emerald-300 bg-emerald-100 px-3 py-1 text-[13px] font-bold text-emerald-800">
+                          <CheckCircle2 className="h-3.5 w-3.5" /> Enrolled
+                        </span>
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-3.5 text-right">
+                        <button
+                          onClick={() => openDetail(s)}
+                          className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-[#d3e1f5] bg-white px-4 text-[14.5px] font-bold text-[#082a63] transition hover:border-[#082a63] hover:bg-[#082a63] hover:text-white active:scale-95"
+                        >
+                          <Eye className="h-4 w-4" /> View
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* cards (phones / tablets) */}
+            <div className="grid grid-cols-1 gap-3 p-3 sm:p-4 md:grid-cols-2 lg:hidden">
+              {filtered.map((s) => (
+                <button key={s.id} onClick={() => openDetail(s)} className="group min-w-0 rounded-xl border border-[#d3e1f5] bg-white p-4 text-left transition hover:border-[#1b57d8] hover:shadow-sm">
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-[16px] font-extrabold text-emerald-800">{s.candidate_name?.charAt(0) || "S"}</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="break-words text-[16px] font-bold leading-snug text-[#082a63]">{s.candidate_name}</p>
+                      {s.father_name && <p className="break-words text-[13.5px] text-[#3d5688]">F: {s.father_name}</p>}
+                    </div>
+                    <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-[#8fb0e6] transition-transform group-hover:translate-x-0.5" />
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-emerald-300 bg-emerald-100 px-2.5 py-0.5 text-[12.5px] font-bold text-emerald-800">
+                      <CheckCircle2 className="h-3.5 w-3.5" /> Enrolled
+                    </span>
+                    {s.roll_no ? (
+                      <span className="rounded-md bg-emerald-50 px-2 py-0.5 font-mono text-[12.5px] font-bold text-emerald-800">Roll {s.roll_no}</span>
+                    ) : (
+                      <span className="rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-[12.5px] font-bold text-amber-700">Roll no. pending</span>
+                    )}
+                  </div>
+
+                  <div className="mt-2.5 space-y-0.5 text-[13.5px] text-[#3d5688]">
+                    {s.courses?.course_name && <p className="break-words font-semibold text-[#082a63]">{s.courses.course_name}</p>}
+                    <p>
+                      {s.enrollment_no && <span className="mr-3 font-mono">{s.enrollment_no}</span>}
+                      Session {sessionOf(s)}
+                    </p>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <div className="border-t border-[#e4edf9] bg-[#f8fbff] px-5 py-3 text-[13.5px] font-semibold text-[#3d5688]">
+              Showing {filtered.length} {filtered.length === 1 ? "student" : "students"}
+            </div>
+          </>
         )}
       </div>
     </div>

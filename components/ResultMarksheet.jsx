@@ -205,7 +205,7 @@ export default function ResultMarksheet({ data }) {
               {[
                 { label: "Total Marks", value: data.grandTotalObt, sub: `out of ${data.grandTotalMax}`, tone: "brand" },
                 { label: "Percentage", value: `${data.percentage}%`, sub: pass ? "Passed" : "Not passed", tone: "brand" },
-                { label: "Final Result", value: pass ? "✓ PASS" : "✗ FAIL", sub: pass ? "पास" : "नापास", tone: pass ? "brand" : "red", kok: true },
+                { label: "Final Result", value: pass ? "✓ PASS" : "✗ FAIL", sub: pass ? "उत्तीर्ण" : "अनुत्तीर्ण", tone: pass ? "brand" : "red", kok: true },
               ].map((b) => (
                 <div key={b.label} style={{
                   border: `1.5px solid ${b.tone === "red" ? "#dc2626" : BRAND}`, borderRadius: 6,

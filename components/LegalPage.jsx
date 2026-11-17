@@ -142,8 +142,8 @@ export function Bullets({ items }) {
 export function ReviewNote() {
   return (
     <p className="mt-8 rounded-md border border-[#f3d28a] bg-[#fff8e6] px-4 py-3 text-[13.5px] font-medium leading-relaxed text-[#5a4300]">
-      <b>Note for the website owner:</b> this page is general draft text. Have it reviewed by the Directorate of Education / legal
-      section and update it to match the actual practices of Goa State Open School before publishing.
+      <b>Note for the website owner:</b> this page is general draft text. Have it reviewed by your legal advisor
+      and update it to match the actual practices of Goa State Open School before publishing.
     </p>
   );
 }

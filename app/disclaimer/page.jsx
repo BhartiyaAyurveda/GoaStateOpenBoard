@@ -17,7 +17,7 @@ export default function DisclaimerPage() {
     >
       <PolicySection n="1" heading="General information">
         <p>
-          This website is maintained by Goa State Open School, Directorate of Education, Government of Goa, to provide information about
+          This website is maintained by Goa State Open School to provide information about
           its programmes, admissions, examinations and services. Every effort is made to keep the information accurate and up to
           date, but it is provided for general information only and does not constitute legal or professional advice.
         </p>

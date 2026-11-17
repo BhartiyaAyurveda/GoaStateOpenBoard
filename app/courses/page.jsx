@@ -28,7 +28,7 @@ export default async function CoursesPage() {
       <main id="main-content">
         <section className="bg-gradient-to-b from-[#dfeafa] to-white">
           <div className="mx-auto max-w-[1320px] px-4 py-10 sm:px-6 lg:py-14">
-            <p className="text-[13.5px] font-bold uppercase tracking-[0.2em] text-brand">Directorate of Education</p>
+            <p className="text-[13.5px] font-bold uppercase tracking-[0.2em] text-brand">Goa State Open School <span lang="kok" className="font-devanagari normal-case tracking-normal"> · गोंय राज्य मुक्त शाळा</span></p>
             <h1 className="mt-2 font-serif text-[34px] font-extrabold leading-tight tracking-tight text-ink sm:text-[42px]">Our Courses</h1>
             <div className="mt-3 flex items-center gap-2" aria-hidden="true">
               <span className="h-[3px] w-14 bg-brand" />

@@ -31,7 +31,7 @@ export default function RegisterStudentPage() {
   }, [draftId]);
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="space-y-1">
@@ -125,9 +125,9 @@ export default function RegisterStudentPage() {
             <div className="flex flex-wrap items-center justify-center gap-3 pt-3">
               <button
                 onClick={() => { setRegSuccess(null); loadStudents(); }}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#082a63] hover:bg-[#0b3a85] active:scale-95 text-white text-[15px] font-bold transition-all shadow-sm"
+                className="inline-flex h-12 items-center gap-2 px-6 rounded-xl bg-[#1b57d8] hover:bg-[#1245b8] active:scale-95 text-white text-[15px] font-bold transition-all shadow-sm"
               >
-                <UserPlus className="w-4 h-4 text-[#1b57d8]" />
+                <UserPlus className="w-4 h-4" />
                 <span>Register Another Student</span>
               </button>
               <Link href="/college/dashboard/registrations"

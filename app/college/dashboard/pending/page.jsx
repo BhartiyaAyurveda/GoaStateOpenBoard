@@ -2,39 +2,22 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import {
-  Clock,
-  Search,
-  RefreshCw,
-  Eye,
-  CheckCircle2,
-  Users,
-  MessageSquare,
-  ClipboardList,
-  X,
-  Send,
-} from "lucide-react";
+import { Search, RefreshCw, Eye, CheckCircle2, MessageSquare, ClipboardList, X, Send, ChevronRight } from "lucide-react";
 import { useDashboard, STATUS_LABELS } from "../DashboardContext";
+
+const fmtDate = (d) => (d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—");
 
 export default function PendingApprovalsPage() {
   const { students, loading, loadStudents, openDetail } = useDashboard();
-  const [searchTerm, setSearchTerm]                     = useState("");
-  const [filterType, setFilterType]                     = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState("all");
 
   const pendingStudents = useMemo(() => {
-    return students.filter(
-      (s) =>
-        s.status === "pending" ||
-        s.status === "submitted" ||
-        s.status === "under_review" ||
-        s.status === "query_raised"
-    );
+    return students.filter((s) => s.status === "pending" || s.status === "submitted" || s.status === "under_review" || s.status === "query_raised");
   }, [students]);
 
   const queryCount = pendingStudents.filter((s) => s.status === "query_raised").length;
-  const newSubmissionsCount = pendingStudents.filter(
-    (s) => s.status === "pending" || s.status === "submitted"
-  ).length;
+  const newSubmissionsCount = pendingStudents.filter((s) => s.status === "pending" || s.status === "submitted").length;
   const underReviewCount = pendingStudents.filter((s) => s.status === "under_review").length;
 
   const filtered = useMemo(() => {
@@ -58,292 +41,212 @@ export default function PendingApprovalsPage() {
     });
   }, [pendingStudents, filterType, searchTerm]);
 
+  const hasFilters = searchTerm || filterType !== "all";
+  const clearFilters = () => {
+    setSearchTerm("");
+    setFilterType("all");
+  };
+
+  const cards = [
+    { key: "new", label: "New submissions", short: "New", sub: "Awaiting nodal review", count: newSubmissionsCount, Icon: Send, tone: "bg-blue-50 text-blue-700", bar: "bg-blue-500" },
+    { key: "query", label: "Admin queries", short: "Queries", sub: "Action required from college", count: queryCount, Icon: MessageSquare, tone: "bg-orange-50 text-orange-700", bar: "bg-orange-500", pulse: queryCount > 0 },
+    { key: "review", label: "Under Board review", short: "In review", sub: "Board processing", count: underReviewCount, Icon: Eye, tone: "bg-violet-50 text-violet-700", bar: "bg-violet-500" },
+  ];
+
+  const actionLabel = (s) => (s.status === "query_raised" ? "Resolve query" : "Review & manage");
+  const actionCls = (s) =>
+    s.status === "query_raised" ? "bg-orange-600 hover:bg-orange-700" : "bg-[#1b57d8] hover:bg-[#1245b8]";
+
   return (
-    <div className="space-y-6 max-w-6xl">
-      {/* ── Page Header ── */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[13px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-800 border border-amber-300">
-              <Clock className="w-3.5 h-3.5 text-amber-700" />
-              Admissions Review Desk
-            </span>
-            <span className="text-[13px] sm:text-[15px] text-[#3d5688] font-semibold">
-              Pending Total: {pendingStudents.length}
-            </span>
-          </div>
-          <h1 className="text-xl sm:text-2xl font-bold text-[#082a63] tracking-tight">
-            Pending Approvals &amp; Queries
-          </h1>
-          <p className="text-[13px] sm:text-[15px] text-[#3d5688]">
-            Candidate applications requiring document review, roll number allocation, or admin query resolution.
+    <div className="min-w-0 space-y-5">
+      {/* Header */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-[24px] font-bold tracking-tight text-[#082a63] sm:text-[28px]">Pending Approvals &amp; Queries</h1>
+          <p className="text-[14.5px] text-[#3d5688] sm:text-[15.5px]">
+            {pendingStudents.length} pending · applications needing document review, roll number allocation or query resolution.
           </p>
         </div>
-
         <Link
           href="/college/dashboard/registrations"
-          className="inline-flex items-center gap-2 text-[13px] sm:text-[15px] text-[#082a63] hover:text-[#1b57d8] font-bold bg-white px-4 py-2.5 rounded-xl border border-[#d3e1f5] hover:border-[#1b57d8] shadow-xs transition-all shrink-0"
+          className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-[#d3e1f5] bg-white px-5 text-[14.5px] font-bold text-[#082a63] shadow-sm transition hover:border-[#1b57d8] hover:bg-[#f4f8fe]"
         >
-          <ClipboardList className="w-4 h-4 text-[#1245b8]" />
-          <span>All Applications</span>
+          <ClipboardList className="h-4 w-4 text-[#1245b8]" /> All applications
         </Link>
       </div>
 
-      {/* ── 3 Quick Action Metric Cards ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {/* Card 1: New Submissions */}
-        <button
-          onClick={() => setFilterType(filterType === "new" ? "all" : "new")}
-          className={`p-4 sm:p-4.5 rounded-2xl border text-left transition-all flex items-center justify-between ${
-            filterType === "new"
-              ? "bg-[#082a63] text-white border-[#082a63] shadow-sm"
-              : "bg-white text-[#082a63] border-[#d3e1f5] hover:border-[#1b57d8] hover:shadow-xs"
-          }`}
-        >
-          <div className="space-y-0.5">
-            <p className={`text-[13px] font-bold uppercase tracking-wider ${filterType === "new" ? "text-[#5db0f4]" : "text-[#3d5688]"}`}>
-              New Submissions
-            </p>
-            <p className="text-xl sm:text-2xl font-extrabold tracking-tight">{newSubmissionsCount}</p>
-            <p className={`text-[13px] ${filterType === "new" ? "text-white/70" : "text-[#8a97b3]"}`}>
-              Awaiting nodal review
-            </p>
-          </div>
-          <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${filterType === "new" ? "bg-white/10 text-[#5db0f4]" : "bg-blue-50 text-blue-700"}`}>
-            <Send className="w-4 h-4" />
-          </div>
-        </button>
-
-        {/* Card 2: Admin Queries Raised */}
-        <button
-          onClick={() => setFilterType(filterType === "query" ? "all" : "query")}
-          className={`p-4 sm:p-4.5 rounded-2xl border text-left transition-all flex items-center justify-between ${
-            filterType === "query"
-              ? "bg-[#082a63] text-white border-[#082a63] shadow-sm"
-              : "bg-white text-[#082a63] border-[#d3e1f5] hover:border-orange-400 hover:shadow-xs"
-          }`}
-        >
-          <div className="space-y-0.5">
-            <div className="flex items-center gap-1.5">
-              <p className={`text-[13px] font-bold uppercase tracking-wider ${filterType === "query" ? "text-[#5db0f4]" : "text-orange-700"}`}>
-                Admin Queries
+      {/* Metric / filter cards */}
+      <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+        {cards.map(({ key, label, short, sub, count, Icon, tone, bar, pulse }) => {
+          const isActive = filterType === key;
+          return (
+            <button
+              key={key}
+              onClick={() => setFilterType(isActive ? "all" : key)}
+              aria-pressed={isActive}
+              className={`relative flex flex-col gap-2 overflow-hidden rounded-2xl border p-3 text-left transition sm:p-4 ${
+                isActive ? "border-[#082a63] bg-[#082a63] text-white shadow-md" : "border-[#d3e1f5] bg-white text-[#082a63] hover:border-[#1b57d8] hover:shadow-sm"
+              }`}
+            >
+              {!isActive && <span className={`absolute inset-x-0 top-0 h-1 ${bar}`} aria-hidden="true" />}
+              <p className={`flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wide sm:text-[12.5px] sm:tracking-wider ${isActive ? "text-[#bcd8fb]" : "text-[#3d5688]"}`}>
+                <span className="sm:hidden">{short}</span>
+                <span className="hidden sm:inline">{label}</span>
+                {pulse && <span className="h-2 w-2 animate-pulse rounded-full bg-orange-500" />}
               </p>
-              {queryCount > 0 && (
-                <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
-              )}
-            </div>
-            <p className="text-xl sm:text-2xl font-extrabold tracking-tight text-orange-600">{queryCount}</p>
-            <p className={`text-[13px] ${filterType === "query" ? "text-white/70" : "text-[#8a97b3]"}`}>
-              Action required from college
-            </p>
-          </div>
-          <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${filterType === "query" ? "bg-white/10 text-[#5db0f4]" : "bg-orange-50 text-orange-700"}`}>
-            <MessageSquare className="w-4 h-4" />
-          </div>
-        </button>
-
-        {/* Card 3: Under Board Review */}
-        <button
-          onClick={() => setFilterType(filterType === "review" ? "all" : "review")}
-          className={`p-4 sm:p-4.5 rounded-2xl border text-left transition-all flex items-center justify-between ${
-            filterType === "review"
-              ? "bg-[#082a63] text-white border-[#082a63] shadow-sm"
-              : "bg-white text-[#082a63] border-[#d3e1f5] hover:border-violet-400 hover:shadow-xs"
-          }`}
-        >
-          <div className="space-y-0.5">
-            <p className={`text-[13px] font-bold uppercase tracking-wider ${filterType === "review" ? "text-[#5db0f4]" : "text-[#3d5688]"}`}>
-              Under Board Review
-            </p>
-            <p className="text-xl sm:text-2xl font-extrabold tracking-tight">{underReviewCount}</p>
-            <p className={`text-[13px] ${filterType === "review" ? "text-white/70" : "text-[#8a97b3]"}`}>
-              Board processing
-            </p>
-          </div>
-          <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${filterType === "review" ? "bg-white/10 text-[#5db0f4]" : "bg-violet-50 text-violet-700"}`}>
-            <Eye className="w-4 h-4" />
-          </div>
-        </button>
+              <div className="flex items-end justify-between gap-2">
+                <span className="text-[28px] font-extrabold leading-none tracking-tight sm:text-[32px]">{count}</span>
+                <span className={`hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:flex ${isActive ? "bg-white/15 text-white" : tone}`}>
+                  <Icon className="h-5 w-5" />
+                </span>
+              </div>
+              <p className={`hidden text-[13.5px] sm:block ${isActive ? "text-white/75" : "text-[#6b7ea3]"}`}>{sub}</p>
+            </button>
+          );
+        })}
       </div>
 
-      {/* ── Search & Filter Toolbar ── */}
-      <div className="bg-white rounded-2xl border border-[#d3e1f5] p-3.5 sm:p-4 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="relative flex-1 w-full">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#3d5688]" />
+      {/* Search */}
+      <div className="flex flex-col gap-3 rounded-2xl border border-[#d3e1f5] bg-white p-3 shadow-sm sm:flex-row sm:items-center">
+        <div className="relative min-w-0 flex-1" title="Search by name, phone or course">
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#3d5688]" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search pending candidate by name, phone, course…"
-            className="w-full pl-10 pr-9 py-2.5 text-[15px] rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] text-[#082a63] placeholder-[#8a97b3] focus:outline-none focus:ring-4 focus:ring-[#1b57d8]/15 focus:border-[#1b57d8] focus:bg-white transition-all font-medium"
+            placeholder="Search pending candidates…"
+            className="h-11 w-full rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] pl-10 pr-10 text-[15px] font-medium text-[#082a63] outline-none transition placeholder:text-[#8a97b3] focus:border-[#1b57d8] focus:bg-white focus:ring-4 focus:ring-[#1b57d8]/15"
           />
           {searchTerm && (
-            <button
-              onClick={() => setSearchTerm("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
-            >
-              <X className="w-3.5 h-3.5" />
+            <button onClick={() => setSearchTerm("")} aria-label="Clear search" className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-[#4a6090] hover:bg-[#eaf2fd]">
+              <X className="h-4 w-4" />
             </button>
           )}
         </div>
-
-        <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto text-[13px] sm:text-[15px] text-[#3d5688]">
-          <span className="font-semibold text-[#082a63]">
+        <div className="flex items-center justify-between gap-3 sm:justify-end">
+          <span className="text-[14.5px] font-semibold text-[#082a63]">
             {filtered.length} {filtered.length === 1 ? "applicant" : "applicants"}
           </span>
           <button
             onClick={() => loadStudents()}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#f4f8fe] border border-[#d3e1f5] hover:border-[#082a63] text-[#082a63] transition-all shadow-xs"
             title="Refresh"
+            className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl border border-[#d3e1f5] bg-white px-4 text-[14.5px] font-bold text-[#082a63] transition hover:bg-[#f4f8fe]"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-            <span className="font-bold text-[13px] sm:text-[15px]">Refresh</span>
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /> Refresh
           </button>
         </div>
       </div>
 
-      {/* ── Table Container ── */}
-      <div className="rounded-3xl bg-white border border-[#d3e1f5] shadow-xs overflow-hidden">
+      {/* List */}
+      <div className="overflow-hidden rounded-2xl border border-[#d3e1f5] bg-white shadow-sm">
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-3">
-            <div className="w-8 h-8 border-3 border-[#082a63]/20 border-t-[#082a63] rounded-full animate-spin" />
+          <div className="flex flex-col items-center justify-center gap-3 py-20">
+            <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#082a63]/20 border-t-[#082a63]" />
             <p className="text-[15px] font-semibold text-[#3d5688]">Fetching pending records…</p>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-[#3d5688] space-y-3">
-            <div className="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
-              <CheckCircle2 className="w-7 h-7" />
-            </div>
-            <div className="text-center space-y-1">
-              <p className="text-base font-bold text-[#082a63]">
-                {searchTerm || filterType !== "all"
-                  ? "No matching pending applications"
-                  : "All caught up! No pending applications"}
-              </p>
-              <p className="text-[13px] sm:text-[15px] text-[#3d5688] max-w-sm">
-                {searchTerm || filterType !== "all"
-                  ? "Try resetting your search query or switching the category filter."
-                  : "Every student registration under your college has been verified and processed by the council."}
-              </p>
-            </div>
-            {(searchTerm || filterType !== "all") && (
-              <button
-                onClick={() => {
-                  setSearchTerm("");
-                  setFilterType("all");
-                }}
-                className="text-[13px] sm:text-[15px] font-bold text-[#082a63] underline hover:text-[#1b57d8] transition-colors"
-              >
-                Clear active filters
+          <div className="flex flex-col items-center justify-center px-4 py-14 text-center sm:py-16">
+            <span className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200">
+              <CheckCircle2 className="h-8 w-8" />
+            </span>
+            <p className="text-[17px] font-bold text-[#082a63]">{hasFilters ? "No matching pending applications" : "All caught up. Nothing is pending"}</p>
+            <p className="mt-1 max-w-sm text-[14.5px] text-[#3d5688]">
+              {hasFilters ? "Try a different search or switch the category." : "Every student registration under your college has been verified and processed by the Board."}
+            </p>
+            {hasFilters && (
+              <button onClick={clearFilters} className="mt-5 h-11 rounded-xl border border-[#d3e1f5] px-6 text-[14.5px] font-bold text-[#082a63] transition hover:bg-[#f4f8fe]">
+                Clear filters
               </button>
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] text-left text-[13px] sm:text-[15px]">
-              <thead className="bg-[#f4f8fe] text-[#082a63] uppercase font-bold tracking-wider border-b border-[#d3e1f5] text-[13px]">
-                <tr>
-                  <th className="py-3.5 px-6">Candidate Details</th>
-                  <th className="py-3.5 px-4">Applied Course</th>
-                  <th className="py-3.5 px-4">Contact Phone</th>
-                  <th className="py-3.5 px-4">Application Status</th>
-                  <th className="py-3.5 px-4">Submission Date</th>
-                  <th className="py-3.5 px-6 text-right">Required Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#d3e1f5]/70">
-                {filtered.map((s) => {
-                  const st = STATUS_LABELS[s.status] || STATUS_LABELS.pending;
-                  const Icon = st.icon;
-                  const isQuery = s.status === "query_raised";
-                  return (
-                    <tr
-                      key={s.id}
-                      className={`hover:bg-[#f4f8fe]/60 transition-colors group ${
-                        isQuery ? "bg-orange-50/20" : ""
-                      }`}
-                    >
-                      {/* Candidate Column */}
-                      <td className="py-4 px-6">
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={`w-9 h-9 rounded-full font-extrabold text-[15px] flex items-center justify-center shrink-0 border ${
-                              isQuery
-                                ? "bg-orange-100 text-orange-800 border-orange-300"
-                                : "bg-amber-100 text-amber-800 border-amber-300"
-                            }`}
-                          >
-                            {s.candidate_name?.charAt(0) || "S"}
+          <>
+            {/* table (laptops) */}
+            <div className="hidden overflow-x-auto lg:block">
+              <table className="w-full text-left text-[15px]">
+                <thead className="border-b border-[#d3e1f5] bg-[#f4f8fe]">
+                  <tr className="text-[12.5px] font-bold uppercase tracking-wider text-[#4a6090]">
+                    <th className="whitespace-nowrap px-5 py-3.5">Candidate</th>
+                    <th className="whitespace-nowrap px-4 py-3.5">Course</th>
+                    <th className="whitespace-nowrap px-4 py-3.5">Phone</th>
+                    <th className="whitespace-nowrap px-4 py-3.5">Status</th>
+                    <th className="whitespace-nowrap px-4 py-3.5">Submitted</th>
+                    <th className="whitespace-nowrap px-5 py-3.5 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#e4edf9]">
+                  {filtered.map((s) => {
+                    const st = STATUS_LABELS[s.status] || STATUS_LABELS.pending;
+                    const Icon = st.icon;
+                    const isQuery = s.status === "query_raised";
+                    return (
+                      <tr key={s.id} className={`transition-colors hover:bg-[#f4f8fe] ${isQuery ? "bg-orange-50/40" : ""}`}>
+                        <td className="px-5 py-3.5">
+                          <div className="flex items-center gap-3">
+                            <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[15px] font-extrabold ${isQuery ? "bg-orange-100 text-orange-800" : "bg-amber-100 text-amber-800"}`}>
+                              {s.candidate_name?.charAt(0) || "S"}
+                            </span>
+                            <div className="min-w-0">
+                              <p className="font-bold leading-snug text-[#082a63]">{s.candidate_name}</p>
+                              <p className="text-[13.5px] text-[#3d5688]">{s.father_name ? `F: ${s.father_name}` : "—"}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-bold text-[#082a63] text-[15px] leading-snug">
-                              {s.candidate_name}
-                            </p>
-                            <p className="text-[13px] text-[#3d5688] mt-0.5">
-                              {s.father_name ? `F: ${s.father_name}` : "—"}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <p className="font-semibold leading-snug text-[#082a63]">{s.courses?.course_name || "—"}</p>
+                          <p className="text-[13.5px] text-[#3d5688]">{s.session_label || "Session 2026-27"}</p>
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3.5 font-mono text-[14px] text-[#082a63]">{s.phone || "—"}</td>
+                        <td className="whitespace-nowrap px-4 py-3.5">
+                          <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1 text-[13px] font-bold ${st.color}`}>
+                            <Icon className="h-3.5 w-3.5" /> {st.label}
+                          </span>
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3.5 text-[#3d5688]">{fmtDate(s.created_at)}</td>
+                        <td className="whitespace-nowrap px-5 py-3.5 text-right">
+                          <button onClick={() => openDetail(s)} className={`inline-flex h-10 items-center gap-1.5 rounded-xl px-4 text-[14.5px] font-bold text-white shadow-xs transition active:scale-95 ${actionCls(s)}`}>
+                            <Eye className="h-4 w-4" /> {actionLabel(s)}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
 
-                      {/* Course */}
-                      <td className="py-4 px-4 text-[#3d5688] font-semibold">
-                        <p className="text-[15px] text-[#082a63] font-semibold">
-                          {s.courses?.course_name || "—"}
-                        </p>
-                        <p className="text-[13px] text-[#3d5688] mt-0.5">
-                          {s.session_label || "Session 2026-27"}
-                        </p>
-                      </td>
-
-                      {/* Phone */}
-                      <td className="py-4 px-4 font-mono font-medium text-[#082a63] text-[15px]">
-                        {s.phone || "—"}
-                      </td>
-
-                      {/* Status */}
-                      <td className="py-4 px-4">
-                        <span
-                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[13px] font-bold border ${st.color}`}
-                        >
-                          <Icon className="w-3.5 h-3.5" />
-                          <span>{st.label}</span>
-                        </span>
-                      </td>
-
-                      {/* Date */}
-                      <td className="py-4 px-4 text-[#3d5688] text-[13px] sm:text-[15px]">
-                        {s.created_at ? (
-                          new Date(s.created_at).toLocaleDateString("en-IN", {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                          })
-                        ) : (
-                          "—"
-                        )}
-                      </td>
-
-                      {/* Action */}
-                      <td className="py-4 px-6 text-right">
-                        <button
-                          onClick={() => openDetail(s)}
-                          className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] sm:text-[15px] font-bold transition-all shadow-xs active:scale-95 ${
-                            isQuery
-                              ? "bg-orange-600 hover:bg-orange-700 text-white"
-                              : "bg-[#082a63] hover:bg-[#0b3a85] text-white"
-                          }`}
-                        >
-                          <Eye className="w-4 h-4" />
-                          <span>{isQuery ? "Resolve Query" : "Review & Manage"}</span>
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+            {/* cards (phones / tablets) */}
+            <div className="grid grid-cols-1 gap-3 p-3 sm:p-4 md:grid-cols-2 lg:hidden">
+              {filtered.map((s) => {
+                const st = STATUS_LABELS[s.status] || STATUS_LABELS.pending;
+                const Icon = st.icon;
+                const isQuery = s.status === "query_raised";
+                return (
+                  <div key={s.id} className={`min-w-0 rounded-xl border p-4 ${isQuery ? "border-orange-200 bg-orange-50/40" : "border-[#d3e1f5] bg-white"}`}>
+                    <div className="flex items-start gap-3">
+                      <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[16px] font-extrabold ${isQuery ? "bg-orange-100 text-orange-800" : "bg-amber-100 text-amber-800"}`}>
+                        {s.candidate_name?.charAt(0) || "S"}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="break-words text-[16px] font-bold leading-snug text-[#082a63]">{s.candidate_name}</p>
+                        <p className="break-words text-[13.5px] text-[#3d5688]">{[s.father_name && `F: ${s.father_name}`, s.phone].filter(Boolean).join(" · ") || "—"}</p>
+                      </div>
+                    </div>
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-0.5 text-[12.5px] font-bold ${st.color}`}>
+                        <Icon className="h-3.5 w-3.5" /> {st.label}
+                      </span>
+                      <span className="text-[13px] text-[#3d5688]">Submitted {fmtDate(s.created_at)}</span>
+                    </div>
+                    {s.courses?.course_name && <p className="mt-2 break-words text-[14px] font-semibold text-[#082a63]">{s.courses.course_name}</p>}
+                    <button onClick={() => openDetail(s)} className={`mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl text-[14.5px] font-bold text-white transition active:scale-95 ${actionCls(s)}`}>
+                      <Eye className="h-4 w-4" /> {actionLabel(s)} <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
     </div>

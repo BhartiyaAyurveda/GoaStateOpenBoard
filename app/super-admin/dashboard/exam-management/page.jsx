@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import AdminPageShell from "@/components/admin/AdminPageShell";
 import Select from "@/components/ui/Select";
+import { useConfirm } from "@/components/ui/ConfirmDialog";
 import { getNextSession, getPrevSession, get6DigitSession } from "@/lib/enrollment-roll-utils";
 
 const TABS = [
@@ -44,6 +45,34 @@ function Toast({ toast }) {
     </div>
   );
 }
+
+const TIMINGS = ["Morning (10:00 AM - 1:00 PM)", "Evening (2:00 PM - 5:00 PM)"];
+
+const YEARS = [
+  { yr: "1", label: "1st Year", icon: GraduationCap },
+  { yr: "2", label: "2nd Year", icon: Sparkles },
+  { yr: "3", label: "3rd Year", icon: Sparkles },
+];
+
+// 1st / 2nd / 3rd year switch shared by the tabs
+function YearToggle({ value, onChange, label = "Year" }) {
+  return (
+    <div className="min-w-0">
+      <span className="mb-1.5 block text-[13.5px] font-bold text-[#082a63]">{label}</span>
+      <div className="grid grid-cols-3 gap-1 rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] p-1">
+        {YEARS.map(({ yr, label: l, icon: Icon }) => (
+          <button key={yr} type="button" onClick={() => onChange(yr)}
+            className={`flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-[14.5px] font-bold transition ${value === yr ? "bg-[#082a63] text-white shadow-sm" : "text-[#3d5688] hover:bg-white"}`}>
+            <Icon className="hidden h-3.5 w-3.5 sm:block" /> {l}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const fieldCls = "h-11 w-full min-w-0 rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] px-3.5 text-[15px] text-[#082a63] outline-none placeholder:text-[#8a97b3] focus:border-[#1b57d8] focus:bg-white focus:ring-2 focus:ring-[#1b57d8]/15";
+const labelCls = "mb-1.5 block text-[13.5px] font-bold text-[#082a63]";
 
 // ── Shared Year-to-Session Transition Helper ───────────────
 async function advanceOrRecedeSession({
@@ -137,6 +166,7 @@ async function advanceOrRecedeSession({
 // TAB 1 — SUBJECTS
 // ══════════════════════════════════════════════════════════
 function SubjectsTab({
+  confirm,
   courses = [],
   sessions = [],
   setSessions,
@@ -220,7 +250,7 @@ function SubjectsTab({
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("Delete this subject? This cannot be undone.")) return;
+    if (!(await confirm({ title: "Delete subject?", message: "Marks and datesheet entries for this subject may be affected. This cannot be undone.", confirmLabel: "Delete", danger: true }))) return;
     const res = await fetch(`/api/admin/subjects/${id}`, { method: "DELETE" });
     const json = await res.json();
     if (!res.ok) showToast(json.error || "Failed to delete", "error");
@@ -508,108 +538,100 @@ function DatesheetTab({
     setSaving(false);
   };
 
-  const inputCls = "px-2 py-1 rounded-lg border border-[#d3e1f5] bg-[#f4f8fe] text-[15px] text-[#082a63] focus:outline-none focus:ring-1 focus:ring-[#1b57d8]";
+  const scheduled = rows.filter((r) => r.exam_date && r.exam_time).length;
+  const yearLabel = selectedYear === "1" ? "1st Year" : selectedYear === "2" ? "2nd Year" : "3rd Year";
+  const dateCls = "h-10 w-full min-w-0 rounded-lg border border-[#d3e1f5] bg-white px-2.5 text-[14.5px] text-[#082a63] outline-none focus:border-[#1b57d8] focus:ring-2 focus:ring-[#1b57d8]/15";
+  const timeOptions = (row) => [
+    { value: "", label: "No timing" },
+    ...TIMINGS.map((t) => ({ value: t, label: t })),
+    ...(row.exam_time && !TIMINGS.includes(row.exam_time) ? [{ value: row.exam_time, label: row.exam_time }] : []),
+  ];
+  const StatusPill = ({ row }) =>
+    row.exam_date && row.exam_time ? (
+      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[13px] font-bold text-emerald-700"><CheckCircle2 className="h-3.5 w-3.5" /> Set</span>
+    ) : (
+      <span className="inline-flex rounded-full bg-amber-100 px-2.5 py-0.5 text-[13px] font-bold text-amber-800">Pending</span>
+    );
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
+    <div className="min-w-0 space-y-5">
+      <div className="flex flex-col gap-4 rounded-2xl border border-[#d3e1f5] bg-white p-4 shadow-sm lg:flex-row lg:items-end lg:justify-between">
         <FilterBar courses={courses} sessions={sessions} selectedCourse={selectedCourse} selectedSession={selectedSession} onCourseChange={setSelectedCourse} onSessionChange={setSelectedSession} />
-
-        {selectedCourse && selectedSession && (
-          <div className="flex items-center gap-2">
-            <span className="text-[15px] font-bold uppercase tracking-wider text-[#3d5688]">Year:</span>
-            <div className="inline-flex rounded-xl bg-[#f4f8fe] p-1 border border-[#d3e1f5]">
-              {[
-                { yr: "1", label: "1st Year", icon: GraduationCap },
-                { yr: "2", label: "2nd Year", icon: Sparkles },
-                { yr: "3", label: "3rd Year", icon: Sparkles },
-              ].map(({ yr, label, icon: Icon }) => (
-                <button
-                  key={yr}
-                  type="button"
-                  onClick={() => handleYearChange(yr)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[15px] font-bold transition-all ${
-                    selectedYear === yr
-                      ? "bg-[#082a63] text-white shadow-sm"
-                      : "text-[#3d5688] hover:text-[#082a63] hover:bg-white/60"
-                  }`}
-                >
-                  <Icon className="w-3.5 h-3.5" />
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        {selectedCourse && selectedSession && <YearToggle value={selectedYear} onChange={handleYearChange} />}
       </div>
 
       {selectedCourse && selectedSession && (
         <>
           {loading ? (
-            <div className="flex items-center justify-center py-10"><RefreshCw className="w-5 h-5 animate-spin text-[#1b57d8]" /></div>
+            <div className="flex items-center justify-center py-12"><RefreshCw className="h-6 w-6 animate-spin text-[#1b57d8]" /></div>
           ) : rows.length === 0 ? (
-            <div className="text-center py-10 text-[#3d5688] text-[17px]">No subjects found for {selectedYear === "1" ? "1st Year" : selectedYear === "2" ? "2nd Year" : "3rd Year"}. Add subjects in Subjects tab first.</div>
+            <div className="rounded-2xl border border-dashed border-[#b9cbe6] bg-white px-4 py-12 text-center">
+              <Calendar className="mx-auto mb-3 h-10 w-10 text-[#a9bde0]" />
+              <p className="text-[16px] font-bold text-[#082a63]">No subjects for {yearLabel}</p>
+              <p className="mt-1 text-[14px] text-[#4a6090]">Add subjects in the Subjects tab first, then set their dates here.</p>
+            </div>
           ) : (
-            <div className="bg-white rounded-xl border border-[#d3e1f5] overflow-hidden">
-              <div className="bg-[#eaf2fd] px-4 py-2.5 border-b border-[#d3e1f5] flex items-center justify-between gap-3 flex-wrap">
-                <p className="text-[15px] font-bold text-[#082a63] uppercase">Exam Schedule • {selectedYear === "1" ? "1st Year" : selectedYear === "2" ? "2nd Year" : "3rd Year"}</p>
-                <div className="flex items-center gap-2">
-                  <select
-                    defaultValue=""
-                    onChange={e => {
-                      if (e.target.value) {
-                        setRows(r => r.map(row => ({ ...row, exam_time: e.target.value })));
-                        e.target.value = "";
-                      }
-                    }}
-                    className="px-2.5 py-1.5 rounded-lg border border-[#d3e1f5] bg-white text-[15px] font-semibold text-[#082a63] focus:outline-none focus:ring-1 focus:ring-[#1b57d8]"
-                  >
-                    <option value="" disabled>Set time for all...</option>
-                    <option value="Morning (10:00 AM - 1:00 PM)">All Morning (10:00 AM - 1:00 PM)</option>
-                    <option value="Evening (2:00 PM - 5:00 PM)">All Evening (2:00 PM - 5:00 PM)</option>
-                  </select>
-                  <button onClick={handleSave} disabled={saving} className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-[#082a63] text-white text-[15px] font-bold hover:bg-[#0b3a85] disabled:opacity-60"><Save className="w-3.5 h-3.5" />{saving ? "Saving..." : "Save Datesheet"}</button>
+            <div className="overflow-hidden rounded-2xl border border-[#d3e1f5] bg-white shadow-sm">
+              <div className="flex flex-col gap-3 border-b border-[#d3e1f5] bg-[#f4f8fe] px-4 py-3.5 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
+                <div className="min-w-0">
+                  <p className="text-[16px] font-bold text-[#082a63]">Exam schedule · {yearLabel}</p>
+                  <p className="text-[13.5px] text-[#3d5688]">{scheduled} of {rows.length} subjects scheduled</p>
+                </div>
+                <div className="grid grid-cols-1 gap-2 sm:flex sm:items-center">
+                  <Select size="lg" ariaLabel="Set time for all subjects" placeholder="Set time for all…" className="sm:w-64" align="right" value=""
+                    onChange={(v) => v && setRows((r) => r.map((row) => ({ ...row, exam_time: v })))}
+                    options={TIMINGS.map((t) => ({ value: t, label: `All ${t}` }))} />
+                  <button onClick={handleSave} disabled={saving}
+                    className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-[#1b57d8] px-6 text-[15px] font-bold text-white transition hover:bg-[#1245b8] disabled:opacity-60">
+                    <Save className="h-4 w-4" /> {saving ? "Saving…" : "Save Datesheet"}
+                  </button>
                 </div>
               </div>
-              <table className="w-full text-[15px]">
-                <thead className="border-b border-[#d3e1f5] bg-[#f4f8fe]">
-                  <tr>
-                    <th className="px-4 py-2.5 text-left font-bold text-[#082a63] uppercase">Subject</th>
-                    <th className="px-4 py-2.5 text-left font-bold text-[#082a63] uppercase">Code</th>
-                    <th className="px-4 py-2.5 text-left font-bold text-[#082a63] uppercase">Exam Date</th>
-                    <th className="px-4 py-2.5 text-left font-bold text-[#082a63] uppercase">Exam Time</th>
-                    <th className="px-4 py-2.5 text-center font-bold text-[#082a63] uppercase">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#eaf2fd]">
-                  {rows.map((row, i) => (
-                    <tr key={row.id} className="hover:bg-[#f4f8fe]">
-                      <td className="px-4 py-2.5 font-semibold text-[#082a63]">{row.subject_name}</td>
-                      <td className="px-4 py-2.5 text-[#3d5688]">{row.subject_code || "—"}</td>
-                      <td className="px-4 py-2.5"><input type="date" value={row.exam_date || ""} onChange={e => update(i, "exam_date", e.target.value)} className={inputCls} /></td>
-                      <td className="px-4 py-2.5">
-                        <select
-                          value={row.exam_time || ""}
-                          onChange={e => update(i, "exam_time", e.target.value)}
-                          className={inputCls}
-                        >
-                          <option value="">— Select Timing —</option>
-                          <option value="Morning (10:00 AM - 1:00 PM)">Morning (10:00 AM - 1:00 PM)</option>
-                          <option value="Evening (2:00 PM - 5:00 PM)">Evening (2:00 PM - 5:00 PM)</option>
-                          {row.exam_time && !["Morning (10:00 AM - 1:00 PM)", "Evening (2:00 PM - 5:00 PM)"].includes(row.exam_time) && (
-                            <option value={row.exam_time}>{row.exam_time}</option>
-                          )}
-                        </select>
-                      </td>
-                      <td className="px-4 py-2.5 text-center">
-                        {row.exam_date && row.exam_time
-                          ? <span className="inline-flex items-center gap-1 text-emerald-600 font-bold"><CheckCircle2 className="w-3.5 h-3.5" />Set</span>
-                          : <span className="text-[#4a6090]">Pending</span>}
-                      </td>
+
+              {/* table (laptops) */}
+              <div className="hidden lg:block">
+                <table className="w-full text-left text-[15px]">
+                  <thead className="border-b border-[#d3e1f5]">
+                    <tr className="text-[12.5px] font-bold uppercase tracking-wider text-[#4a6090]">
+                      <th className="px-5 py-3">Subject</th>
+                      <th className="px-3 py-3">Code</th>
+                      <th className="w-56 px-3 py-3">Exam date</th>
+                      <th className="w-72 px-3 py-3">Exam time</th>
+                      <th className="px-5 py-3 text-center">Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-[#e4edf9]">
+                    {rows.map((row, i) => (
+                      <tr key={row.id} className="transition-colors hover:bg-[#f4f8fe]">
+                        <td className="px-5 py-3 font-bold text-[#082a63]">{row.subject_name}</td>
+                        <td className="px-3 py-3">{row.subject_code ? <span className="rounded-md bg-[#eaf2fd] px-2 py-0.5 font-mono text-[13px] font-bold text-[#1245b8]">{row.subject_code}</span> : <span className="text-[#8a97b3]">—</span>}</td>
+                        <td className="px-3 py-3"><input type="date" value={row.exam_date || ""} onChange={(e) => update(i, "exam_date", e.target.value)} className={dateCls} /></td>
+                        <td className="px-3 py-3"><Select ariaLabel={`Exam time for ${row.subject_name}`} placeholder="Select timing" value={row.exam_time || ""} onChange={(v) => update(i, "exam_time", v)} options={timeOptions(row)} /></td>
+                        <td className="px-5 py-3 text-center"><StatusPill row={row} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* cards (mobile / tablet) */}
+              <div className="grid grid-cols-1 gap-3 p-3 sm:p-4 md:grid-cols-2 lg:hidden">
+                {rows.map((row, i) => (
+                  <div key={row.id} className="min-w-0 rounded-xl border border-[#d3e1f5] bg-white p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="break-words text-[16px] font-bold text-[#082a63]">{row.subject_name}</p>
+                        {row.subject_code && <span className="mt-1 inline-block rounded-md bg-[#eaf2fd] px-2 py-0.5 font-mono text-[12.5px] font-bold text-[#1245b8]">{row.subject_code}</span>}
+                      </div>
+                      <StatusPill row={row} />
+                    </div>
+                    <div className="mt-3 space-y-3">
+                      <label className="block"><span className={labelCls}>Exam date</span><input type="date" value={row.exam_date || ""} onChange={(e) => update(i, "exam_date", e.target.value)} className={fieldCls} /></label>
+                      <div><span className={labelCls}>Exam time</span><Select size="lg" ariaLabel={`Exam time for ${row.subject_name}`} placeholder="Select timing" value={row.exam_time || ""} onChange={(v) => update(i, "exam_time", v)} options={timeOptions(row)} /></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </>
@@ -622,6 +644,7 @@ function DatesheetTab({
 // TAB 3 — ROLL NUMBERS (PROCESS-DRIVEN WORKFLOW)
 // ══════════════════════════════════════════════════════════
 function RollNumbersTab({
+  confirm,
   courses = [],
   sessions = [],
   setSessions,
@@ -755,7 +778,7 @@ function RollNumbersTab({
 
   const handleUnallot = async (id) => {
     const yrLabel = targetYear === "3" ? "3rd Year " : targetYear === "2" ? "2nd Year " : "";
-    if (!confirm(`Remove ${yrLabel}roll number for this student? Their marks and admit card may also be cleared.`)) return;
+    if (!(await confirm({ title: "Remove roll number?", message: `Remove the ${yrLabel}roll number of this student? Their marks and admit card may also be cleared.`, confirmLabel: "Remove", danger: true }))) return;
     try {
       const res = await fetch("/api/admin/roll-numbers/unallot", {
         method: "POST",
@@ -875,50 +898,10 @@ function RollNumbersTab({
           )}
 
           {/* ── 2. Target Year Toggle & Top Actions ── */}
-          <div className="bg-white rounded-2xl border border-[#d3e1f5] p-4 flex flex-wrap items-center justify-between gap-4 shadow-sm">
-            <div className="flex items-center gap-3">
-              <span className="text-[15px] font-bold uppercase tracking-wider text-[#3d5688]">Target Year:</span>
-              <div className="inline-flex rounded-xl bg-[#f4f8fe] p-1 border border-[#d3e1f5]">
-                <button
-                  type="button"
-                  onClick={() => handleTargetYearChange("1")}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[15px] font-bold transition-all ${
-                    targetYear === "1"
-                      ? "bg-[#082a63] text-white shadow-sm"
-                      : "text-[#3d5688] hover:text-[#082a63] hover:bg-white/60"
-                  }`}
-                >
-                  <GraduationCap className="w-4 h-4" />
-                  1st Year (roll_no)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleTargetYearChange("2")}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[15px] font-bold transition-all ${
-                    targetYear === "2"
-                      ? "bg-[#082a63] text-white shadow-sm"
-                      : "text-[#3d5688] hover:text-[#082a63] hover:bg-white/60"
-                  }`}
-                >
-                  <Sparkles className="w-4 h-4 text-[#1b57d8]" />
-                  2nd Year (roll_no_2nd_year)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleTargetYearChange("3")}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[15px] font-bold transition-all ${
-                    targetYear === "3"
-                      ? "bg-[#082a63] text-white shadow-sm"
-                      : "text-[#3d5688] hover:text-[#082a63] hover:bg-white/60"
-                  }`}
-                >
-                  <Sparkles className="w-4 h-4 text-emerald-400" />
-                  3rd Year (roll_no_3rd_year)
-                </button>
-              </div>
-            </div>
+          <div className="bg-white rounded-2xl border border-[#d3e1f5] p-4 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between shadow-sm">
+            <YearToggle label="Target year" value={targetYear} onChange={handleTargetYearChange} />
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <a
                 href={`/super-admin/dashboard/admit-cards/bulk?exam_session_id=${selectedSession}`}
                 target="_blank"
@@ -1003,7 +986,7 @@ function RollNumbersTab({
           <div className="bg-white rounded-2xl border border-[#d3e1f5] overflow-hidden shadow-sm">
             {/* Sub-Tabs Header */}
             <div className="bg-[#f4f8fe] px-5 py-3 border-b border-[#d3e1f5] flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() => {
@@ -1017,7 +1000,7 @@ function RollNumbersTab({
                   }`}
                 >
                   <Clock className="w-3.5 h-3.5" />
-                  ⏳ Pending Allotment ({currentPendingCount})
+                  Pending Allotment ({currentPendingCount})
                 </button>
                 <button
                   type="button"
@@ -1032,12 +1015,12 @@ function RollNumbersTab({
                   }`}
                 >
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  ✅ Allotted Students ({currentAllottedCount})
+                  Allotted Students ({currentAllottedCount})
                 </button>
               </div>
 
               {/* Search box */}
-              <div className="relative w-64">
+              <div className="relative w-full sm:w-64">
                 <Search className="w-3.5 h-3.5 text-[#4a6090] absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
@@ -1427,66 +1410,107 @@ function ResultsTab({
     ? students.filter(s => s.course === selectedCourse)
     : students;
 
+  const markCls = "inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#1b57d8] px-3.5 py-2 text-[14px] font-bold text-white transition hover:bg-[#1245b8]";
+  const openMarks = (s) => router.push(`/super-admin/dashboard/exam-management/results/${s.id}${s.target_year ? `?year=${s.target_year}` : ""}`);
+  const PublishBtn = ({ s }) =>
+    s.result_published_at ? (
+      <button onClick={() => handlePublish(s, false)} disabled={publishing === s.id}
+        className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3.5 py-2 text-[14px] font-bold text-red-700 transition hover:bg-red-100 disabled:opacity-60">
+        Unpublish
+      </button>
+    ) : (
+      <button onClick={() => handlePublish(s, true)} disabled={publishing === s.id}
+        className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2 text-[14px] font-bold text-emerald-700 transition hover:bg-emerald-100 disabled:opacity-60">
+        <CheckCircle2 className="h-4 w-4" /> Publish
+      </button>
+    );
+
   return (
-    <div className="space-y-5">
-      <FilterBar courses={courses} sessions={sessions} selectedCourse={selectedCourse} selectedSession={selectedSession} onCourseChange={setSelectedCourse} onSessionChange={setSelectedSession} />
+    <div className="min-w-0 space-y-5">
+      <div className="rounded-2xl border border-[#d3e1f5] bg-white p-4 shadow-sm">
+        <FilterBar courses={courses} sessions={sessions} selectedCourse={selectedCourse} selectedSession={selectedSession} onCourseChange={setSelectedCourse} onSessionChange={setSelectedSession} />
+      </div>
 
       {selectedSession && (
-        <div className="bg-white rounded-xl border border-[#d3e1f5] overflow-hidden">
-          <div className="bg-[#eaf2fd] px-4 py-2.5 border-b border-[#d3e1f5] flex items-center justify-between">
-            <p className="text-[15px] font-bold text-[#082a63] uppercase">Students with Admit Cards ({filteredStudents.length})</p>
-            <button onClick={load} className="p-1.5 rounded-lg hover:bg-[#d3e1f5]"><RefreshCw className={`w-3.5 h-3.5 text-[#3d5688] ${loading ? "animate-spin" : ""}`} /></button>
+        <div className="overflow-hidden rounded-2xl border border-[#d3e1f5] bg-white shadow-sm">
+          <div className="flex items-center justify-between gap-3 border-b border-[#d3e1f5] bg-[#f4f8fe] px-4 py-3.5 sm:px-5">
+            <div className="min-w-0">
+              <p className="text-[16px] font-bold text-[#082a63]">Students with admit cards</p>
+              <p className="text-[13.5px] text-[#3d5688]">{filteredStudents.length} {filteredStudents.length === 1 ? "student" : "students"} · {filteredStudents.filter((s) => s.result_published_at).length} published</p>
+            </div>
+            <button onClick={load} aria-label="Refresh" title="Refresh"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#d3e1f5] bg-white text-[#082a63] transition hover:bg-[#f4f8fe]">
+              <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            </button>
           </div>
+
           {loading ? (
-            <div className="flex items-center justify-center py-10"><RefreshCw className="w-5 h-5 animate-spin text-[#1b57d8]" /></div>
+            <div className="flex items-center justify-center py-12"><RefreshCw className="h-6 w-6 animate-spin text-[#1b57d8]" /></div>
           ) : filteredStudents.length === 0 ? (
-            <div className="text-center py-10 text-[#3d5688] text-[17px]">No students found.</div>
+            <div className="px-4 py-12 text-center">
+              <BarChart2 className="mx-auto mb-3 h-10 w-10 text-[#a9bde0]" />
+              <p className="text-[16px] font-bold text-[#082a63]">No students found</p>
+              <p className="mt-1 text-[14px] text-[#4a6090]">Students appear here once their roll numbers are allotted.</p>
+            </div>
           ) : (
-            <table className="w-full text-[15px]">
-              <thead className="border-b border-[#d3e1f5] bg-[#f4f8fe]">
-                <tr>
-                  <th className="px-4 py-2.5 text-left font-bold text-[#082a63] uppercase">Roll No.</th>
-                  <th className="px-4 py-2.5 text-left font-bold text-[#082a63] uppercase">Name</th>
-                  <th className="px-4 py-2.5 text-left font-bold text-[#082a63] uppercase">Course</th>
-                  <th className="px-4 py-2.5 text-center font-bold text-[#082a63] uppercase">Status</th>
-                  <th className="px-4 py-2.5 text-right font-bold text-[#082a63] uppercase">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#eaf2fd]">
-                {filteredStudents.map(s => (
-                  <tr key={s.id} className="hover:bg-[#f4f8fe]">
-                    <td className="px-4 py-2.5 font-bold text-[#1b57d8]">
-                      {s.roll_no}
-                      {s.year_label && (
-                        <span className="ml-1.5 px-1.5 py-0.5 rounded text-[13px] font-semibold bg-[#eaf2fd] text-[#3d5688]">
-                          {s.year_label}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-2.5 font-semibold text-[#082a63]">{s.candidate_name}</td>
-                    <td className="px-4 py-2.5 text-[#3d5688]">{s.course}</td>
-                    <td className="px-4 py-2.5 text-center">{statusBadge(s)}</td>
-                    <td className="px-4 py-2.5 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <button onClick={() => router.push(`/super-admin/dashboard/exam-management/results/${s.id}${s.target_year ? `?year=${s.target_year}` : ""}`)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#082a63] text-white text-[14px] font-bold hover:bg-[#0b3a85]">
-                          <Pencil className="w-3 h-3" />Enter Marks
-                        </button>
-                        {s.result_published_at ? (
-                          <button onClick={() => handlePublish(s, false)} disabled={publishing === s.id} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-50 text-red-700 text-[14px] font-bold hover:bg-red-100 disabled:opacity-60">
-                            Unpublish
-                          </button>
-                        ) : (
-                          <button onClick={() => handlePublish(s, true)} disabled={publishing === s.id} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-[14px] font-bold hover:bg-emerald-100 disabled:opacity-60">
-                            <CheckCircle2 className="w-3 h-3" />Publish
-                          </button>
-                        )}
+            <>
+              {/* table (laptops) */}
+              <div className="hidden overflow-x-auto lg:block">
+                <table className="w-full text-left text-[15px]">
+                  <thead className="border-b border-[#d3e1f5]">
+                    <tr className="text-[12.5px] font-bold uppercase tracking-wider text-[#4a6090]">
+                      <th className="px-5 py-3">Roll no.</th>
+                      <th className="px-3 py-3">Name</th>
+                      <th className="px-3 py-3">Course</th>
+                      <th className="px-3 py-3 text-center">Status</th>
+                      <th className="px-5 py-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#e4edf9]">
+                    {filteredStudents.map((s) => (
+                      <tr key={s.id} className="transition-colors hover:bg-[#f4f8fe]">
+                        <td className="whitespace-nowrap px-5 py-3 font-bold text-[#1245b8]">
+                          {s.roll_no}
+                          {s.year_label && <span className="ml-1.5 rounded bg-[#eaf2fd] px-1.5 py-0.5 text-[12.5px] font-semibold text-[#3d5688]">{s.year_label}</span>}
+                        </td>
+                        <td className="px-3 py-3 font-bold text-[#082a63]">{s.candidate_name}</td>
+                        <td className="px-3 py-3 text-[#3d5688]">{s.course}</td>
+                        <td className="px-3 py-3 text-center">{statusBadge(s)}</td>
+                        <td className="px-5 py-3">
+                          <div className="flex items-center justify-end gap-2">
+                            <button onClick={() => openMarks(s)} className={markCls}><Pencil className="h-4 w-4" /> Enter Marks</button>
+                            <PublishBtn s={s} />
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* cards (mobile / tablet) */}
+              <div className="grid grid-cols-1 gap-3 p-3 sm:p-4 md:grid-cols-2 lg:hidden">
+                {filteredStudents.map((s) => (
+                  <div key={s.id} className="min-w-0 rounded-xl border border-[#d3e1f5] bg-white p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="break-words text-[16px] font-bold text-[#082a63]">{s.candidate_name}</p>
+                        <p className="mt-0.5 text-[14px] font-bold text-[#1245b8]">
+                          {s.roll_no}
+                          {s.year_label && <span className="ml-1.5 rounded bg-[#eaf2fd] px-1.5 py-0.5 text-[12.5px] font-semibold text-[#3d5688]">{s.year_label}</span>}
+                        </p>
+                        <p className="mt-0.5 break-words text-[14px] text-[#3d5688]">{s.course}</p>
                       </div>
-                    </td>
-                  </tr>
+                      {statusBadge(s)}
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      <button onClick={() => openMarks(s)} className={markCls}><Pencil className="h-4 w-4" /> Enter Marks</button>
+                      <PublishBtn s={s} />
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            </>
           )}
         </div>
       )}
@@ -1498,7 +1522,7 @@ function ResultsTab({
 // ══════════════════════════════════════════════════════════
 // CENTERS TAB
 // ══════════════════════════════════════════════════════════
-function CentersTab({ showToast }) {
+function CentersTab({ showToast, confirm }) {
   const [centers, setCenters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
@@ -1529,7 +1553,7 @@ function CentersTab({ showToast }) {
   };
 
   const deleteCenter = async (id) => {
-    if (!confirm("Delete this exam center?")) return;
+    if (!(await confirm({ title: "Delete exam center?", message: "This cannot be undone.", confirmLabel: "Delete", danger: true }))) return;
     const res = await fetch(`/api/admin/exam-centers/${id}`, { method: "DELETE" });
     const d = await res.json();
     if (d.ok) { showToast("Center deleted."); load(); }
@@ -1547,83 +1571,84 @@ function CentersTab({ showToast }) {
     setAdding(false);
   };
 
-  if (loading) return <div className="flex justify-center py-16"><div className="w-8 h-8 border-2 border-[#082a63]/20 border-t-[#082a63] rounded-full animate-spin" /></div>;
+  if (loading) return <div className="flex justify-center py-16"><RefreshCw className="h-6 w-6 animate-spin text-[#1b57d8]" /></div>;
+
+  const addFields = [
+    { key: "center_name", label: "Center name", placeholder: "e.g. Panaji Exam Hall", required: true },
+    { key: "center_code", label: "Center code", placeholder: "e.g. GOA01", required: true },
+    { key: "city", label: "City", placeholder: "e.g. Panaji" },
+    { key: "address", label: "Address", placeholder: "Street, locality, pin code" },
+  ];
 
   return (
-    <div className="space-y-6">
-      {/* Add Form */}
-      <div className="bg-white rounded-2xl border border-[#d3e1f5] p-5">
-        <h3 className="text-[17px] font-bold text-[#082a63] mb-4 flex items-center gap-2"><Plus className="w-4 h-4" /> Add Exam Center</h3>
-        <form onSubmit={addCenter} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {[
-            { key: "center_name", label: "Center Name *", placeholder: "e.g. Delhi Centre" },
-            { key: "center_code", label: "Center Code *", placeholder: "e.g. DEL01" },
-            { key: "city", label: "City", placeholder: "e.g. New Delhi" },
-            { key: "address", label: "Address", placeholder: "Full address" },
-          ].map(f => (
-            <div key={f.key}>
-              <label className="block text-[14px] font-bold text-[#3d5688] uppercase mb-1">{f.label}</label>
-              <input value={newForm[f.key]} onChange={e => setNewForm(p => ({ ...p, [f.key]: e.target.value }))}
-                placeholder={f.placeholder}
-                className="w-full px-3 py-2 rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] text-[17px] text-[#082a63] focus:outline-none focus:ring-2 focus:ring-[#1b57d8]" />
-            </div>
+    <div className="min-w-0 space-y-5">
+      <form onSubmit={addCenter} className="rounded-2xl border border-[#d3e1f5] bg-white p-4 shadow-sm sm:p-5">
+        <h3 className="mb-4 flex items-center gap-2 text-[17px] font-bold text-[#082a63]">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#eaf2fd] text-[#1b57d8]"><Plus className="h-4 w-4" /></span>
+          Add Exam Center
+        </h3>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {addFields.map((f) => (
+            <label key={f.key} className="block min-w-0">
+              <span className={labelCls}>{f.label} {f.required && <span className="text-red-500">*</span>}</span>
+              <input value={newForm[f.key]} onChange={(e) => setNewForm((p) => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} className={fieldCls} />
+            </label>
           ))}
-          <div className="sm:col-span-2 lg:col-span-4 flex justify-end">
-            <button type="submit" disabled={adding} className="px-5 py-2 rounded-xl bg-[#082a63] text-white text-[15px] font-bold hover:bg-[#0b3a85] transition-all disabled:opacity-60 flex items-center gap-1.5">
-              <Plus className="w-3.5 h-3.5" /> {adding ? "Adding..." : "Add Center"}
-            </button>
-          </div>
-        </form>
+        </div>
+        <button type="submit" disabled={adding}
+          className="mt-4 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-[#1b57d8] px-6 text-[15px] font-bold text-white transition hover:bg-[#1245b8] disabled:opacity-60 sm:w-auto">
+          <Plus className="h-4 w-4" /> {adding ? "Adding…" : "Add Center"}
+        </button>
+      </form>
+
+      <div className="flex items-center justify-between">
+        <p className="text-[15px] font-bold text-[#082a63]">Exam centers <span className="ml-1 rounded-full bg-[#eaf2fd] px-2.5 py-0.5 text-[13px] text-[#1245b8]">{centers.length}</span></p>
       </div>
 
-      {/* Centers list */}
-      <div className="bg-white rounded-2xl border border-[#d3e1f5] overflow-hidden">
-        <div className="px-5 py-4 border-b border-[#d3e1f5]">
-          <p className="text-[17px] font-bold text-[#082a63]">Exam Centers ({centers.length})</p>
+      {centers.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-[#b9cbe6] bg-white px-4 py-12 text-center">
+          <MapPin className="mx-auto mb-3 h-10 w-10 text-[#a9bde0]" />
+          <p className="text-[16px] font-bold text-[#082a63]">No exam centers yet</p>
+          <p className="mt-1 text-[14px] text-[#4a6090]">Add your first center using the form above.</p>
         </div>
-        {centers.length === 0 && (
-          <div className="p-10 text-center text-[17px] text-[#3d5688]">No exam centers added yet.</div>
-        )}
-        <div className="divide-y divide-[#d3e1f5]">
-          {centers.map(c => (
-            <div key={c.id} className="p-4">
+      ) : (
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          {centers.map((c) => (
+            <div key={c.id} className="min-w-0 rounded-2xl border border-[#d3e1f5] bg-white p-4 shadow-sm">
               {editingId === c.id ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                  {[
-                    { key: "center_name", label: "Name" },
-                    { key: "center_code", label: "Code" },
-                    { key: "city", label: "City" },
-                    { key: "address", label: "Address" },
-                  ].map(f => (
-                    <div key={f.key}>
-                      <label className="block text-[14px] font-bold text-[#3d5688] uppercase mb-1">{f.label}</label>
-                      <input value={editForm[f.key]} onChange={e => setEditForm(p => ({ ...p, [f.key]: e.target.value }))}
-                        className="w-full px-3 py-2 rounded-xl border border-[#1b57d8] bg-white text-[17px] text-[#082a63] focus:outline-none focus:ring-2 focus:ring-[#1b57d8]" />
-                    </div>
+                <div className="space-y-3">
+                  {[{ key: "center_name", label: "Name" }, { key: "center_code", label: "Code" }, { key: "city", label: "City" }, { key: "address", label: "Address" }].map((f) => (
+                    <label key={f.key} className="block">
+                      <span className={labelCls}>{f.label}</span>
+                      <input value={editForm[f.key]} onChange={(e) => setEditForm((p) => ({ ...p, [f.key]: e.target.value }))} className={fieldCls} />
+                    </label>
                   ))}
-                  <div className="sm:col-span-2 lg:col-span-4 flex gap-2 justify-end">
-                    <button onClick={() => setEditingId(null)} className="px-4 py-1.5 rounded-xl border border-[#d3e1f5] text-[15px] font-bold text-[#3d5688] hover:bg-[#eaf2fd]">Cancel</button>
-                    <button onClick={saveEdit} disabled={saving} className="px-4 py-1.5 rounded-xl bg-[#1b57d8] text-white text-[15px] font-bold hover:bg-[#1245b8] disabled:opacity-60 flex items-center gap-1.5">
-                      <Save className="w-3.5 h-3.5" /> {saving ? "Saving..." : "Save"}
-                    </button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button onClick={saveEdit} disabled={saving} className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-[#1b57d8] text-[14.5px] font-bold text-white hover:bg-[#1245b8] disabled:opacity-60"><Save className="h-4 w-4" /> {saving ? "Saving…" : "Save"}</button>
+                    <button onClick={() => setEditingId(null)} className="h-11 rounded-xl border border-[#d3e1f5] text-[14.5px] font-bold text-[#082a63] hover:bg-[#f4f8fe]">Cancel</button>
                   </div>
                 </div>
               ) : (
                 <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-[17px] font-bold text-[#082a63]">{c.center_name}</p>
-                    <p className="text-[15px] text-[#3d5688] mt-0.5">Code: <span className="font-mono font-semibold text-[#082a63]">{c.center_code}</span>{c.city ? ` • ${c.city}` : ""}{c.address ? ` • ${c.address}` : ""}</p>
+                  <div className="flex min-w-0 items-start gap-3">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#eaf2fd] text-[#1b57d8]"><MapPin className="h-5 w-5" /></span>
+                    <div className="min-w-0">
+                      <p className="break-words text-[16px] font-bold text-[#082a63]">{c.center_name}</p>
+                      {c.center_code && <span className="mt-0.5 inline-block rounded-md bg-[#eaf2fd] px-2 py-0.5 font-mono text-[12.5px] font-bold text-[#1245b8]">{c.center_code}</span>}
+                      {c.city && <p className="mt-1 text-[14px] text-[#3d5688]">{c.city}</p>}
+                      {c.address && <p className="break-words text-[13.5px] text-[#4a6090]">{c.address}</p>}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <button onClick={() => startEdit(c)} className="p-1.5 rounded-lg hover:bg-[#eaf2fd] text-[#3d5688] hover:text-[#082a63] transition-colors"><Pencil className="w-4 h-4" /></button>
-                    <button onClick={() => deleteCenter(c.id)} className="p-1.5 rounded-lg hover:bg-red-50 text-[#3d5688] hover:text-red-600 transition-colors"><Trash2 className="w-4 h-4" /></button>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    <button onClick={() => startEdit(c)} aria-label="Edit center" title="Edit" className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#d3e1f5] text-[#3d5688] transition hover:bg-[#eaf2fd]"><Pencil className="h-4 w-4" /></button>
+                    <button onClick={() => deleteCenter(c.id)} aria-label="Delete center" title="Delete" className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#d3e1f5] text-[#3d5688] transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"><Trash2 className="h-4 w-4" /></button>
                   </div>
                 </div>
               )}
             </div>
           ))}
         </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -1631,6 +1656,7 @@ function CentersTab({ showToast }) {
 // MAIN PAGE
 // ══════════════════════════════════════════════════════════
 export default function ExamManagementPage() {
+  const [confirm, confirmDialog] = useConfirm();
   const [activeTab, setActiveTab] = useState("subjects");
   const [courses, setCourses] = useState([]);
   const [sessions, setSessions] = useState([]);
@@ -1692,6 +1718,7 @@ export default function ExamManagementPage() {
       {/* Tab content */}
       {activeTab === "subjects" && (
         <SubjectsTab
+          confirm={confirm}
           courses={courses}
           sessions={sessions}
           setSessions={setSessions}
@@ -1720,6 +1747,7 @@ export default function ExamManagementPage() {
       )}
       {activeTab === "rollnos" && (
         <RollNumbersTab
+          confirm={confirm}
           courses={courses}
           sessions={sessions}
           setSessions={setSessions}
@@ -1743,9 +1771,10 @@ export default function ExamManagementPage() {
           showToast={showToast}
         />
       )}
-      {activeTab === "centers" && <CentersTab showToast={showToast} />}
+      {activeTab === "centers" && <CentersTab showToast={showToast} confirm={confirm} />}
 
       <Toast toast={toast} />
+      {confirmDialog}
     </div>
     </AdminPageShell>
   );

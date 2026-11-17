@@ -78,7 +78,7 @@ export default async function ProgrammePage({ params }) {
 
           {/* heading band */}
           <div className="mt-4 border-l-[6px] border-navy bg-gradient-to-r from-[#e3edfa] to-white px-5 py-5 sm:px-7">
-            <p className="text-[13px] font-bold uppercase tracking-[0.18em] text-[#44557a]">Goa State Open School</p>
+            <p className="text-[13px] font-bold uppercase tracking-[0.18em] text-[#44557a]">Goa State Open School <span lang="kok" className="font-devanagari normal-case tracking-normal"> · गोंय राज्य मुक्त शाळा</span></p>
             <h1 className="mt-1 text-[26px] font-extrabold leading-tight tracking-tight text-ink sm:text-[34px]">{p.title}</h1>
             <p className="mt-1.5 max-w-[760px] text-[15px] font-medium leading-relaxed text-[#44557a]">{p.tagline}</p>
           </div>

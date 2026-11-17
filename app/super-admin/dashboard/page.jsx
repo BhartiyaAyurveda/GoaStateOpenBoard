@@ -65,6 +65,7 @@ import HomeCustomizer from "@/components/admin/HomeCustomizer";
 import SyllabusUploader from "@/components/admin/SyllabusUploader";
 import Modal from "@/components/ui/Modal";
 import Select from "@/components/ui/Select";
+import { useConfirm } from "@/components/ui/ConfirmDialog";
 
 // Labelled input with a leading icon (used by the Register College modal)
 function CollegeField({ icon: Icon, label, req, value, onChange, placeholder, type = "text", autoComplete = "off", inputMode, maxLength, action, className = "", inputClassName = "" }) {
@@ -147,6 +148,21 @@ export default function SuperAdminDashboardPage() {
 
   // Toast Notification state
   const [toast, setToast] = useState({ show: false, message: "", type: "success" });
+
+  // Bell dropdown: closes on outside click / Esc
+  const [bellOpen, setBellOpen] = useState(false);
+  const bellRef = useRef(null);
+  useEffect(() => {
+    if (!bellOpen) return;
+    const onDown = (e) => { if (bellRef.current && !bellRef.current.contains(e.target)) setBellOpen(false); };
+    const onKey = (e) => { if (e.key === "Escape") setBellOpen(false); };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [bellOpen]);
 
   const showToast = (message, type = "success") => {
     setToast({ show: true, message, type });
@@ -318,6 +334,8 @@ export default function SuperAdminDashboardPage() {
   const [examSessions, setExamSessions] = useState([]);
   const [examCenters, setExamCenters] = useState([]);
   const [examLoading, setExamLoading] = useState(false);
+  const [confirm, confirmDialog] = useConfirm();
+  const [resetErr, setResetErr] = useState("");
   const [newSession, setNewSession] = useState({ session_name: "", start_date: "", end_date: "" });
   const [sessionSubmitting, setSessionSubmitting] = useState(false);
   const [newCenter, setNewCenter] = useState({ center_name: "", center_code: "", city: "", state: "", address: "" });
@@ -392,7 +410,7 @@ export default function SuperAdminDashboardPage() {
   };
 
   const deleteSession = async (id) => {
-    if (!confirm("Delete this exam session?")) return;
+    if (!(await confirm({ title: "Delete exam session?", message: "Roll numbers, admit cards and results linked to this session may stop working.", confirmLabel: "Delete", danger: true }))) return;
     const res = await fetch(`/api/admin/exam-sessions/${id}`, { method: "DELETE" });
     if ((await res.json()).ok) setExamSessions(p => p.filter(s => s.id !== id));
   };
@@ -411,7 +429,7 @@ export default function SuperAdminDashboardPage() {
   };
 
   const deleteCenter = async (id) => {
-    if (!confirm("Delete this exam center?")) return;
+    if (!(await confirm({ title: "Delete exam center?", message: "This cannot be undone.", confirmLabel: "Delete", danger: true }))) return;
     const res = await fetch(`/api/admin/exam-centers/${id}`, { method: "DELETE" });
     if ((await res.json()).ok) setExamCenters(p => p.filter(c => c.id !== id));
   };
@@ -551,6 +569,7 @@ export default function SuperAdminDashboardPage() {
     if (!resetClg) return;
     const pwd = resetPwd || generatePassword();
     setResetSaving(true);
+    setResetErr("");
     try {
       const res = await fetch(`/api/admin/colleges/${resetClg.id}/regenerate-password`, {
         method: "POST",
@@ -563,8 +582,12 @@ export default function SuperAdminDashboardPage() {
         setResetClg(null);
         setResetPwd("");
         showToast("Password reset successfully!", "success");
+      } else {
+        setResetErr(data.error || "Could not reset the password. Try again.");
       }
-    } catch {}
+    } catch {
+      setResetErr("Network error. Please try again.");
+    }
     setResetSaving(false);
   };
 
@@ -854,6 +877,7 @@ export default function SuperAdminDashboardPage() {
             </div>
             <div className="min-w-0">
               <p className="text-[17px] font-extrabold text-white truncate leading-tight">Goa State Open School</p>
+              <p lang="kok" className="font-devanagari truncate text-[13.5px] font-semibold leading-tight text-[#bcd8fb]">गोंय राज्य मुक्त शाळा</p>
               <p className="mt-0.5 text-[13px] font-semibold uppercase tracking-wider text-[#8ec9fa]">Board Admin Console</p>
             </div>
           </div>
@@ -958,10 +982,93 @@ export default function SuperAdminDashboardPage() {
                 </div>
               </div>
               {/* Bell */}
-              <div className="relative p-3 rounded-xl bg-[#eaf2fd] border border-[#d3e1f5] hover:bg-[#d3e1f5] text-[#3d5688] cursor-pointer transition-colors">
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-2 right-2.5 w-2 h-2 rounded-full bg-[#1b57d8] ring-2 ring-[#eaf2fd]" />
-              </div>
+              {(() => {
+                const pendingApps = appCounts
+                  ? (appCounts.pending || 0) + (appCounts.submitted || 0)
+                  : applications.filter((a) => a.status === "submitted" || a.status === "pending").length;
+                const unreadInquiries = inquiries.filter((i) => !i.is_read).length;
+                const bellItems = [
+                  pendingApps > 0 && {
+                    key: "apps", icon: ClipboardList, tone: "bg-blue-50 text-blue-700",
+                    title: `${pendingApps} student application${pendingApps === 1 ? "" : "s"} awaiting review`,
+                    sub: "Approve, reject or raise a query", go: () => { changeAppFilter("all"); setActiveTab("applications"); },
+                  },
+                  unreadInquiries > 0 && {
+                    key: "inq", icon: MessageSquarePlus, tone: "bg-orange-50 text-orange-700",
+                    title: `${unreadInquiries} unread contact inquir${unreadInquiries === 1 ? "y" : "ies"}`,
+                    sub: "Messages from the contact form", go: () => setActiveTab("inquiries"),
+                  },
+                  maintenanceOn && {
+                    key: "maint", icon: WifiOff, tone: "bg-red-50 text-red-600",
+                    title: "Site is in maintenance mode",
+                    sub: "Visitors currently see the offline page", go: () => setActiveTab("maintenance"),
+                  },
+                ].filter(Boolean);
+                const toggleBell = () => {
+                  const next = !bellOpen;
+                  setBellOpen(next);
+                  if (next) { loadApplications(); loadInquiries(); } // refresh the counts when opened
+                };
+                return (
+                  <div className="relative" ref={bellRef}>
+                    <button
+                      type="button"
+                      onClick={toggleBell}
+                      aria-label={bellItems.length ? `Notifications (${bellItems.length} new)` : "Notifications"}
+                      aria-haspopup="true"
+                      aria-expanded={bellOpen}
+                      className={`relative p-3 rounded-xl border border-[#d3e1f5] text-[#3d5688] transition-colors ${bellOpen ? "bg-[#d3e1f5]" : "bg-[#eaf2fd] hover:bg-[#d3e1f5]"}`}
+                    >
+                      <Bell className="w-5 h-5" />
+                      {bellItems.length > 0 && (
+                        <span className="absolute top-2 right-2.5 w-2 h-2 rounded-full bg-[#1b57d8] ring-2 ring-[#eaf2fd]" />
+                      )}
+                    </button>
+                    {bellOpen && (
+                      <div role="menu" className="absolute right-0 top-full z-50 mt-2 w-[340px] max-w-[calc(100vw_-_2.5rem)] overflow-hidden rounded-2xl border border-[#d3e1f5] bg-white shadow-xl">
+                        <div className="flex items-center justify-between border-b border-[#eaf2fd] px-4 py-3">
+                          <p className="text-[15px] font-bold text-[#082a63]">Notifications</p>
+                          {bellItems.length > 0 && (
+                            <span className="rounded-full bg-[#eaf2fd] px-2 py-0.5 text-[12.5px] font-bold text-[#1245b8]">{bellItems.length} new</span>
+                          )}
+                        </div>
+                        {bellItems.length === 0 ? (
+                          <div className="px-4 py-8 text-center">
+                            <CheckCircle2 className="mx-auto mb-2 h-8 w-8 text-emerald-500" />
+                            <p className="text-[15px] font-bold text-[#082a63]">You&apos;re all caught up</p>
+                            <p className="mt-0.5 text-[13.5px] text-[#4a6090]">Nothing needs your attention right now.</p>
+                          </div>
+                        ) : (
+                          <ul className="divide-y divide-[#eaf2fd]">
+                            {bellItems.map((it) => {
+                              const ItemIcon = it.icon;
+                              return (
+                                <li key={it.key}>
+                                  <button
+                                    type="button"
+                                    role="menuitem"
+                                    onClick={() => { setBellOpen(false); it.go(); }}
+                                    className="flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-[#f4f8fe]"
+                                  >
+                                    <span className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${it.tone}`}>
+                                      <ItemIcon className="h-[18px] w-[18px]" />
+                                    </span>
+                                    <span className="min-w-0 flex-1">
+                                      <span className="block text-[14.5px] font-semibold leading-snug text-[#082a63]">{it.title}</span>
+                                      <span className="block text-[13px] text-[#4a6090]">{it.sub}</span>
+                                    </span>
+                                    <ChevronRight className="mt-2 h-4 w-4 shrink-0 text-[#9db3d6]" />
+                                  </button>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           </header>
 
@@ -969,145 +1076,197 @@ export default function SuperAdminDashboardPage() {
           <main className="flex-1 overflow-y-auto p-5 sm:p-7">
           
           {/* TAB 1: OVERVIEW */}
-          {activeTab === "overview" && (
-            <div className="space-y-6">
+          {activeTab === "overview" && (() => {
+            const unread = inquiries.filter((i) => !i.is_read).length;
+            const activeSession = examSessions.find((s) => s.is_active);
+            const alerts = [
+              maintenanceOn && { tone: "red", icon: WifiOff, text: "The website is in maintenance mode. Visitors see the offline page.", tab: "maintenance", cta: "Turn off" },
+              appAwaiting > 0 && { tone: "amber", icon: Clock, text: `${appAwaiting} student application${appAwaiting === 1 ? "" : "s"} waiting for review.`, tab: "applications", cta: "Review" },
+              unread > 0 && { tone: "blue", icon: MessageSquarePlus, text: `${unread} unread contact ${unread === 1 ? "inquiry" : "inquiries"}.`, tab: "inquiries", cta: "Open" },
+              !examLoading && !activeSession && { tone: "amber", icon: BookOpen, text: "No active exam session. Roll numbers, admit cards and results need one.", tab: "exam", cta: "Set up" },
+            ].filter(Boolean);
+            const toneCls = {
+              red: "border-red-200 bg-red-50 text-red-800",
+              amber: "border-amber-200 bg-amber-50 text-amber-900",
+              blue: "border-[#c9daf2] bg-[#eef4fc] text-[#1245b8]",
+            };
+            const stats = [
+              { tab: "applications", label: "Applications", value: appAllTotal, sub: "Total received", icon: ClipboardList, bg: "bg-[#e3edfa]", ic: "text-[#1245b8]", accent: "text-[#1245b8]" },
+              { tab: "applications", label: "Awaiting action", value: appAwaiting, sub: "Need review", icon: Clock, bg: "bg-amber-50", ic: "text-amber-700", accent: "text-amber-700" },
+              { tab: "colleges", label: "Colleges", value: colleges.length, sub: `${colleges.filter((c) => c.is_active).length} active`, icon: Building2, bg: "bg-[#e3edfa]", ic: "text-[#1245b8]", accent: "text-[#1245b8]" },
+              { tab: "courses", label: "Courses", value: courses.length, sub: "Programmes offered", icon: GraduationCap, bg: "bg-emerald-50", ic: "text-emerald-700", accent: "text-emerald-700" },
+              { tab: "institutes", label: "Study centres", value: instituteCount ?? "–", sub: "In the directory", icon: MapPin, bg: "bg-violet-50", ic: "text-violet-700", accent: "text-violet-700" },
+              { tab: "inquiries", label: "Inquiries", value: inquiries.length, sub: `${unread} unread`, icon: MessageSquarePlus, bg: "bg-rose-50", ic: "text-rose-700", accent: "text-rose-700" },
+            ];
+            const modules = [
+              { tab: "exam", icon: BookOpen, title: "Exam Management", sub: "Sessions, roll numbers, results" },
+              { tab: "announcements", icon: Bell, title: "Announcements", sub: "Notices and circulars" },
+              { tab: "institutes", icon: MapPin, title: "Study Centres", sub: "Shown on the website" },
+              { tab: "home", icon: Sparkles, title: "Home Customization", sub: "Hero, cards and links" },
+              { tab: "contact", icon: Phone, title: "Contact Info", sub: "Phone, email and address" },
+              { tab: "social", icon: Share2, title: "Social Links", sub: "Footer and contact page" },
+              { tab: "maintenance", icon: WifiOff, title: "Maintenance Mode", sub: maintenanceOn ? "Site is offline" : "Site is live" },
+              { href: "/", icon: ExternalLink, title: "View Website", sub: "Open the public site" },
+            ];
+            const fmt = (d) => (d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) : "");
+            return (
+            <div className="min-w-0 space-y-5">
 
-              {/* ── Welcome Banner ── */}
-              <div className="rounded-2xl bg-gradient-to-br from-[#082a63] via-[#0b3a85] to-[#1245b8] text-white border border-[#1b57d8]/20 shadow-lg overflow-hidden">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 p-6 md:p-8 relative">
-                  {/* Gold shimmer strip */}
-                  <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#1b57d8]/60 to-transparent" />
-
-                  <div className="space-y-2.5 relative z-10">
+              {/* Welcome */}
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#082a63] via-[#0b3a85] to-[#1245b8] text-white shadow-lg">
+                <ShieldCheck className="pointer-events-none absolute -right-6 -top-6 h-40 w-40 text-white/[0.06]" aria-hidden="true" />
+                <div className="relative flex flex-col gap-4 p-5 sm:p-7 md:flex-row md:items-center md:justify-between">
+                  <div className="space-y-2">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 text-[15px] font-semibold border border-emerald-500/25">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        System Active
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/15 px-2.5 py-1 text-[14px] font-semibold text-emerald-300">
+                        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" /> System active
                       </span>
                       {maintenanceOn && (
-                        <button onClick={() => setActiveTab("maintenance")}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/20 text-red-300 text-[15px] font-bold border border-red-500/30 hover:bg-red-500/30 transition-colors">
-                          <WifiOff className="w-3 h-3" /> Site Offline
+                        <button onClick={() => setActiveTab("maintenance")} className="inline-flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-500/20 px-2.5 py-1 text-[14px] font-bold text-red-300 transition hover:bg-red-500/30">
+                          <WifiOff className="h-3.5 w-3.5" /> Site offline
                         </button>
                       )}
                     </div>
-                    <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">Board Admin Hub</h1>
-                    <p className="text-[17px] text-white/75 max-w-lg leading-relaxed">
-                      Goa State Open School — Board administration panel.
-                    </p>
+                    <h1 className="text-[28px] font-bold leading-tight tracking-tight sm:text-4xl">Board Admin Hub</h1>
+                    <p className="max-w-lg text-[15.5px] leading-relaxed text-white/75">Goa State Open School · Board administration panel</p>
                   </div>
-
-                  <div className="flex flex-wrap items-center gap-2.5 relative z-10 shrink-0">
-                    <button onClick={() => setActiveTab("applications")}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white hover:bg-[#e3edfa] text-[#082a63] font-bold text-[15px] transition-all shadow-md">
-                      <ClipboardList className="w-4 h-4" /> Applications
+                  <div className="grid grid-cols-2 gap-2.5 md:flex md:shrink-0">
+                    <button onClick={() => setActiveTab("applications")} className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-white px-5 text-[15px] font-bold text-[#082a63] shadow-md transition hover:bg-[#e3edfa]">
+                      <ClipboardList className="h-4 w-4" /> Applications
                     </button>
-                    <button onClick={() => setActiveTab("colleges")}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white font-semibold text-[15px] border border-white/15 transition-all">
-                      <Building2 className="w-4 h-4 text-[#bcd8fb]" /> Colleges
+                    <button onClick={() => setActiveTab("colleges")} className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl border border-white/20 bg-white/10 px-5 text-[15px] font-semibold text-white transition hover:bg-white/15">
+                      <Building2 className="h-4 w-4 text-[#bcd8fb]" /> Colleges
                     </button>
                   </div>
                 </div>
               </div>
 
-              {/* ── Stat Cards ── */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                {[
-                  { tab: "applications", label: "Applications",      value: appAllTotal,                                                        sub: "Total received",          icon: ClipboardList, bg: "bg-[#e3edfa]", ic: "text-[#1245b8]", accent: "text-[#1245b8]" },
-                  { tab: "applications", label: "Awaiting Action",   value: appAwaiting, sub: "Need review", icon: Clock, bg: "bg-amber-50", ic: "text-amber-700", accent: "text-amber-700" },
-                  { tab: "colleges",     label: "Colleges",          value: colleges.length,                                                            sub: `${colleges.filter(c => c.is_active).length} active`, icon: Building2, bg: "bg-[#e3edfa]", ic: "text-[#1245b8]", accent: "text-[#1245b8]" },
-                  { tab: "courses",      label: "Courses",           value: courses.length,                                                             sub: "Programmes offered",      icon: GraduationCap, bg: "bg-emerald-50", ic: "text-emerald-700", accent: "text-emerald-700" },
-                ].map(({ tab, label, value, sub, icon: Icon, bg, ic, accent }) => (
-                  <div key={label} onClick={() => setActiveTab(tab)}
-                    className="p-4 sm:p-5 rounded-2xl bg-white border border-[#d3e1f5] shadow-sm hover:shadow-md hover:border-[#1b57d8]/60 transition-all cursor-pointer group">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className={`w-9 h-9 rounded-xl ${bg} ${ic} flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                        <Icon className="w-4 h-4" />
-                      </div>
-                      <ChevronRight className="w-3.5 h-3.5 text-[#1b57d8]/40 group-hover:text-[#1b57d8] group-hover:translate-x-0.5 transition-all" />
+              {/* Needs attention */}
+              {alerts.length > 0 && (
+                <div className="space-y-2">
+                  {alerts.map((a) => (
+                    <div key={a.tab + a.text} className={`flex items-center gap-3 rounded-xl border px-4 py-3 ${toneCls[a.tone]}`}>
+                      <a.icon className="h-5 w-5 shrink-0" />
+                      <p className="min-w-0 flex-1 text-[14.5px] font-semibold leading-snug">{a.text}</p>
+                      <button onClick={() => setActiveTab(a.tab)} className="shrink-0 rounded-lg bg-white/80 px-3 py-1.5 text-[13.5px] font-bold text-[#082a63] transition hover:bg-white">{a.cta}</button>
                     </div>
-                    <p className="text-[14px] font-bold uppercase tracking-widest text-[#4a6090] mb-1">{label}</p>
-                    <p className="text-3xl font-extrabold text-[#082a63] leading-none">{value}</p>
-                    <p className={`text-[15px] font-medium mt-1.5 ${accent}`}>{sub}</p>
-                  </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Stats */}
+              <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
+                {stats.map(({ tab, label, value, sub, icon: Icon, bg, ic, accent }) => (
+                  <button key={label} onClick={() => setActiveTab(tab)}
+                    className="group rounded-2xl border border-[#d3e1f5] bg-white p-4 text-left shadow-sm transition hover:border-[#1b57d8]/60 hover:shadow-md">
+                    <div className="mb-3 flex items-start justify-between">
+                      <span className={`flex h-9 w-9 items-center justify-center rounded-xl ${bg} ${ic} transition-transform group-hover:scale-110`}><Icon className="h-4 w-4" /></span>
+                      <ChevronRight className="h-4 w-4 text-[#1b57d8]/40 transition group-hover:translate-x-0.5 group-hover:text-[#1b57d8]" />
+                    </div>
+                    <p className="mb-1 truncate text-[12.5px] font-bold uppercase tracking-wider text-[#4a6090]">{label}</p>
+                    <p className="text-[30px] font-extrabold leading-none text-[#082a63]">{value}</p>
+                    <p className={`mt-1.5 truncate text-[14px] font-medium ${accent}`}>{sub}</p>
+                  </button>
                 ))}
               </div>
 
-              {/* ── Quick Access Modules ── */}
+              {/* Quick access */}
               <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-[17px] font-bold text-[#082a63] uppercase tracking-wider">Quick Access</h2>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {[
-                    { tab: "exam",          icon: BookOpen,          bg: "bg-[#e3edfa]", ic: "text-[#1245b8]", title: "Exam Management",   sub: "Sessions, centres & results",   cta: "Open Exams" },
-                    { tab: "announcements", icon: Bell,              bg: "bg-[#e3edfa]", ic: "text-[#1245b8]", title: "Announcements",     sub: "Publish notices & circulars",   cta: "Manage Notices" },
-                    { tab: "inquiries",     icon: MessageSquarePlus, bg: "bg-[#e3edfa]", ic: "text-[#1245b8]", title: "Contact Inquiries", sub: "Replies to public queries",     cta: "View Inquiries" },
-                    { tab: "institutes",    icon: Building2,         bg: "bg-[#e3edfa]", ic: "text-[#1245b8]", title: "Study Centres", sub: "Directory of study centres",   cta: "Manage Centres" },
-                  ].map(({ tab, icon: Icon, bg, ic, title, sub, cta }) => (
-                    <div key={tab} onClick={() => setActiveTab(tab)}
-                      className="p-4 rounded-2xl bg-white border border-[#d3e1f5] hover:border-[#1b57d8]/60 hover:shadow-md transition-all cursor-pointer group">
-                      <div className={`w-9 h-9 rounded-xl ${bg} ${ic} flex items-center justify-center mb-3 group-hover:bg-[#082a63] group-hover:text-white transition-colors`}>
-                        <Icon className="w-4 h-4" />
-                      </div>
-                      <h3 className="text-[15px] font-bold text-[#082a63]">{title}</h3>
-                      <p className="text-[15px] text-[#3d5688] mt-0.5 leading-snug">{sub}</p>
-                      <span className="inline-flex items-center gap-1 text-[15px] font-bold text-[#1245b8] mt-3 group-hover:translate-x-0.5 transition-transform">
-                        {cta} <ChevronRight className="w-3 h-3" />
-                      </span>
-                    </div>
-                  ))}
+                <h2 className="mb-3 text-[16px] font-bold text-[#082a63]">Quick access</h2>
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                  {modules.map(({ tab, href, icon: Icon, title, sub }) => {
+                    const cls = "group flex items-start gap-3 rounded-2xl border border-[#d3e1f5] bg-white p-3.5 text-left shadow-sm transition hover:border-[#1b57d8]/60 hover:shadow-md";
+                    const body = (
+                      <>
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e3edfa] text-[#1245b8] transition-colors group-hover:bg-[#082a63] group-hover:text-white"><Icon className="h-5 w-5" /></span>
+                        <span className="min-w-0">
+                          <span className="block truncate text-[15px] font-bold text-[#082a63]">{title}</span>
+                          <span className="block text-[13.5px] leading-snug text-[#3d5688]">{sub}</span>
+                        </span>
+                      </>
+                    );
+                    return href ? (
+                      <a key={title} href={href} target="_blank" rel="noopener noreferrer" className={cls}>{body}</a>
+                    ) : (
+                      <button key={title} onClick={() => setActiveTab(tab)} className={cls}>{body}</button>
+                    );
+                  })}
                 </div>
               </div>
 
               {/* Recent applications */}
-              <div className="rounded-3xl bg-white border border-[#d3e1f5] shadow-sm overflow-hidden">
-                <div className="p-5 border-b border-[#d3e1f5] flex items-center justify-between gap-4">
-                  <div>
-                    <h2 className="text-lg font-serif font-bold text-[#082a63]">Recent Student Applications</h2>
-                    <p className="text-[15px] text-[#3d5688] mt-0.5">Latest registrations submitted by colleges</p>
+              <div className="overflow-hidden rounded-2xl border border-[#d3e1f5] bg-white shadow-sm">
+                <div className="flex items-center justify-between gap-4 border-b border-[#d3e1f5] px-4 py-4 sm:px-5">
+                  <div className="min-w-0">
+                    <h2 className="text-[17px] font-bold text-[#082a63]">Recent student applications</h2>
+                    <p className="text-[14px] text-[#3d5688]">Latest registrations submitted by colleges</p>
                   </div>
-                  <button onClick={() => setActiveTab("applications")}
-                    className="text-[15px] font-bold text-[#1245b8] hover:text-[#082a63] underline transition-colors">
-                    View All
-                  </button>
+                  <button onClick={() => setActiveTab("applications")} className="shrink-0 rounded-lg border border-[#d3e1f5] px-3.5 py-2 text-[14px] font-bold text-[#1245b8] transition hover:bg-[#f4f8fe]">View all</button>
                 </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[600px] text-left text-[15px]">
-                    <thead className="bg-[#f4f8fe] text-[#082a63] uppercase font-bold tracking-wider border-b border-[#d3e1f5]">
-                      <tr>
-                        <th className="py-3 px-6">Candidate</th>
-                        <th className="py-3 px-6">Course</th>
-                        <th className="py-3 px-6">College</th>
-                        <th className="py-3 px-6">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#d3e1f5]/60 text-[#082a63]">
+
+                {applications.length === 0 ? (
+                  <div className="px-4 py-12 text-center">
+                    <ClipboardList className="mx-auto mb-3 h-10 w-10 text-[#a9bde0]" />
+                    <p className="text-[16px] font-bold text-[#082a63]">No applications yet</p>
+                    <p className="mt-1 text-[14px] text-[#4a6090]">Registrations submitted by colleges will appear here.</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="hidden overflow-x-auto md:block">
+                      <table className="w-full text-left text-[15px]">
+                        <thead className="border-b border-[#d3e1f5] bg-[#f4f8fe]">
+                          <tr className="text-[12.5px] font-bold uppercase tracking-wider text-[#4a6090]">
+                            <th className="px-5 py-3">Candidate</th>
+                            <th className="px-4 py-3">Course</th>
+                            <th className="px-4 py-3">College</th>
+                            <th className="px-4 py-3">Date</th>
+                            <th className="px-5 py-3">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#e4edf9] text-[#082a63]">
+                          {applications.slice(0, 5).map((a) => {
+                            const st = APP_STATUS[a.status] || APP_STATUS.pending;
+                            return (
+                              <tr key={a.id} className="transition-colors hover:bg-[#f4f8fe]">
+                                <td className="px-5 py-3.5 font-bold"><Link href={`/super-admin/dashboard/registrations/${a.id}`} className="hover:text-[#1b57d8] hover:underline">{a.candidate_name}</Link></td>
+                                <td className="px-4 py-3.5 text-[#3d5688]">{a.courses?.course_name || "—"}</td>
+                                <td className="px-4 py-3.5 text-[#3d5688]">{a.colleges?.college_name || "—"}</td>
+                                <td className="whitespace-nowrap px-4 py-3.5 text-[#3d5688]">{fmt(a.created_at) || "—"}</td>
+                                <td className="px-5 py-3.5">
+                                  <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-[13.5px] font-bold ${st.color}`}>
+                                    <span className={`h-1.5 w-1.5 rounded-full ${st.dot}`} />{st.label}
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div className="divide-y divide-[#e4edf9] md:hidden">
                       {applications.slice(0, 5).map((a) => {
                         const st = APP_STATUS[a.status] || APP_STATUS.pending;
                         return (
-                          <tr key={a.id} className="hover:bg-[#f4f8fe]/80 transition-colors">
-                            <td className="py-3.5 px-6 font-semibold">{a.candidate_name}</td>
-                            <td className="py-3.5 px-6 text-[#3d5688]">{a.courses?.course_name || "—"}</td>
-                            <td className="py-3.5 px-6 text-[#3d5688]">{a.colleges?.college_name || "—"}</td>
-                            <td className="py-3.5 px-6">
-                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[14px] font-bold ${st.color}`}>
-                                <span className={`w-1.5 h-1.5 rounded-full ${st.dot}`} />{st.label}
+                          <Link key={a.id} href={`/super-admin/dashboard/registrations/${a.id}`} className="block px-4 py-3.5 transition hover:bg-[#f4f8fe]">
+                            <div className="flex items-start justify-between gap-3">
+                              <p className="min-w-0 break-words text-[16px] font-bold text-[#082a63]">{a.candidate_name}</p>
+                              <span className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-[12.5px] font-bold ${st.color}`}>
+                                <span className={`h-1.5 w-1.5 rounded-full ${st.dot}`} />{st.label}
                               </span>
-                            </td>
-                          </tr>
+                            </div>
+                            <p className="mt-0.5 break-words text-[14px] text-[#3d5688]">{[a.courses?.course_name, a.colleges?.college_name].filter(Boolean).join(" · ") || "—"}</p>
+                          </Link>
                         );
                       })}
-                      {applications.length === 0 && (
-                        <tr><td colSpan={4} className="py-8 px-6 text-center text-[#3d5688]">No applications yet.</td></tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                    </div>
+                  </>
+                )}
               </div>
 
             </div>
-          )}
+            );
+          })()}
 
           {/* TAB: MAINTENANCE MODE */}
           {activeTab === "maintenance" && (
@@ -1265,7 +1424,7 @@ export default function SuperAdminDashboardPage() {
                 const closeCreds = () => { setNewCredentials(null); setResetCredentials(null); setShowCredPwd(false); };
                 const textBlock = [
                   "=======================================================",
-                  "  GOA STATE OPEN SCHOOL — DIRECTORATE OF EDUCATION, GOVT. OF GOA",
+                  "                     GOA STATE OPEN SCHOOL",
                   "              COLLEGE LOGIN CREDENTIALS",
                   "=======================================================",
                   "",
@@ -1692,31 +1851,48 @@ export default function SuperAdminDashboardPage() {
           </Modal>
 
           {/* Reset Password Modal */}
-          {resetClg && (
-            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-              <div className="absolute inset-0 bg-black/60" onClick={() => setResetClg(null)} />
-              <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6 space-y-4">
-                <h3 className="font-bold text-[#082a63]">Reset Password — {resetClg.college_name}</h3>
-                <div>
-                  <label className="block text-[14px] font-bold uppercase text-[#3d5688] mb-1">New Password (leave blank to auto-generate)</label>
-                  <div className="flex gap-2">
-                    <input value={resetPwd} onChange={(e) => setResetPwd(e.target.value)} placeholder="Leave blank to auto-generate"
-                      className="flex-1 px-3 py-2.5 rounded-xl border border-[#d3e1f5] text-[17px] text-[#082a63] focus:outline-none focus:ring-2 focus:ring-[#1b57d8]"
-                    />
-                    <button type="button" onClick={() => setResetPwd(generatePassword())}
-                      className="px-3 py-2.5 rounded-xl bg-[#eaf2fd] border border-[#d3e1f5] text-[15px] font-bold text-[#082a63] hover:bg-[#d3e1f5]"
-                    >Auto</button>
-                  </div>
-                </div>
+          <Modal
+            open={!!resetClg}
+            onClose={() => { setResetClg(null); setResetErr(""); }}
+            busy={resetSaving}
+            icon={KeyRound}
+            title="Reset Password"
+            subtitle={resetClg?.college_name}
+            size="sm:max-w-md"
+            onSubmit={(e) => { e.preventDefault(); saveResetPassword(); }}
+            footer={
+              <>
+                <button type="button" onClick={() => { setResetClg(null); setResetErr(""); }} disabled={resetSaving}
+                  className="h-11 rounded-xl border border-[#d3e1f5] bg-white px-6 text-[15px] font-bold text-[#082a63] transition hover:bg-[#f4f8fe] disabled:opacity-60">
+                  Cancel
+                </button>
+                <button type="submit" disabled={resetSaving}
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-amber-500 px-7 text-[15px] font-bold text-white transition hover:bg-amber-600 disabled:opacity-60">
+                  <KeyRound className="h-4 w-4" /> {resetSaving ? "Resetting…" : "Reset Password"}
+                </button>
+              </>
+            }
+          >
+            <div className="space-y-4">
+              <p className="rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-[13.5px] font-medium leading-relaxed text-amber-900">
+                The college's current password stops working immediately. You will see the new password once, so copy it and share it with the college.
+              </p>
+              {resetErr && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-[14px] font-semibold text-red-700">{resetErr}</p>}
+              <label className="block">
+                <span className="mb-1.5 block text-[13.5px] font-bold text-[#082a63]">New password</span>
                 <div className="flex gap-2">
-                  <button onClick={() => setResetClg(null)} className="flex-1 py-2.5 rounded-xl border border-[#d3e1f5] text-[15px] font-bold text-[#3d5688] hover:bg-[#eaf2fd]">Cancel</button>
-                  <button onClick={saveResetPassword} disabled={resetSaving} className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-[15px] font-bold disabled:opacity-60">
-                    {resetSaving ? "Resetting..." : "Reset Password"}
+                  <input value={resetPwd} onChange={(e) => setResetPwd(e.target.value)} placeholder="Leave blank to auto-generate" autoComplete="off"
+                    className="h-11 min-w-0 flex-1 rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] px-3.5 text-[15px] text-[#082a63] outline-none placeholder:text-[#8a97b3] focus:border-[#1b57d8] focus:bg-white focus:ring-2 focus:ring-[#1b57d8]/15" />
+                  <button type="button" onClick={() => setResetPwd(generatePassword())}
+                    className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-xl border border-[#d3e1f5] bg-[#eaf2fd] px-4 text-[14px] font-bold text-[#082a63] hover:bg-[#d3e1f5]">
+                    <Sparkles className="h-4 w-4" /> Auto
                   </button>
                 </div>
-              </div>
+              </label>
             </div>
-          )}
+          </Modal>
+
+          {confirmDialog}
 
           {/* ═══ TAB: COURSES & SUBJECTS ═══ */}
           {activeTab === "courses" && (() => {
@@ -1797,7 +1973,7 @@ export default function SuperAdminDashboardPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <CollegeField className="sm:col-span-2" icon={GraduationCap} label="Course name (English)" req value={courseForm.name}
                     onChange={(v) => setCourseForm((f) => ({ ...f, name: v }))} placeholder="e.g. Secondary Programme (Class X)" maxLength={120} />
-                  <CollegeField className="sm:col-span-2" icon={GraduationCap} label="Course name (Hindi / Konkani)" value={courseForm.hindi}
+                  <CollegeField className="sm:col-span-2" icon={GraduationCap} label="Course name (Konkani)" value={courseForm.hindi}
                     onChange={(v) => setCourseForm((f) => ({ ...f, hindi: v }))} placeholder="Optional" maxLength={120} inputClassName="font-devanagari" />
                   <CollegeField icon={Clock} label="Duration" value={courseForm.duration}
                     onChange={(v) => setCourseForm((f) => ({ ...f, duration: v }))} placeholder="e.g. 1 Year" maxLength={40} />
@@ -2456,17 +2632,16 @@ export default function SuperAdminDashboardPage() {
                 <p className="text-[15px] text-[#3d5688]">College will see this in their notifications and can resubmit after fixing.</p>
                 <div>
                   <label className="text-[15px] font-bold text-[#082a63] uppercase mb-1 block">Field / Section</label>
-                  <select value={queryField} onChange={(e) => setQueryField(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-[#d3e1f5] text-[17px] text-[#082a63] focus:outline-none focus:ring-2 focus:ring-[#1b57d8]"
-                  >
-                    <option value="general">General</option>
-                    <option value="photo">Photograph</option>
-                    <option value="aadhaar">Aadhaar Card</option>
-                    <option value="marksheet_10th">10th Marksheet</option>
-                    <option value="marksheet_12th">12th Marksheet</option>
-                    <option value="personal_details">Personal Details</option>
-                    <option value="course_details">Course Details</option>
-                  </select>
+                  <Select size="lg" ariaLabel="Field or section" value={queryField} onChange={setQueryField}
+                    options={[
+                      { value: "general", label: "General" },
+                      { value: "photo", label: "Photograph" },
+                      { value: "aadhaar", label: "Aadhaar Card" },
+                      { value: "marksheet_10th", label: "10th Marksheet" },
+                      { value: "marksheet_12th", label: "12th Marksheet" },
+                      { value: "personal_details", label: "Personal Details" },
+                      { value: "course_details", label: "Course Details" },
+                    ]} />
                 </div>
                 <div>
                   <label className="text-[15px] font-bold text-[#082a63] uppercase mb-1 block">Query Message</label>

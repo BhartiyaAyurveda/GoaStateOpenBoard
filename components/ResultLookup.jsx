@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
-import { ChevronDown, Loader2, Printer, Search, RotateCcw, Hash, CalendarDays, ClipboardList, ShieldCheck } from "lucide-react";
+import Select from "@/components/ui/Select";
+import { Loader2, Printer, Search, RotateCcw, Hash, CalendarDays, ClipboardList, ShieldCheck } from "lucide-react";
 import { ENROLLMENT_PATTERN, RESULT_CLASSES, RESULT_SESSIONS } from "@/lib/result-options";
 import ResultMarksheet from "@/components/ResultMarksheet";
 
@@ -90,7 +91,7 @@ function ResultSheet({ data, onReset }) {
           <div className="flex-1 text-center">
             <p className="text-[22px] font-extrabold tracking-wide text-navy sm:text-[26px]">GOA STATE OPEN SCHOOL</p>
             <p lang="kok" className="font-devanagari text-[15px] font-semibold text-navy">गोंय राज्य मुक्त शाळा</p>
-            <p className="text-[13.5px] font-semibold text-[#44557a]">Directorate of Education, Government of Goa</p>
+            <p className="text-[13.5px] font-semibold text-[#44557a]">Open Schooling | Flexible Learning</p>
           </div>
           <span className="hidden w-[54px] sm:block" />
         </header>
@@ -332,20 +333,17 @@ export default function ResultLookup() {
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <Field label="Examination" error={errors.session} htmlFor="r-session" icon={ClipboardList}>
-            <select
+            <Select
               id="r-session"
+              variant="public"
+              withIcon
+              invalid={Boolean(errors.session)}
+              ariaLabel="Examination"
+              placeholder="-- Select Examination --"
               value={values.session}
-              onChange={set("session")}
-              className={`${controlCls(errors.session)} cursor-pointer appearance-none pr-10 ${values.session ? "" : "text-[#8a97b3]"}`}
-            >
-              <option value="">-- Select Examination --</option>
-              {RESULT_SESSIONS.map((s) => (
-                <option key={s.value} value={s.value} className="text-ink">
-                  {s.label}
-                </option>
-              ))}
-            </select>
-            <ChevronDown size={18} strokeWidth={2.2} className="pointer-events-none absolute right-3.5 top-[15px] text-[#5b78a8]" aria-hidden="true" />
+              onChange={(v) => set("session")({ target: { value: v } })}
+              options={RESULT_SESSIONS.map((s) => ({ value: s.value, label: s.label }))}
+            />
           </Field>
         </div>
 

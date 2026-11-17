@@ -26,6 +26,9 @@ import {
   FileText
 } from "lucide-react";
 import { DashboardProvider, useDashboard, STATUS_LABELS } from "./DashboardContext";
+import ResetPageZoom from "@/components/ResetPageZoom";
+import Modal from "@/components/ui/Modal";
+import Select from "@/components/ui/Select";
 
 function DashboardLayoutContent({ children }) {
   const pathname = usePathname();
@@ -135,6 +138,7 @@ function DashboardLayoutContent({ children }) {
   if (!college) {
     return (
       <div className="min-h-screen bg-[#f4f8fe] flex items-center justify-center">
+        <ResetPageZoom />
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-3 border-[#082a63]/20 border-t-[#082a63] rounded-full animate-spin" />
           <p className="text-[15px] font-semibold text-[#3d5688]">Loading Study Centre Portal...</p>
@@ -145,6 +149,7 @@ function DashboardLayoutContent({ children }) {
 
   return (
     <div data-dashboard className="min-h-screen bg-[#f4f8fe] text-[#082a63] flex flex-col selection:bg-[#1b57d8] selection:text-white">
+      <ResetPageZoom />
 
       {/* Floating Toast Notification */}
       {toast.show && (
@@ -161,156 +166,171 @@ function DashboardLayoutContent({ children }) {
         </div>
       )}
 
-      {/* Student Detail Modal */}
-      {selectedStudent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white text-[#082a63] max-w-lg w-full rounded-3xl shadow-2xl border border-[#d3e1f5] max-h-[90vh] flex flex-col overflow-hidden">
-            {/* Modal header */}
-            <div className="px-6 pt-6 pb-4 border-b border-[#d3e1f5] shrink-0 flex items-center justify-between bg-[#f4f8fe]">
-              <div>
-                <h3 className="text-lg font-bold text-[#082a63]">{selectedStudent.candidate_name}</h3>
-                <p className="text-[15px] text-[#3d5688] mt-0.5">{selectedStudent.courses?.course_name || "—"}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                {(() => {
-                  const st = STATUS_LABELS[selectedStudent.status] || STATUS_LABELS.pending;
-                  const Icon = st.icon;
-                  return (
-                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[13px] font-bold border ${st.color}`}>
-                      <Icon className="w-3.5 h-3.5" />
-                      {st.label}
-                    </span>
-                  );
-                })()}
-                <button
-                  onClick={closeDetail}
-                  className="p-1.5 rounded-full text-[#3d5688] hover:text-[#082a63] hover:bg-[#d3e1f5] transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
+      {/* Student detail / query-resolution modal */}
+      {(() => {
+        const s = selectedStudent;
+        const st = s ? STATUS_LABELS[s.status] || STATUS_LABELS.pending : null;
+        const StIcon = st?.icon;
+        const isQuery = s?.status === "query_raised";
+        const openQueries = studentQueries.filter((q) => q.status === "open");
+        const fieldCls =
+          "h-11 w-full min-w-0 rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] px-3.5 text-[15px] text-[#082a63] outline-none placeholder:text-[#8a97b3] focus:border-[#1b57d8] focus:bg-white focus:ring-2 focus:ring-[#1b57d8]/15";
+        const labelCls = "mb-1.5 block text-[13.5px] font-bold text-[#082a63]";
+        const setEdit = (key) => (e) => setEditForm((f) => ({ ...f, [key]: e.target.value }));
 
-            {/* Modal body */}
-            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5" style={{ scrollbarWidth: "thin" }}>
-              {/* Student info grid */}
-              <div className="grid grid-cols-2 gap-3 text-[13px] sm:text-[15px]">
-                {[
-                  ["Father's Name", selectedStudent.father_name],
-                  ["Date of Birth",  selectedStudent.dob],
-                  ["Gender",         selectedStudent.gender],
-                  ["Phone",          selectedStudent.phone],
-                  ["Email",          selectedStudent.email],
-                  ["Applied On",     selectedStudent.created_at ? new Date(selectedStudent.created_at).toLocaleDateString("en-IN") : "—"],
-                ].map(([label, val]) => (
-                  <div key={label} className="bg-[#f4f8fe] rounded-xl px-3.5 py-2.5 border border-[#d3e1f5]">
-                    <p className="text-[13px] text-[#3d5688] font-bold uppercase tracking-wider">{label}</p>
-                    <p className="font-semibold text-[#082a63] text-[15px] mt-0.5 break-words">{val || "—"}</p>
-                  </div>
-                ))}
-              </div>
+        const footer = !s ? null : isQuery && editForm ? (
+          <>
+            <button type="button" onClick={() => setEditForm(null)} disabled={saving}
+              className="h-11 rounded-xl border border-[#d3e1f5] bg-white px-6 text-[15px] font-bold text-[#082a63] transition hover:bg-[#f4f8fe] disabled:opacity-60">
+              Cancel
+            </button>
+            <button type="button" onClick={resubmit} disabled={saving}
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#1b57d8] px-6 text-[15px] font-bold text-white transition hover:bg-[#1245b8] disabled:opacity-60">
+              {saving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />} Resubmit to Board
+            </button>
+          </>
+        ) : isQuery ? (
+          <>
+            <button type="button" onClick={closeDetail}
+              className="h-11 rounded-xl border border-[#d3e1f5] bg-white px-6 text-[15px] font-bold text-[#082a63] transition hover:bg-[#f4f8fe]">
+              Close
+            </button>
+            <button type="button" onClick={startEdit}
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-amber-600 px-6 text-[15px] font-bold text-white transition hover:bg-amber-700">
+              <Pencil className="h-4 w-4" /> Edit &amp; resubmit application
+            </button>
+          </>
+        ) : (
+          <button type="button" onClick={closeDetail}
+            className="h-11 rounded-xl border border-[#d3e1f5] bg-white px-6 text-[15px] font-bold text-[#082a63] transition hover:bg-[#f4f8fe]">
+            Close
+          </button>
+        );
 
-              {/* Assign Roll / Enrollment / Session */}
-              <div className="bg-[#f4f8fe] rounded-2xl border border-[#d3e1f5] p-4 sm:p-5 space-y-3">
-                <div className="flex items-center gap-2">
-                  <Hash className="w-4 h-4 text-[#1b57d8]" />
-                  <h4 className="text-[15px] font-bold text-[#082a63] uppercase tracking-wider">
-                    Academic Details
-                  </h4>
+        return (
+          <Modal
+            open={!!s}
+            onClose={closeDetail}
+            busy={saving}
+            icon={GraduationCap}
+            title={s?.candidate_name || "Application"}
+            subtitle={s?.courses?.course_name || ""}
+            size="sm:max-w-2xl"
+            footer={footer}
+          >
+            {s && (
+              <div className="space-y-5">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1 text-[13px] font-bold ${st.color}`}>
+                    <StIcon className="h-3.5 w-3.5" /> {st.label}
+                  </span>
+                  {s.created_at && <span className="text-[13.5px] text-[#6b7ea3]">Applied {new Date(s.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</span>}
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {[
-                    ["Roll No", selectedStudent.roll_no],
-                    ["Enrollment No", selectedStudent.enrollment_no],
-                    ["Session", selectedStudent.academic_session || selectedStudent.session_label],
-                  ].map(([label, value]) => (
-                    <div key={label}>
-                      <p className="block text-[13px] sm:text-[15px] font-bold text-[#082a63] mb-1.5">{label}</p>
-                      <p className="w-full px-3.5 py-2.5 text-[15px] rounded-xl border border-[#d3e1f5] bg-white text-[#082a63] font-mono">{value || "Not allotted yet"}</p>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-[13px] text-[#3d5688]">Roll and enrollment numbers are allotted by the Board and cannot be edited here.</p>
-              </div>
 
-              {/* Query Raised */}
-              {selectedStudent.status === "query_raised" && (
-                <div className="space-y-3">
-                  <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-2">
-                    <p className="text-[15px] font-bold text-amber-900 uppercase tracking-wide flex items-center gap-2">
-                      <MessageSquare className="w-4 h-4" /> Admin Queries
+                {/* Admin queries first: this is what the college has to act on */}
+                {isQuery && (
+                  <div className="space-y-2.5 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                    <p className="flex items-center gap-2 text-[14.5px] font-bold text-amber-900">
+                      <MessageSquare className="h-4 w-4" /> Board queries to resolve ({openQueries.length})
                     </p>
-                    {studentQueries.filter((q) => q.status === "open").map((q) => (
-                      <div key={q.id} className="bg-white rounded-xl px-4 py-3 border border-amber-200">
-                        {q.field_name && (
-                          <p className="text-[13px] font-bold text-amber-700 uppercase tracking-wide mb-1">
-                            {q.field_name.replace(/_/g, " ")}
-                          </p>
-                        )}
-                        <p className="text-[15px] text-amber-950 font-medium">{q.message}</p>
-                      </div>
-                    ))}
+                    {openQueries.length === 0 ? (
+                      <p className="text-[14px] text-amber-900/80">Loading the Board&apos;s queries…</p>
+                    ) : (
+                      openQueries.map((q) => (
+                        <div key={q.id} className="rounded-xl border border-amber-200 bg-white px-4 py-3">
+                          {q.field_name && <p className="mb-1 text-[12.5px] font-bold uppercase tracking-wide text-amber-700">{q.field_name.replace(/_/g, " ")}</p>}
+                          <p className="break-words text-[15px] font-medium text-amber-950">{q.message}</p>
+                        </div>
+                      ))
+                    )}
                   </div>
+                )}
 
-                  {editForm ? (
-                    <div className="bg-white rounded-2xl border border-[#d3e1f5] p-4 sm:p-5 space-y-3">
-                      <h4 className="text-[15px] font-bold text-[#082a63] uppercase tracking-wider">Edit Application</h4>
-                      <div className="grid grid-cols-2 gap-3">
+                {/* Edit form */}
+                {isQuery && editForm && (
+                  <div className="space-y-4 rounded-2xl border border-[#d3e1f5] bg-white p-4">
+                    <h4 className="text-[15px] font-bold text-[#082a63]">Edit application</h4>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      {[
+                        ["Candidate name", "candidate_name", "text"],
+                        ["Father's name", "father_name", "text"],
+                        ["Mother's name", "mother_name", "text"],
+                        ["Date of birth", "dob", "date"],
+                        ["Phone", "phone", "tel"],
+                        ["Email", "email", "email"],
+                        ["Aadhaar no.", "aadhar_no", "text"],
+                        ["City", "city", "text"],
+                        ["State", "state", "text"],
+                        ["Pincode", "pincode", "text"],
+                      ].map(([label, key, type]) => (
+                        <label key={key} className="block min-w-0">
+                          <span className={labelCls}>{label}</span>
+                          <input type={type} value={editForm[key] || ""} onChange={setEdit(key)} className={fieldCls} />
+                        </label>
+                      ))}
+                      <div>
+                        <span className={labelCls}>Gender</span>
+                        <Select size="lg" ariaLabel="Gender" placeholder="Select" value={editForm.gender || ""} onChange={(v) => setEditForm((f) => ({ ...f, gender: v }))}
+                          options={[{ value: "", label: "Not set" }, ...["Male", "Female", "Other"].map((g) => ({ value: g, label: g }))]} />
+                      </div>
+                      <div>
+                        <span className={labelCls}>Category</span>
+                        <Select size="lg" ariaLabel="Category" placeholder="Select" value={editForm.category || ""} onChange={(v) => setEditForm((f) => ({ ...f, category: v }))}
+                          options={[{ value: "", label: "Not set" }, ...["General", "OBC", "SC", "ST", "EWS"].map((c) => ({ value: c, label: c }))]} />
+                      </div>
+                      <label className="block min-w-0 sm:col-span-2">
+                        <span className={labelCls}>Address</span>
+                        <input type="text" value={editForm.address || ""} onChange={setEdit("address")} className={fieldCls} />
+                      </label>
+                    </div>
+                  </div>
+                )}
+
+                {/* Student info */}
+                {!editForm && (
+                  <>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      {[
+                        ["Father's name", s.father_name],
+                        ["Date of birth", s.dob],
+                        ["Gender", s.gender],
+                        ["Phone", s.phone],
+                        ["Email", s.email],
+                        ["Course", s.courses?.course_name],
+                      ].map(([label, val]) => (
+                        <div key={label} className="min-w-0 rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] px-3.5 py-2.5">
+                          <p className="text-[12.5px] font-bold uppercase tracking-wide text-[#6b7ea3]">{label}</p>
+                          <p className="mt-0.5 break-words text-[15px] font-semibold text-[#082a63]">{val || "—"}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="space-y-3 rounded-2xl border border-[#d3e1f5] bg-[#f4f8fe] p-4">
+                      <div className="flex items-center gap-2">
+                        <Hash className="h-4 w-4 text-[#1b57d8]" />
+                        <h4 className="text-[14.5px] font-bold text-[#082a63]">Academic details</h4>
+                      </div>
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                         {[
-                          ["Candidate Name","candidate_name","text"],
-                          ["Father's Name","father_name","text"],
-                          ["Mother's Name","mother_name","text"],
-                          ["Date of Birth","dob","date"],
-                          ["Phone","phone","tel"],
-                          ["Email","email","email"],
-                          ["Aadhar No","aadhar_no","text"],
-                          ["City","city","text"],
-                          ["State","state","text"],
-                          ["Pincode","pincode","text"],
-                          ["Address","address","text"],
-                        ].map(([label, key, type]) => (
-                          <div key={key} className={key === "address" ? "col-span-2" : ""}>
-                            <label className="block text-[13px] sm:text-[15px] font-bold text-[#082a63] mb-1">{label}</label>
-                            <input
-                              type={type}
-                              value={editForm[key] || ""}
-                              onChange={(e) => setEditForm((f) => ({ ...f, [key]: e.target.value }))}
-                              className="w-full px-3.5 py-2 text-[15px] rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] text-[#082a63] focus:outline-none focus:ring-2 focus:ring-[#1b57d8]"
-                            />
+                          ["Roll no.", s.roll_no],
+                          ["Enrollment no.", s.enrollment_no],
+                          ["Session", s.academic_session || s.session_label],
+                        ].map(([label, value]) => (
+                          <div key={label} className="min-w-0">
+                            <p className="mb-1 text-[13px] font-bold text-[#3d5688]">{label}</p>
+                            <p className="break-words rounded-xl border border-[#d3e1f5] bg-white px-3.5 py-2.5 font-mono text-[14.5px] text-[#082a63]">{value || "Not allotted yet"}</p>
                           </div>
                         ))}
                       </div>
-                      <div className="grid grid-cols-2 gap-2 pt-2">
-                        <button
-                          onClick={() => setEditForm(null)}
-                          className="py-2.5 rounded-xl border border-[#d3e1f5] text-[15px] font-bold text-[#3d5688] hover:bg-[#f4f8fe] transition-all cursor-pointer"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={resubmit}
-                          disabled={saving}
-                          className="py-2.5 rounded-xl bg-[#082a63] hover:bg-[#0b3a85] text-white text-[15px] font-bold transition-all disabled:opacity-60 flex items-center justify-center gap-1.5 cursor-pointer"
-                        >
-                          {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                          Resubmit to Admin
-                        </button>
-                      </div>
+                      <p className="text-[13px] text-[#3d5688]">Roll and enrollment numbers are allotted by the Board and cannot be edited here.</p>
                     </div>
-                  ) : (
-                    <button
-                      onClick={startEdit}
-                      className="w-full py-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-[15px] font-bold transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer"
-                    >
-                      <Pencil className="w-4 h-4" /> Edit &amp; Resubmit Application
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+                  </>
+                )}
+              </div>
+            )}
+          </Modal>
+        );
+      })()}
 
       {/* Main Dashboard Shell */}
       <div className="fixed inset-0 flex overflow-hidden">
@@ -330,6 +350,7 @@ function DashboardLayoutContent({ children }) {
               <p className="text-[15px] font-bold text-white leading-tight tracking-tight">
                 Goa State Open School
               </p>
+              <p lang="kok" className="font-devanagari text-[13.5px] font-semibold leading-tight text-[#bcd8fb]">गोंय राज्य मुक्त शाळा</p>
               <p className="text-[13px] text-[#5db0f4] font-semibold tracking-wider uppercase mt-0.5">
                 Study Centre Portal
               </p>

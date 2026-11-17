@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Building2, Headphones } from "lucide-react";
+import { Building2, Headphones, MapPin } from "lucide-react";
 import TopBar from "@/components/TopBar";
 import Header from "@/components/Header";
 import Navbar from "@/components/Navbar";
@@ -17,6 +17,7 @@ export const metadata = {
 
 export default async function StudyCentresPage() {
   const [centres, contact] = await Promise.all([getStudyCentres(), getContactInfo()]);
+  const cityCount = new Set(centres.map((c) => c.city.toLowerCase()).filter(Boolean)).size;
 
   return (
     <>
@@ -27,7 +28,7 @@ export default async function StudyCentresPage() {
       <main id="main-content">
         <section className="bg-gradient-to-b from-[#dfeafa] to-white">
           <div className="mx-auto max-w-[1320px] px-4 py-10 sm:px-6 lg:py-14">
-            <p className="text-[13.5px] font-bold uppercase tracking-[0.2em] text-brand">Goa State Open School</p>
+            <p className="text-[13.5px] font-bold uppercase tracking-[0.2em] text-brand">Goa State Open School <span lang="kok" className="font-devanagari normal-case tracking-normal"> · गोंय राज्य मुक्त शाळा</span></p>
             <h1 className="mt-2 font-serif text-[34px] font-extrabold leading-tight tracking-tight text-ink sm:text-[42px]">Study Centres</h1>
             <div className="mt-3 flex items-center gap-2" aria-hidden="true">
               <span className="h-[3px] w-14 bg-brand" />
@@ -36,6 +37,18 @@ export default async function StudyCentresPage() {
             <p className="mt-4 max-w-[760px] text-[15.5px] font-medium leading-[1.7] text-ink/90">
               Study centres support learners with admission, classes and examinations. Find the centre nearest to you and contact it directly.
             </p>
+            {centres.length > 0 && (
+              <div className="mt-5 flex flex-wrap gap-2.5 text-[13.5px] font-bold">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-[#c9daf2] bg-white px-3.5 py-1.5 text-navy">
+                  <Building2 size={15} aria-hidden="true" /> {centres.length} study {centres.length === 1 ? "centre" : "centres"}
+                </span>
+                {cityCount > 0 && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-[#c9daf2] bg-white px-3.5 py-1.5 text-navy">
+                    <MapPin size={15} aria-hidden="true" /> {cityCount} {cityCount === 1 ? "city" : "cities"}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </section>
 

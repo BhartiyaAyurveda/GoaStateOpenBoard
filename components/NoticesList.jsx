@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, ExternalLink, FileText, Search, SearchX } from "lucide-react";
+import Select from "@/components/ui/Select";
+import { CalendarDays, ChevronLeft, ChevronRight, ExternalLink, FileText, Search, SearchX } from "lucide-react";
 import { NOTICE_CATEGORIES, formatNoticeDate } from "@/lib/notices";
 
 const PAGE_SIZE = 8;
@@ -62,20 +63,14 @@ export default function NoticesList({ notices: NOTICES = [] }) {
         </div>
         <div className="relative">
           <CalendarDays size={18} strokeWidth={1.8} className="pointer-events-none absolute left-3.5 top-[15px] text-[#5b78a8]" aria-hidden="true" />
-          <select
+          <Select
+            variant="public"
+            withIcon
+            ariaLabel="Filter by year"
             value={year}
-            onChange={(e) => reset(setYear)(e.target.value)}
-            aria-label="Filter by year"
-            className="h-[48px] w-full cursor-pointer appearance-none rounded-md border border-[#b9cbe6] bg-[#fbfdff] pl-11 pr-10 text-[14.5px] font-medium text-ink outline-none transition hover:border-[#7fa0d6] focus:border-brand focus:ring-4 focus:ring-brand/15"
-          >
-            <option value="All">All years</option>
-            {YEARS.map((y) => (
-              <option key={y} value={y}>
-                {y}
-              </option>
-            ))}
-          </select>
-          <ChevronDown size={18} strokeWidth={2.2} className="pointer-events-none absolute right-3.5 top-[15px] text-[#5b78a8]" aria-hidden="true" />
+            onChange={(v) => reset(setYear)(v)}
+            options={[{ value: "All", label: "All years" }, ...YEARS.map((y) => ({ value: y, label: String(y) }))]}
+          />
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Select from "@/components/ui/Select";
 import {
   CheckCircle2,
   ChevronRight,
@@ -84,33 +85,35 @@ async function uploadToImageKit(file, folder = "registrations") {
 
 // ── Field Helpers ──────────────────────────────────────────────────────────
 const inputCls =
-  "w-full px-4 py-2.5 sm:py-3 text-[15px] rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] text-[#082a63] placeholder-[#8a97b3] font-medium focus:outline-none focus:ring-4 focus:ring-[#1b57d8]/15 focus:border-[#1b57d8] focus:bg-white transition-all";
+  "w-full px-4 py-3 text-[15px] rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] text-[#082a63] placeholder-[#8a97b3] font-medium focus:outline-none focus:ring-4 focus:ring-[#1b57d8]/15 focus:border-[#1b57d8] focus:bg-white transition-all";
 const inputIconCls =
-  "w-full pl-10 pr-4 py-2.5 sm:py-3 text-[15px] rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] text-[#082a63] placeholder-[#8a97b3] font-medium focus:outline-none focus:ring-4 focus:ring-[#1b57d8]/15 focus:border-[#1b57d8] focus:bg-white transition-all";
+  "w-full pl-10 pr-4 py-3 text-[15px] rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] text-[#082a63] placeholder-[#8a97b3] font-medium focus:outline-none focus:ring-4 focus:ring-[#1b57d8]/15 focus:border-[#1b57d8] focus:bg-white transition-all";
 const labelCls =
-  "block text-[13px] font-bold uppercase tracking-widest text-[#3d5688] mb-1.5";
+  "block text-[14px] font-bold leading-snug text-[#082a63] mb-1.5";
 const errCls =
   "text-red-600 text-[13px] font-semibold mt-1 flex items-center gap-1";
 
 function Field({ label, req, error, icon: Icon, children }) {
   return (
-    <div className="space-y-0.5">
+    <div className="flex h-full flex-col">
       <label className={labelCls}>
         {label}
         {req && <span className="text-red-500 ml-1">*</span>}
       </label>
-      {Icon ? (
-        <div className="relative group">
-          <Icon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#3d5688] group-focus-within:text-[#1b57d8] transition-colors pointer-events-none" />
-          {children}
-        </div>
-      ) : children}
-      {error && (
-        <p className={errCls}>
-          <span className="w-1 h-1 rounded-full bg-red-600" />
-          {error}
-        </p>
-      )}
+      <div className="mt-auto">
+        {Icon ? (
+          <div className="relative group">
+            <Icon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#3d5688] group-focus-within:text-[#1b57d8] transition-colors pointer-events-none" />
+            {children}
+          </div>
+        ) : children}
+        {error && (
+          <p className={errCls}>
+            <span className="w-1 h-1 rounded-full bg-red-600" />
+            {error}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
@@ -118,7 +121,7 @@ function Field({ label, req, error, icon: Icon, children }) {
 function SectionLabel({ children }) {
   return (
     <div className="flex items-center gap-3 pt-1 pb-0.5">
-      <span className="text-[12px] font-bold uppercase tracking-widest text-[#1b57d8]">{children}</span>
+      <span className="text-[13px] font-extrabold uppercase tracking-wider text-[#1245b8]">{children}</span>
       <div className="flex-1 h-px bg-gradient-to-r from-[#1b57d8]/30 to-transparent" />
     </div>
   );
@@ -296,11 +299,8 @@ function EduRow({ label, hindiLabel, required, value, onChange, allowCgpa = fals
             <div className="text-slate-400 font-bold text-[15px] mt-4">/</div>
             <div className="w-24">
               <p className="text-[12px] text-slate-500 mb-1">Scale (Out of)</p>
-              <select value={value.cgpa_scale || "10"} onChange={e => set("cgpa_scale", e.target.value)}
-                className={inp}>
-                <option value="10">10</option>
-                <option value="4">4</option>
-              </select>
+              <Select ariaLabel="CGPA scale" value={value.cgpa_scale || "10"} onChange={(v) => set("cgpa_scale", v)}
+                options={[{ value: "10", label: "10" }, { value: "4", label: "4" }]} />
             </div>
           </div>
         </td>
@@ -690,27 +690,25 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
           </Field>
 
           <Field label="Gender / लिंग" icon={User}>
-            <select
+            <Select
+              variant="form"
+              withIcon
+              ariaLabel="Gender"
               value={form.gender}
-              onChange={(e) => set("gender", e.target.value)}
-              className={inputIconCls}
-            >
-              {["Male / दादलो", "Female / बायल", "Other / हेर"].map((g) => (
-                <option key={g} value={g.split(" /")[0]}>{g}</option>
-              ))}
-            </select>
+              onChange={(v) => set("gender", v)}
+              options={["Male / दादलो", "Female / बायल", "Other / हेर"].map((g) => ({ value: g.split(" /")[0], label: g }))}
+            />
           </Field>
 
           <Field label="Category / Reservation / आरक्षण वर्ग" icon={BadgeCheck}>
-            <select
+            <Select
+              variant="form"
+              withIcon
+              ariaLabel="Category"
               value={form.category}
-              onChange={(e) => set("category", e.target.value)}
-              className={inputIconCls}
-            >
-              {["General / सर्वसादारण", "OBC / हेर मागासवर्गीय", "SC / अनुसूचित जात", "ST / अनुसूचित जमात", "EWS / आर्थिक दृष्ट्या दुबळो"].map((c) => (
-                <option key={c} value={c.split(" /")[0]}>{c}</option>
-              ))}
-            </select>
+              onChange={(v) => set("category", v)}
+              options={["General / सर्वसादारण", "OBC / हेर मागासवर्गीय", "SC / अनुसूचित जात", "ST / अनुसूचित जमात", "EWS / आर्थिक दृष्ट्या दुबळो"].map((c) => ({ value: c.split(" /")[0], label: c }))}
+            />
           </Field>
 
           <Field label="Aadhaar Number / आधार क्रमांक" icon={CreditCard}>
@@ -824,7 +822,7 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
                   type="button"
                   onClick={handleVerifyOtp}
                   disabled={otpLoading || otpDigits.some(d => !d)}
-                  className="w-full mt-1 py-2.5 rounded-xl bg-[#1b57d8] hover:bg-[#5db0f4] active:scale-95 text-[#06204f] text-[15px] font-extrabold disabled:opacity-50 transition-all shadow-sm cursor-pointer flex items-center justify-center gap-2"
+                  className="w-full mt-1 py-2.5 rounded-xl bg-[#1b57d8] hover:bg-[#1245b8] active:scale-95 text-white text-[15px] font-extrabold disabled:opacity-50 transition-all shadow-sm cursor-pointer flex items-center justify-center gap-2"
                 >
                   {otpLoading
                     ? <><RefreshCw className="w-4 h-4 animate-spin" /> Verifying…</>
@@ -865,15 +863,14 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
           </Field>
 
           <Field label="State / UT / राज्य" req error={errors.state}>
-            <select
+            <Select
+              variant="form"
+              invalid={Boolean(errors.state)}
+              ariaLabel="State"
               value={form.state}
-              onChange={(e) => set("state", e.target.value)}
-              className={inputCls}
-            >
-              {INDIAN_STATES.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
+              onChange={(v) => set("state", v)}
+              options={INDIAN_STATES.map((st) => ({ value: st, label: st }))}
+            />
           </Field>
 
           <Field label="PIN Code / पिन कोड" error={errors.pincode}>
@@ -887,15 +884,13 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
           </Field>
 
           <Field label="Academic Session / शैक्षणीक सत्र">
-            <select
+            <Select
+              variant="form"
+              ariaLabel="Academic session"
               value={form.academic_session}
-              onChange={(e) => set("academic_session", e.target.value)}
-              className={inputCls}
-            >
-              {SESSIONS.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
+              onChange={(v) => set("academic_session", v)}
+              options={SESSIONS.map((se) => ({ value: se, label: se }))}
+            />
           </Field>
         </div>
       </div>
@@ -948,13 +943,13 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-slate-200">
-              <EduRow label="High School (10th)" hindiLabel="हायस्कूल" required
+              <EduRow label="High School (10th)" hindiLabel="हायस्कूल (10वी)" required
                 value={form.education.high_school}
                 onChange={v => setForm(f => ({ ...f, education: { ...f.education, high_school: v } }))} />
-              <EduRow label="Intermediate (12th / 10+2)" hindiLabel="इंटरमीडिएट" required
+              <EduRow label="Intermediate (12th / 10+2)" hindiLabel="उच्च माध्यमीक (12वी)" required
                 value={form.education.intermediate}
                 onChange={v => setForm(f => ({ ...f, education: { ...f.education, intermediate: v } }))} />
-              <EduRow label="Graduation" hindiLabel="पदवी (ऐच्छिक)" allowCgpa
+              <EduRow label="Graduation" hindiLabel="पदवी (वैकल्पीक)" allowCgpa
                 value={form.education.graduation}
                 onChange={v => setForm(f => ({ ...f, education: { ...f.education, graduation: v } }))} />
               <EduRow label="Other / Diploma" hindiLabel="हेर / डिप्लोमा" allowCgpa
@@ -1264,12 +1259,14 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
       )}
 
       {/* ── Guidelines Banner (standard style) ── */}
-      <div className="bg-[#FFF9E6] border-l-4 border-[#1b57d8] p-4 rounded-r-xl shadow-xs">
-        <h4 className="font-bold text-[#082a63] mb-1.5 flex items-center gap-2 text-[15px]">
-          <AlertTriangle className="w-4 h-4 text-[#B13B1C]" />
+      <div className="rounded-2xl border border-amber-200 bg-[#FFF9E6] p-4 sm:p-5 shadow-xs">
+        <h4 className="mb-2 flex items-center gap-2.5 text-[15.5px] font-bold text-[#082a63]">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+            <AlertTriangle className="w-4 h-4" />
+          </span>
           Important Instructions / महाविद्यालयां खातीर म्हत्वाच्यो सूचना
         </h4>
-        <ul className="list-disc list-inside space-y-1 text-[13px] text-[#082a63] ml-1 leading-relaxed">
+        <ul className="ml-1 list-inside list-disc space-y-1.5 text-[14px] leading-relaxed text-[#082a63] marker:text-amber-600">
           <li>Verify candidate's personal and academic particulars with original certificates before submission.</li>
           <li>Ensure active student mobile number and email ID are provided for board notifications.</li>
           <li>Uploaded documents must be legible and in JPG/PNG/PDF format within the specified size limits.</li>
@@ -1342,19 +1339,19 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
         {/* Step Card Header */}
         <div className="bg-gradient-to-r from-[#082a63] to-[#1245b8] px-4 sm:px-5 py-3 sm:py-3.5 flex items-center justify-between gap-2 border-b border-[#06204f] rounded-t-2xl">
           <div className="flex items-center gap-2.5 min-w-0">
-            <span className="w-7 h-7 rounded-full bg-[#1b57d8] text-[#06204f] font-extrabold text-[15px] flex items-center justify-center shadow-sm shrink-0">
+            <span className="w-8 h-8 rounded-full bg-white/15 ring-1 ring-white/30 text-white font-extrabold text-[15px] flex items-center justify-center shrink-0">
               {step}
             </span>
-            <h2 className="text-white font-bold text-[13px] sm:text-[15px] tracking-wide leading-tight">
-              {step === 1 && <><span className="uppercase">Personal Details</span><span className="text-[#1b57d8]/80"> / वैयक्तिक तपशील</span></>}
-              {step === 2 && <><span className="uppercase">Contact &amp; Address</span><span className="text-[#1b57d8]/80"> / संपर्क आनी पत्तो</span></>}
-              {step === 3 && <><span className="uppercase">Course &amp; Session</span><span className="text-[#1b57d8]/80"> / अभ्यासक्रम तपशील</span></>}
-              {step === 4 && <><span className="uppercase">Education</span><span className="text-[#1b57d8]/80"> / शैक्षणीक पात्रता</span></>}
-              {step === 5 && <><span className="uppercase">Documents</span><span className="text-[#1b57d8]/80"> / दस्तावेज अपलोड</span></>}
-              {step === 6 && <><span className="uppercase">Review</span><span className="text-[#1b57d8]/80"> / पुनरावलोकन आनी घोशणा</span></>}
+            <h2 className="text-white font-bold text-[15px] sm:text-[16px] leading-tight">
+              {step === 1 && <><span>Personal Details</span><span className="font-semibold text-[#bcd8fb]"> / वैयक्तिक तपशील</span></>}
+              {step === 2 && <><span>Contact &amp; Address</span><span className="font-semibold text-[#bcd8fb]"> / संपर्क आनी पत्तो</span></>}
+              {step === 3 && <><span>Course &amp; Session</span><span className="font-semibold text-[#bcd8fb]"> / अभ्यासक्रम तपशील</span></>}
+              {step === 4 && <><span>Education</span><span className="font-semibold text-[#bcd8fb]"> / शैक्षणीक पात्रता</span></>}
+              {step === 5 && <><span>Documents</span><span className="font-semibold text-[#bcd8fb]"> / दस्तावेज अपलोड</span></>}
+              {step === 6 && <><span>Review</span><span className="font-semibold text-[#bcd8fb]"> / पुनरावलोकन आनी घोशणा</span></>}
             </h2>
           </div>
-          <span className="text-[12px] font-semibold text-[#bccbe6] hidden sm:inline-block shrink-0">
+          <span className="text-[13px] font-semibold text-[#d3e1f5] hidden sm:inline-block shrink-0">
             {step === 5 ? "JPG / PNG / PDF · Max 5MB" :
              step === 4 ? "10th & 12th mandatory" :
              step === 1 ? "* Fields mandatory" :
@@ -1371,11 +1368,11 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
             type="button"
             onClick={back}
             disabled={step === 1}
-            className="px-3 sm:px-5 py-2.5 rounded-xl border border-[#d3e1f5] text-[15px] font-bold text-[#3d5688] hover:text-[#082a63] hover:bg-white disabled:opacity-40 disabled:pointer-events-none flex items-center gap-1.5 sm:gap-2 transition-all shadow-xs cursor-pointer"
+            className="px-3 sm:px-5 py-3 rounded-xl border border-[#d3e1f5] text-[15px] font-bold text-[#3d5688] hover:text-[#082a63] hover:bg-white disabled:opacity-40 disabled:pointer-events-none flex items-center gap-1.5 sm:gap-2 transition-all shadow-xs cursor-pointer"
           >
             <ChevronLeft className="w-4 h-4 shrink-0" />
-            <span className="hidden xs:inline">Previous /</span>
-            <span> फाटीं</span>
+            <span>Previous</span>
+            <span className="hidden sm:inline"> / फाटीं</span>
           </button>
 
           {draftSaving && (
@@ -1388,10 +1385,10 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
             <button
               type="button"
               onClick={next}
-              className="px-4 sm:px-6 py-2.5 rounded-xl bg-[#082a63] hover:bg-[#0b3a85] active:scale-95 text-white text-[15px] font-bold flex items-center gap-1.5 sm:gap-2 transition-all shadow-sm cursor-pointer"
+              className="px-4 sm:px-6 py-3 rounded-xl bg-[#1b57d8] hover:bg-[#1245b8] active:scale-95 text-white text-[15px] font-bold flex items-center gap-1.5 sm:gap-2 transition-all shadow-sm cursor-pointer"
             >
-              <span className="hidden sm:inline">Save &amp; Continue /</span>
-              <span>फुडें</span>
+              <span className="sm:hidden">Next</span>
+              <span className="hidden sm:inline">Save &amp; Continue / फुडें</span>
               <ChevronRight className="w-4 h-4 shrink-0" />
             </button>
           ) : (
@@ -1399,19 +1396,19 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
               type="button"
               onClick={handleSubmit}
               disabled={submitting}
-              className="px-4 sm:px-7 py-2.5 sm:py-3 rounded-xl bg-[#1b57d8] hover:bg-[#5db0f4] active:scale-95 text-[#06204f] text-[15px] font-extrabold flex items-center gap-1.5 sm:gap-2 transition-all disabled:opacity-60 shadow-md cursor-pointer"
+              className="px-4 sm:px-7 py-2.5 sm:py-3 rounded-xl bg-[#1b57d8] hover:bg-[#1245b8] active:scale-95 text-white text-[15px] font-extrabold flex items-center gap-1.5 sm:gap-2 transition-all disabled:opacity-60 shadow-md cursor-pointer"
             >
               {submitting ? (
                 <>
                   <RefreshCw className="w-4 h-4 animate-spin shrink-0" />
-                  <span className="hidden sm:inline">Submitting… /</span>
-                  <span>सादर जाता आसा…</span>
+                  <span>Submitting…</span>
+                  <span className="hidden sm:inline"> / सादर जाता आसा…</span>
                 </>
               ) : (
                 <>
                   <CheckCircle2 className="w-4 h-4 shrink-0" />
-                  <span className="hidden sm:inline">Submit Registration /</span>
-                  <span>नोंदणी सादर करात</span>
+                  <span className="sm:hidden">Submit</span>
+                  <span className="hidden sm:inline">Submit Registration / नोंदणी सादर करात</span>
                 </>
               )}
             </button>

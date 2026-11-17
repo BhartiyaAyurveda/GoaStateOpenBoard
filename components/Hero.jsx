@@ -6,7 +6,7 @@ import { homeLinkProps, homeImageProps } from "@/lib/home-defaults";
 export default async function Hero() {
   const { hero } = await getHomeContent();
   return (
-    <section className="relative isolate overflow-hidden bg-gradient-to-b from-[#bcdcf8] via-[#d8ebfc] to-white max-sm:from-[#c4e0fa] max-sm:via-[#e4f1fd]">
+    <section className="relative isolate overflow-hidden bg-gradient-to-b from-[#bcdcf8] via-[#d8ebfc] to-white max-sm:flex max-sm:min-h-[calc(100svh-58px)] max-sm:flex-col max-sm:from-[#c4e0fa] max-sm:via-[#e4f1fd]">
       <div className="relative sm:h-[446px] md:h-[clamp(456px,calc(40vw+6px),606px)]">
         {/* tablet / desktop: photo behind the text */}
         <Image
@@ -65,11 +65,11 @@ export default async function Hero() {
         </div>
       </div>
 
-      {/* phone: the photo sits below the text, fading into the sky, with a blue wave at the bottom */}
-      <div className="relative sm:hidden">
-        {/* plain <img>: the photo is shown in its own proportions (not cropped to a fixed height) */}
+      {/* phone: hero fills the screen (100svh minus the 58px sticky navbar); the photo takes the space left under the text, fading into the sky, with a blue wave at the bottom */}
+      <div className="relative min-h-[260px] flex-1 sm:hidden">
+        {/* plain <img>: fills the remaining height, cropped from the top so the church / palms at the bottom stay visible */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={homeImageProps(hero.imageMobile, 900).src} alt={hero.imageAlt} className="block h-auto w-full" loading="eager" decoding="async" />
+        <img src={homeImageProps(hero.imageMobile, 900).src} alt={hero.imageAlt} className="absolute inset-0 block h-full w-full object-cover object-bottom" loading="eager" decoding="async" />
         <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-[#e4f1fd] via-[#e4f1fd]/70 to-transparent" aria-hidden="true" />
         <svg aria-hidden="true" viewBox="0 0 390 70" preserveAspectRatio="none" className="absolute inset-x-0 bottom-0 h-[52px] w-full">
           <defs>

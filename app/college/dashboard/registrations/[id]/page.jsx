@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Select from "@/components/ui/Select";
 import {
   AlertTriangle, CheckCircle2, RefreshCw, Send, FileText,
   MessageSquare, User, Phone, GraduationCap, ChevronLeft,
@@ -223,7 +224,7 @@ export default function RegistrationDetailPage() {
 
   /* error */
   if (error) return (
-    <div className="space-y-4 max-w-2xl">
+    <div className="mx-auto space-y-4 max-w-2xl">
       <button onClick={() => router.back()} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#3d5688] hover:text-[#082a63]">
         <ChevronLeft className="w-4 h-4" /> Back
       </button>
@@ -239,7 +240,7 @@ export default function RegistrationDetailPage() {
   const openQuery = queries.find(q => q.status === "open");
 
   return (
-    <div className="space-y-5 max-w-4xl pb-12">
+    <div className="space-y-5 pb-12">
 
       {/* ── top nav ── */}
       <div className="no-print flex items-center justify-between gap-3 flex-wrap">
@@ -458,11 +459,8 @@ export default function RegistrationDetailPage() {
                     <div key={key} className={span === 2 ? "sm:col-span-2" : ""}>
                       <label className="block text-[12px] font-bold uppercase text-[#3d5688] mb-1.5">{label}</label>
                       {type === "select" ? (
-                        <select value={editForm[key] || ""} onChange={e => setEditForm(f => ({ ...f, [key]: e.target.value }))}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] text-[15px] text-[#082a63] focus:outline-none focus:ring-2 focus:ring-[#1b57d8]/30 focus:border-[#1b57d8] transition-all">
-                          <option value="">— Select —</option>
-                          {options.map(o => <option key={o} value={o}>{o}</option>)}
-                        </select>
+                        <Select variant="form" ariaLabel={label} placeholder="Select" value={editForm[key] || ""} onChange={(v) => setEditForm(f => ({ ...f, [key]: v }))}
+                          options={[{ value: "", label: "Not set" }, ...options.map(o => ({ value: o, label: o }))]} />
                       ) : (
                         <input type={type} value={editForm[key] || ""} onChange={e => setEditForm(f => ({ ...f, [key]: e.target.value }))}
                           className="w-full px-3.5 py-2.5 rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] text-[15px] text-[#082a63] focus:outline-none focus:ring-2 focus:ring-[#1b57d8]/30 focus:border-[#1b57d8] transition-all"
@@ -479,7 +477,7 @@ export default function RegistrationDetailPage() {
                 Cancel
               </button>
               <button onClick={handleResubmit} disabled={submitting}
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#082a63] hover:bg-[#0b3a85] text-white text-[15px] font-bold disabled:opacity-60 transition-all shadow-sm active:scale-95">
+                className="inline-flex h-11 items-center gap-2 px-6 rounded-xl bg-[#1b57d8] hover:bg-[#1245b8] text-white text-[15px] font-bold disabled:opacity-60 transition-all shadow-sm active:scale-95">
                 {submitting
                   ? <><RefreshCw className="w-4 h-4 animate-spin" /> Resubmitting…</>
                   : <><Send className="w-4 h-4" /> Resubmit Application</>}

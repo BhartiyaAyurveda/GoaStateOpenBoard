@@ -8,7 +8,7 @@ export async function PATCH(request, { params }) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await request.json();
-  const allowed = ["name", "name_hindi", "address", "city", "state", "type", "code", "phone", "email", "website", "is_active", "sort_order"];
+  const allowed = ["name", "name_hindi", "address", "city", "state", "type", "code", "phone", "email", "website", "is_active", "sort_order", "show_on_website"];
   const updates = {};
   for (const key of allowed) { if (key in body) updates[key] = body[key]; }
 

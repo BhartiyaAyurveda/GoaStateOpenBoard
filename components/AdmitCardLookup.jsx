@@ -83,7 +83,7 @@ function AdmitCardSheet({ data, onReset }) {
           <div className="flex-1 text-center">
             <p className="text-[22px] font-extrabold tracking-wide text-navy sm:text-[26px]">GOA STATE OPEN SCHOOL</p>
             <p lang="kok" className="font-devanagari text-[15px] font-semibold text-navy">गोंय राज्य मुक्त शाळा</p>
-            <p className="text-[13.5px] font-semibold text-[#44557a]">Directorate of Education, Government of Goa</p>
+            <p className="text-[13.5px] font-semibold text-[#44557a]">Open Schooling | Flexible Learning</p>
           </div>
           <span className="hidden w-[54px] sm:block" />
         </header>

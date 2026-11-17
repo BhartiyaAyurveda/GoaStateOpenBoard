@@ -55,7 +55,7 @@ export default function TermsOfUsePage() {
 
       <PolicySection n="5" heading="Content and ownership">
         <p>
-          The content of this website belongs to Goa State Open School / Government of Goa unless stated otherwise. State Emblem and other
+          The content of this website belongs to Goa State Open School unless stated otherwise. State Emblem and other
           national symbols are protected and may be used only as permitted by law. You may print or download forms and documents for
           personal, non-commercial use; you may not alter them or present them as your own.
         </p>

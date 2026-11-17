@@ -21,12 +21,12 @@ export async function POST(request) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await request.json();
-  const { name, name_hindi, address, city, state, type, code, phone, email, website, sort_order } = body;
+  const { name, name_hindi, address, city, state, type, code, phone, email, website, sort_order, show_on_website } = body;
   if (!name) return NextResponse.json({ error: "name is required" }, { status: 400 });
 
   const { data, error } = await supabaseAdmin
     .from("affiliated_institutes")
-    .insert({ name, name_hindi, address, city, state, type, code, phone, email, website, sort_order: sort_order || 0 })
+    .insert({ name, name_hindi, address, city, state, type, code, phone, email, website, sort_order: sort_order || 0, show_on_website: show_on_website !== false })
     .select()
     .single();
 

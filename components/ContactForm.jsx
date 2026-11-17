@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircle2, ChevronDown, Loader2, Mail, Phone, Send, Tag, User, X } from "lucide-react";
+import Select from "@/components/ui/Select";
+import { CheckCircle2, Loader2, Mail, Phone, Send, Tag, User, X } from "lucide-react";
 
 const SUBJECTS = ["Admission", "Study Centre Enquiry", "General Enquiry", "Others"];
 const EMPTY = { name: "", mobile: "", email: "", subject: "", message: "", website: "" };
@@ -140,26 +141,16 @@ export default function ContactForm() {
             />
           </Field>
           <Field label="Subject" required error={errors.subject} htmlFor="c-subject" icon={Tag}>
-            <select
+            <Select
               id="c-subject"
+              variant="public"
+              withIcon
+              invalid={Boolean(errors.subject)}
+              ariaLabel="Subject"
+              placeholder="-- Select --"
               value={values.subject}
-              onChange={set("subject")}
-              className={`${controlCls(errors.subject)} h-[48px] cursor-pointer appearance-none pl-11 pr-10 ${
-                values.subject ? "" : "text-[#8a97b3]"
-              }`}
-            >
-              <option value="">-- Select --</option>
-              {SUBJECTS.map((s) => (
-                <option key={s} value={s} className="text-ink">
-                  {s}
-                </option>
-              ))}
-            </select>
-            <ChevronDown
-              size={18}
-              strokeWidth={2.2}
-              className="pointer-events-none absolute right-3.5 top-[15px] text-[#5b78a8]"
-              aria-hidden="true"
+              onChange={(v) => set("subject")({ target: { value: v } })}
+              options={SUBJECTS.map((s) => ({ value: s, label: s }))}
             />
           </Field>
         </div>

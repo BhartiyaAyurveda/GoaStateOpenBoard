@@ -40,7 +40,7 @@ export const revalidate = 60; // homepage content (stats) comes from the dashboa
 export const metadata = {
   title: "About Us | Goa State Open School",
   description:
-    "About Goa State Open School – overview, mission, vision, values and examination scheme of the open schooling institution under the Directorate of Education, Government of Goa.",
+    "About Goa State Open School – overview, mission, vision, values and examination scheme of the open schooling institution.",
 };
 
 // NOTE: the sections below (benefits, who can join, aims, learner journey) are
@@ -147,8 +147,7 @@ export default function AboutPage() {
             <div className="grid grid-cols-1 gap-8 p-6 sm:p-9 lg:min-h-[420px] lg:grid-cols-[1fr_1.25fr] lg:items-center lg:gap-10 lg:p-10">
               <div className="space-y-5 text-[16.5px] font-medium leading-[1.8] text-ink">
                 <p>
-                  Goa State Open School is a Government recognized open schooling institution functioning under the Directorate
-                  of Education, Government of Goa. It offers an alternative and flexible mode of education to learners who
+                  Goa State Open School is an open schooling institution. It offers an alternative and flexible mode of education to learners who
                   are unable to pursue regular schooling, enabling them to complete their Secondary (Class X) and Senior
                   Secondary (Class XII) education.
                 </p>

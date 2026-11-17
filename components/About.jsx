@@ -20,8 +20,7 @@ export default function About() {
         </div>
 
         <p className="mt-5 max-w-[560px] text-[16px] font-medium leading-[1.75] text-ink">
-          Goa State Open School is a Government recognized open schooling institution under the Directorate of Education, Government of
-          Goa. It provides an alternative and flexible mode of education for learners who are unable to pursue regular schooling.
+          Goa State Open School is an open schooling institution. It provides an alternative and flexible mode of education for learners who are unable to pursue regular schooling.
         </p>
 
         <ul className="mt-5 max-w-[560px] space-y-2.5">

@@ -3,12 +3,19 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { AlertTriangle, CheckCircle2, RefreshCw, Hash, Users } from "lucide-react";
+import AdminPageShell from "@/components/admin/AdminPageShell";
 
 const TYPE_LABELS = {
-  missing_roll_no:     { label: "Missing Roll No.", color: "bg-amber-100 text-amber-800 border-amber-300" },
-  duplicate_roll_no:   { label: "Duplicate Roll No.", color: "bg-red-100 text-red-800 border-red-300" },
+  missing_roll_no: { label: "Missing Roll No.", color: "bg-amber-100 text-amber-800 border-amber-300" },
+  duplicate_roll_no: { label: "Duplicate Roll No.", color: "bg-red-100 text-red-800 border-red-300" },
   missing_enrollment_no: { label: "Missing Enrollment No.", color: "bg-blue-100 text-blue-800 border-blue-300" },
 };
+
+const Pill = ({ type }) => (
+  <span className={`inline-block whitespace-nowrap rounded-full border px-2.5 py-0.5 text-[12.5px] font-bold ${TYPE_LABELS[type]?.color || "bg-gray-100 text-gray-700 border-gray-300"}`}>
+    {TYPE_LABELS[type]?.label || type}
+  </span>
+);
 
 export default function RollNumberAuditPage() {
   const [data, setData] = useState(null);
@@ -24,138 +31,157 @@ export default function RollNumberAuditPage() {
       const json = await res.json();
       if (!res.ok) setError(json.error || "Failed to load audit");
       else setData(json);
-    } catch { setError("Network error"); }
+    } catch {
+      setError("Network error");
+    }
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
-  const filtered = data?.mismatches?.filter(m => typeFilter === "all" || m.type === typeFilter) || [];
+  const filtered = data?.mismatches?.filter((m) => typeFilter === "all" || m.type === typeFilter) || [];
+  const withRoll = data ? data.total_approved - (data.mismatches?.filter((m) => m.type === "missing_roll_no").length || 0) : 0;
+
+  const stats = data
+    ? [
+        { label: "Total approved", value: data.total_approved, Icon: Users, tone: "bg-[#eaf2fd] text-[#1245b8]" },
+        {
+          label: "Mismatches found",
+          value: data.mismatch_count,
+          Icon: data.mismatch_count > 0 ? AlertTriangle : CheckCircle2,
+          tone: data.mismatch_count > 0 ? "bg-red-100 text-red-600" : "bg-emerald-100 text-emerald-700",
+          alert: data.mismatch_count > 0,
+        },
+        { label: "With roll no.", value: withRoll, Icon: Hash, tone: "bg-[#eaf2fd] text-[#1b57d8]" },
+      ]
+    : [];
+
+  const actions = (
+    <button
+      onClick={load}
+      disabled={loading}
+      className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-[#082a63] px-3.5 text-[14px] font-bold text-white transition hover:bg-[#0b3a85] disabled:opacity-60"
+    >
+      <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /> <span className="hidden sm:inline">Refresh audit</span>
+    </button>
+  );
 
   return (
-    <div className="min-h-screen bg-[#f4f8fe]">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
-        {/* Header */}
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <nav className="flex items-center gap-2 text-[15px] text-[#4a6090] mb-2">
-              <Link href="/super-admin/dashboard" className="hover:text-[#082a63] font-medium flex items-center gap-1">
-                Dashboard
-              </Link>
-              <span>/</span>
-              <span className="font-bold text-[#082a63]">Roll Number Audit</span>
-            </nav>
-            <h1 className="text-2xl font-black text-[#082a63] flex items-center gap-2">
-              <Hash className="w-5 h-5" /> Roll Number Audit
-            </h1>
-            <p className="text-[15px] text-[#4a6090] mt-1">Detect duplicate roll numbers, missing assignments, and enrollment gaps.</p>
-          </div>
-          <button onClick={load} disabled={loading}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#082a63] text-white text-[15px] font-bold rounded-lg hover:bg-[#06204f]">
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh Audit
-          </button>
-        </div>
-
+    <AdminPageShell
+      title="Roll Number Audit"
+      subtitle="Duplicate roll numbers, missing assignments and enrollment gaps"
+      backHref="/super-admin/dashboard/exam-management"
+      backLabel="Exam Hub"
+      actions={actions}
+    >
+      <div className="space-y-5">
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-[17px]">{error}</div>
+          <div role="alert" className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3.5 text-[15px] font-semibold text-red-700">
+            <AlertTriangle className="h-4 w-4 shrink-0" /> {error}
+          </div>
         )}
 
-        {loading ? (
+        {loading && !data ? (
           <div className="flex items-center justify-center py-20">
-            <RefreshCw className="w-6 h-6 animate-spin text-[#1b57d8]" />
+            <RefreshCw className="h-6 w-6 animate-spin text-[#1b57d8]" />
           </div>
-        ) : data && (
-          <>
-            {/* Summary cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
-              <div className="bg-white rounded-xl border border-[#d3e1f5] p-4 flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-[#e3edfa] flex items-center justify-center shrink-0"><Users className="w-5 h-5 text-[#082a63]" /></div>
-                <div><p className="text-[15px] text-[#3d5688]">Total Approved</p><p className="font-bold text-[#082a63] text-xl">{data.total_approved}</p></div>
+        ) : (
+          data && (
+            <>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                {stats.map(({ label, value, Icon, tone, alert }) => (
+                  <div key={label} className={`flex items-center gap-3.5 rounded-2xl border bg-white p-4 shadow-sm ${alert ? "border-red-200" : "border-[#d3e1f5]"}`}>
+                    <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${tone}`}>
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <div>
+                      <p className="text-[13.5px] font-semibold text-[#3d5688]">{label}</p>
+                      <p className={`text-[26px] font-extrabold leading-none ${alert ? "text-red-700" : "text-[#082a63]"}`}>{value}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className={`bg-white rounded-xl border p-4 flex items-center gap-3 ${data.mismatch_count > 0 ? "border-red-200" : "border-[#d3e1f5]"}`}>
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${data.mismatch_count > 0 ? "bg-red-100" : "bg-emerald-100"}`}>
-                  {data.mismatch_count > 0 ? <AlertTriangle className="w-5 h-5 text-red-600" /> : <CheckCircle2 className="w-5 h-5 text-emerald-600" />}
-                </div>
-                <div>
-                  <p className="text-[15px] text-[#3d5688]">Mismatches Found</p>
-                  <p className={`font-bold text-xl ${data.mismatch_count > 0 ? "text-red-700" : "text-emerald-700"}`}>{data.mismatch_count}</p>
-                </div>
-              </div>
-              <div className="bg-white rounded-xl border border-[#d3e1f5] p-4 flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-[#e3edfa] flex items-center justify-center shrink-0"><Hash className="w-5 h-5 text-[#1b57d8]" /></div>
-                <div>
-                  <p className="text-[15px] text-[#3d5688]">With Roll No.</p>
-                  <p className="font-bold text-[#082a63] text-xl">{data.total_approved - (data.mismatches?.filter(m => m.type === "missing_roll_no").length || 0)}</p>
-                </div>
-              </div>
-            </div>
 
-            {data.mismatch_count === 0 ? (
-              <div className="text-center py-16 bg-white rounded-xl border border-[#d3e1f5]">
-                <CheckCircle2 className="w-10 h-10 mx-auto text-emerald-500 mb-3" />
-                <p className="font-bold text-[#082a63] text-xl">All Clear!</p>
-                <p className="text-[17px] text-[#3d5688] mt-1">No roll number mismatches or issues found.</p>
-              </div>
-            ) : (
-              <>
-                {/* Type filter */}
-                <div className="flex gap-2 flex-wrap mb-4">
-                  <button onClick={() => setTypeFilter("all")}
-                    className={`px-3 py-1.5 rounded-lg text-[15px] font-bold ${typeFilter === "all" ? "bg-[#082a63] text-white" : "bg-white border border-[#d3e1f5] text-[#374151]"}`}>
-                    All ({data.mismatch_count})
-                  </button>
-                  {Object.keys(TYPE_LABELS).map(type => {
-                    const count = data.mismatches?.filter(m => m.type === type).length || 0;
-                    if (!count) return null;
-                    return (
-                      <button key={type} onClick={() => setTypeFilter(type)}
-                        className={`px-3 py-1.5 rounded-lg text-[15px] font-bold ${typeFilter === type ? "bg-[#082a63] text-white" : "bg-white border border-[#d3e1f5] text-[#374151]"}`}>
-                        {TYPE_LABELS[type].label} ({count})
+              {data.mismatch_count === 0 ? (
+                <div className="rounded-2xl border border-[#d3e1f5] bg-white px-4 py-16 text-center shadow-sm">
+                  <CheckCircle2 className="mx-auto mb-3 h-11 w-11 text-emerald-500" />
+                  <p className="text-[18px] font-bold text-[#082a63]">All clear</p>
+                  <p className="mt-1 text-[14.5px] text-[#3d5688]">No roll number mismatches or issues found.</p>
+                </div>
+              ) : (
+                <>
+                  <div className="flex flex-wrap gap-2">
+                    {[{ key: "all", label: `All (${data.mismatch_count})` }, ...Object.keys(TYPE_LABELS)
+                      .map((type) => ({ key: type, label: TYPE_LABELS[type].label, count: data.mismatches?.filter((m) => m.type === type).length || 0 }))
+                      .filter((t) => t.count)
+                      .map((t) => ({ key: t.key, label: `${t.label} (${t.count})` }))].map((f) => (
+                      <button
+                        key={f.key}
+                        onClick={() => setTypeFilter(f.key)}
+                        aria-pressed={typeFilter === f.key}
+                        className={`h-10 rounded-xl px-4 text-[14px] font-bold transition ${
+                          typeFilter === f.key ? "bg-[#082a63] text-white shadow-sm" : "border border-[#d3e1f5] bg-white text-[#3d5688] hover:bg-[#f4f8fe]"
+                        }`}
+                      >
+                        {f.label}
                       </button>
-                    );
-                  })}
-                </div>
+                    ))}
+                  </div>
 
-                {/* Mismatch table */}
-                <div className="bg-white rounded-xl border border-[#d3e1f5] overflow-hidden">
-                  <table className="w-full text-[15px]">
-                    <thead className="bg-[#eaf2fd] border-b border-[#d3e1f5]">
-                      <tr>
-                        <th className="px-4 py-3 text-left font-bold text-[#082a63] uppercase">Type</th>
-                        <th className="px-4 py-3 text-left font-bold text-[#082a63] uppercase">Candidate</th>
-                        <th className="px-4 py-3 text-left font-bold text-[#082a63] uppercase">College</th>
-                        <th className="px-4 py-3 text-left font-bold text-[#082a63] uppercase">Issue</th>
-                        <th className="px-4 py-3 text-right font-bold text-[#082a63] uppercase">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#eaf2fd]">
+                  <div className="overflow-hidden rounded-2xl border border-[#d3e1f5] bg-white shadow-sm">
+                    {/* table (laptops) */}
+                    <div className="hidden overflow-x-auto lg:block">
+                      <table className="w-full text-left text-[15px]">
+                        <thead className="border-b border-[#d3e1f5] bg-[#f4f8fe]">
+                          <tr className="text-[12.5px] font-bold uppercase tracking-wider text-[#4a6090]">
+                            <th className="px-5 py-3.5">Type</th>
+                            <th className="px-4 py-3.5">Candidate</th>
+                            <th className="px-4 py-3.5">College</th>
+                            <th className="px-4 py-3.5">Issue</th>
+                            <th className="px-5 py-3.5 text-right">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#e4edf9]">
+                          {filtered.map((m, i) => (
+                            <tr key={i} className="transition-colors hover:bg-[#f4f8fe]">
+                              <td className="px-5 py-3.5"><Pill type={m.type} /></td>
+                              <td className="px-4 py-3.5 font-bold text-[#082a63]">{m.candidate_name}</td>
+                              <td className="px-4 py-3.5 text-[#3d5688]">{m.college || "—"}</td>
+                              <td className="px-4 py-3.5 text-[#082a63]">{m.detail}</td>
+                              <td className="px-5 py-3.5 text-right">
+                                <Link href={`/super-admin/dashboard/registrations/${m.id}`} className="inline-flex h-9 items-center rounded-lg border border-[#d3e1f5] px-4 text-[14px] font-bold text-[#082a63] transition hover:bg-[#eaf2fd]">
+                                  Fix
+                                </Link>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* cards (mobile / tablet) */}
+                    <div className="grid grid-cols-1 gap-3 p-3 sm:p-4 md:grid-cols-2 lg:hidden">
                       {filtered.map((m, i) => (
-                        <tr key={i} className="hover:bg-[#f4f8fe]">
-                          <td className="px-4 py-3">
-                            <span className={`text-[14px] font-bold px-2 py-0.5 rounded-full border ${TYPE_LABELS[m.type]?.color || "bg-gray-100 text-gray-700 border-gray-300"}`}>
-                              {TYPE_LABELS[m.type]?.label || m.type}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 font-semibold text-[#082a63]">{m.candidate_name}</td>
-                          <td className="px-4 py-3 text-[#3d5688]">{m.college || "—"}</td>
-                          <td className="px-4 py-3 text-[#374151]">{m.detail}</td>
-                          <td className="px-4 py-3 text-right">
-                            <Link href={`/super-admin/dashboard/registrations/${m.id}`}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#eaf2fd] text-[#082a63] text-[14px] font-bold hover:bg-[#e3edfa] transition-colors">
-                              Fix
-                            </Link>
-                          </td>
-                        </tr>
+                        <div key={i} className="min-w-0 rounded-xl border border-[#d3e1f5] bg-white p-4">
+                          <Pill type={m.type} />
+                          <p className="mt-2 break-words text-[16px] font-bold text-[#082a63]">{m.candidate_name}</p>
+                          <p className="break-words text-[14px] text-[#3d5688]">{m.college || "—"}</p>
+                          <p className="mt-1.5 break-words text-[14.5px] text-[#082a63]">{m.detail}</p>
+                          <Link href={`/super-admin/dashboard/registrations/${m.id}`} className="mt-3 inline-flex h-10 w-full items-center justify-center rounded-xl border border-[#d3e1f5] text-[14.5px] font-bold text-[#082a63] transition hover:bg-[#eaf2fd]">
+                            Fix this record
+                          </Link>
+                        </div>
                       ))}
-                    </tbody>
-                  </table>
-                </div>
-              </>
-            )}
-          </>
+                    </div>
+                  </div>
+                </>
+              )}
+            </>
+          )
         )}
       </div>
-    </div>
+    </AdminPageShell>
   );
 }

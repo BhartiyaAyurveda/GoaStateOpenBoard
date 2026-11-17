@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Plus, Pencil, Trash2, RefreshCw, X, CheckCircle2, AlertTriangle, Building2, CalendarDays, Clock, Users } from "lucide-react";
 import AdminPageShell from "@/components/admin/AdminPageShell";
 import Select from "@/components/ui/Select";
+import { useConfirm } from "@/components/ui/ConfirmDialog";
 
 const EMPTY_FORM = { course_id: "", exam_center: "", exam_date: "", exam_time: "", session_label: "", max_students: 100 };
 const TIMINGS = ["Morning (10:00 AM - 1:00 PM)", "Evening (2:00 PM - 5:00 PM)"];
@@ -34,6 +35,8 @@ export default function ExamConfigPage() {
   const [saveMsg, setSaveMsg] = useState("");
   const [saveErr, setSaveErr] = useState("");
   const [deleting, setDeleting] = useState(null);
+  const [listErr, setListErr] = useState("");
+  const [confirm, confirmDialog] = useConfirm();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -104,7 +107,8 @@ export default function ExamConfigPage() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("Delete this exam configuration?")) return;
+    if (!(await confirm({ title: "Delete configuration?", message: "The center, date and time set for this course will be removed.", confirmLabel: "Delete", danger: true }))) return;
+    setListErr("");
     setDeleting(id);
     try {
       const res = await fetch(`/api/admin/course-exam-config/${id}`, { method: "DELETE" });
@@ -112,10 +116,10 @@ export default function ExamConfigPage() {
         setConfigs((c) => c.filter((x) => x.id !== id));
       } else {
         const j = await res.json();
-        alert(j.error || "Delete failed.");
+        setListErr(j.error || "Delete failed.");
       }
     } catch {
-      alert("Network error.");
+      setListErr("Network error.");
     }
     setDeleting(null);
   };
@@ -152,6 +156,11 @@ export default function ExamConfigPage() {
       actions={actions}
     >
       <div className="space-y-5">
+        {listErr && (
+          <div role="alert" className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-[14.5px] font-semibold text-red-700">
+            <AlertTriangle className="h-4 w-4 shrink-0" /> {listErr}
+          </div>
+        )}
         {saveMsg && !showForm && (
           <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-[14.5px] font-semibold text-emerald-700">
             <CheckCircle2 className="h-4 w-4 shrink-0" /> {saveMsg}
@@ -353,6 +362,7 @@ export default function ExamConfigPage() {
           </>
         )}
       </div>
+      {confirmDialog}
     </AdminPageShell>
   );
 }

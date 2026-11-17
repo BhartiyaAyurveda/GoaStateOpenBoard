@@ -44,7 +44,7 @@ export default async function Courses() {
 
       <div className="mx-auto max-w-[1320px] px-4 pb-0 pt-14 sm:px-6 md:py-14 lg:py-16">
         <div className="max-w-[760px]">
-          <p className="text-[13.5px] font-bold uppercase tracking-[0.2em] text-sky">Directorate of Education</p>
+          <p className="text-[13.5px] font-bold uppercase tracking-[0.2em] text-sky">Goa State Open School <span lang="kok" className="font-devanagari normal-case tracking-normal"> · गोंय राज्य मुक्त शाळा</span></p>
           <h2 className="mt-2 text-[34px] font-extrabold leading-tight tracking-tight sm:text-[42px]">Our Courses</h2>
           <div className="mt-3 flex items-center gap-2" aria-hidden="true">
             <span className="h-[3px] w-14 bg-sky" />

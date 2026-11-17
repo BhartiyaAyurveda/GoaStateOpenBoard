@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import SocialIcon from "@/components/icons/SocialIcon";
+import { useConfirm } from "@/components/ui/ConfirmDialog";
 import { Share2, Save, RotateCcw, ExternalLink, Sparkles, RefreshCw } from "lucide-react";
 
 const DEFAULT_SOCIALS = [
@@ -71,6 +72,7 @@ const DEFAULT_SOCIALS = [
 ];
 
 export default function SocialLinksManager({ onShowToast }) {
+  const [confirm, confirmDialog] = useConfirm();
   const [socials, setSocials] = useState(DEFAULT_SOCIALS);
   const [isSaved, setIsSaved] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -149,7 +151,7 @@ export default function SocialLinksManager({ onShowToast }) {
   };
 
   const handleReset = async () => {
-    if (!confirm("Reset social links to default configurations?")) return;
+    if (!(await confirm({ title: "Reset social links?", message: "All links go back to the default configuration. Nothing is saved until you press Save.", confirmLabel: "Reset", danger: true }))) return;
     setSocials(DEFAULT_SOCIALS);
     onShowToast?.("Social links restored to defaults.", "info");
   };
@@ -299,6 +301,7 @@ export default function SocialLinksManager({ onShowToast }) {
           {isSaved ? "Saved!" : "Save All Changes"}
         </button>
       </div>
+      {confirmDialog}
     </div>
   );
 }

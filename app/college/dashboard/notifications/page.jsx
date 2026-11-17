@@ -2,37 +2,18 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import {
-  Bell,
-  RefreshCw,
-  MessageSquare,
-  ClipboardList,
-  CheckCircle2,
-  Clock,
-  AlertCircle,
-  Eye,
-  ShieldAlert,
-  User,
-  Filter,
-  Search,
-  X,
-  Sparkles
-} from "lucide-react";
+import { Bell, RefreshCw, CheckCircle2, Clock, AlertCircle, Eye, Search, X, ArrowRight, Pencil } from "lucide-react";
 import { useDashboard } from "../DashboardContext";
 
+const fmtDate = (d) => (d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "");
+
 export default function NotificationsPage() {
-  const {
-    notifications,
-    notifLoading,
-    loadNotifications,
-    students,
-    openDetail
-  } = useDashboard();
+  const { notifications, notifLoading, loadNotifications, students, openDetail } = useDashboard();
 
   const [filterTab, setFilterTab] = useState("all"); // "all", "open", "resolved"
-  const [search, setSearch]       = useState("");
+  const [search, setSearch] = useState("");
 
-  const openCount     = useMemo(() => notifications.filter((n) => n.status === "open").length, [notifications]);
+  const openCount = useMemo(() => notifications.filter((n) => n.status === "open").length, [notifications]);
   const resolvedCount = useMemo(() => notifications.filter((n) => n.status !== "open").length, [notifications]);
 
   const filtered = useMemo(() => {
@@ -51,7 +32,6 @@ export default function NotificationsPage() {
           n.student_registrations?.enrollment_no?.toLowerCase().includes(q);
         if (!matchesQuery) return false;
       }
-
       return true;
     });
   }, [notifications, filterTab, search]);
@@ -66,287 +46,194 @@ export default function NotificationsPage() {
     }
   };
 
+  const hasFilters = search || filterTab !== "all";
+
+  const cards = [
+    { key: "all", label: "All notifications", short: "All", sub: "Board communication log", count: notifications.length, Icon: Bell, bar: "bg-[#082a63]", tone: "bg-[#eaf2fd] text-[#1245b8]" },
+    { key: "open", label: "Action required", short: "Action", sub: "Requires college revision", count: openCount, Icon: AlertCircle, bar: "bg-orange-500", tone: "bg-orange-50 text-orange-700", pulse: openCount > 0 },
+    { key: "resolved", label: "Resolved & cleared", short: "Resolved", sub: "Ratified by admin", count: resolvedCount, Icon: CheckCircle2, bar: "bg-emerald-500", tone: "bg-emerald-50 text-emerald-700" },
+  ];
+
   return (
-    <div className="space-y-6 max-w-5xl">
-      {/* ── Page Header ── */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[13px] font-bold uppercase tracking-wider bg-[#082a63] text-[#5db0f4]">
-              <MessageSquare className="w-3.5 h-3.5 text-[#1b57d8]" />
-              Board Directives &amp; Queries
-            </span>
-            <span className="text-[13px] sm:text-[15px] text-[#3d5688] font-semibold">
-              Total Notices: {notifications.length}
-            </span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#082a63] tracking-tight">
-            Notifications &amp; Admin Queries
-          </h1>
-          <p className="text-[13px] sm:text-[15px] text-[#3d5688]">
-            Official clarifications and document revision requests dispatched by the Goa State Open School Examination Section.
+    <div className="min-w-0 space-y-5">
+      {/* Header */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-[24px] font-bold tracking-tight text-[#082a63] sm:text-[28px]">Notifications &amp; Admin Queries</h1>
+          <p className="text-[14.5px] text-[#3d5688] sm:text-[15.5px]">
+            {notifications.length} {notifications.length === 1 ? "notice" : "notices"} · clarifications and document revision requests from the Goa State Open School Examination Section.
           </p>
         </div>
-
-        <div className="flex items-center gap-2.5 shrink-0">
+        <div className="grid grid-cols-[auto_1fr] gap-2.5 sm:flex sm:shrink-0 sm:items-center">
           <button
             onClick={loadNotifications}
             disabled={notifLoading}
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-white border border-[#d3e1f5] hover:border-[#1b57d8] text-[15px] font-bold text-[#082a63] transition-all shadow-xs"
+            aria-label="Refresh"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-[#d3e1f5] bg-white px-4 text-[14.5px] font-bold text-[#082a63] shadow-sm transition hover:bg-[#f4f8fe] disabled:opacity-60"
           >
-            <RefreshCw className={`w-4 h-4 ${notifLoading ? "animate-spin" : ""}`} />
-            <span>Refresh</span>
+            <RefreshCw className={`h-4 w-4 ${notifLoading ? "animate-spin" : ""}`} /> <span className="hidden sm:inline">Refresh</span>
           </button>
           <Link
             href="/college/dashboard/pending"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#082a63] hover:bg-[#0b3a85] text-white text-[15px] font-bold transition-all shadow-xs"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#1b57d8] px-5 text-[15px] font-bold text-white shadow-sm transition hover:bg-[#1245b8] active:scale-95"
           >
-            <Clock className="w-4 h-4 text-[#1b57d8]" />
-            <span>Pending Desk</span>
+            <Clock className="h-4 w-4" /> Pending desk
           </Link>
         </div>
       </div>
 
-      {/* ── 3 Status Metric Filter Cards ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {/* All Notices */}
-        <button
-          onClick={() => setFilterTab("all")}
-          className={`p-4 sm:p-4.5 rounded-2xl border text-left transition-all flex items-center justify-between ${
-            filterTab === "all"
-              ? "bg-[#082a63] text-white border-[#082a63] shadow-sm"
-              : "bg-white text-[#082a63] border-[#d3e1f5] hover:border-[#1b57d8] hover:shadow-xs"
-          }`}
-        >
-          <div className="space-y-0.5">
-            <p className={`text-[13px] font-bold uppercase tracking-wider ${filterTab === "all" ? "text-[#5db0f4]" : "text-[#3d5688]"}`}>
-              All Notifications
-            </p>
-            <p className="text-2xl font-extrabold tracking-tight">{notifications.length}</p>
-            <p className={`text-[13px] ${filterTab === "all" ? "text-white/70" : "text-[#8a97b3]"}`}>
-              Board communication log
-            </p>
-          </div>
-          <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${filterTab === "all" ? "bg-white/10 text-[#5db0f4]" : "bg-[#f4f8fe] text-[#082a63]"}`}>
-            <Bell className="w-4 h-4" />
-          </div>
-        </button>
-
-        {/* Action Required */}
-        <button
-          onClick={() => setFilterTab("open")}
-          className={`p-4 sm:p-4.5 rounded-2xl border text-left transition-all flex items-center justify-between ${
-            filterTab === "open"
-              ? "bg-[#082a63] text-white border-[#082a63] shadow-sm"
-              : "bg-white text-[#082a63] border-[#d3e1f5] hover:border-orange-400 hover:shadow-xs"
-          }`}
-        >
-          <div className="space-y-0.5">
-            <div className="flex items-center gap-1.5">
-              <p className={`text-[13px] font-bold uppercase tracking-wider ${filterTab === "open" ? "text-[#5db0f4]" : "text-orange-700"}`}>
-                Action Required
+      {/* Status cards (filters) */}
+      <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+        {cards.map(({ key, label, short, sub, count, Icon, bar, tone, pulse }) => {
+          const isActive = filterTab === key;
+          return (
+            <button
+              key={key}
+              onClick={() => setFilterTab(key)}
+              aria-pressed={isActive}
+              className={`relative flex flex-col gap-2 overflow-hidden rounded-2xl border p-3 text-left transition sm:p-4 ${
+                isActive ? "border-[#082a63] bg-[#082a63] text-white shadow-md" : "border-[#d3e1f5] bg-white text-[#082a63] hover:border-[#1b57d8] hover:shadow-sm"
+              }`}
+            >
+              {!isActive && <span className={`absolute inset-x-0 top-0 h-1 ${bar}`} aria-hidden="true" />}
+              <p className={`flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wide sm:text-[12.5px] sm:tracking-wider ${isActive ? "text-[#bcd8fb]" : "text-[#3d5688]"}`}>
+                <span className="sm:hidden">{short}</span>
+                <span className="hidden sm:inline">{label}</span>
+                {pulse && <span className="h-2 w-2 animate-pulse rounded-full bg-orange-500" />}
               </p>
-              {openCount > 0 && <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />}
-            </div>
-            <p className="text-2xl font-extrabold tracking-tight text-orange-600">{openCount}</p>
-            <p className={`text-[13px] ${filterTab === "open" ? "text-white/70" : "text-[#8a97b3]"}`}>
-              Requires college revision
-            </p>
-          </div>
-          <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${filterTab === "open" ? "bg-white/10 text-[#5db0f4]" : "bg-orange-50 text-orange-700"}`}>
-            <AlertCircle className="w-4 h-4" />
-          </div>
-        </button>
-
-        {/* Resolved */}
-        <button
-          onClick={() => setFilterTab("resolved")}
-          className={`p-4 sm:p-4.5 rounded-2xl border text-left transition-all flex items-center justify-between ${
-            filterTab === "resolved"
-              ? "bg-[#082a63] text-white border-[#082a63] shadow-sm"
-              : "bg-white text-[#082a63] border-[#d3e1f5] hover:border-emerald-400 hover:shadow-xs"
-          }`}
-        >
-          <div className="space-y-0.5">
-            <p className={`text-[13px] font-bold uppercase tracking-wider ${filterTab === "resolved" ? "text-[#5db0f4]" : "text-emerald-700"}`}>
-              Resolved &amp; Cleared
-            </p>
-            <p className="text-2xl font-extrabold tracking-tight text-emerald-600">{resolvedCount}</p>
-            <p className={`text-[13px] ${filterTab === "resolved" ? "text-white/70" : "text-[#8a97b3]"}`}>
-              Ratified by admin
-            </p>
-          </div>
-          <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${filterTab === "resolved" ? "bg-white/10 text-[#5db0f4]" : "bg-emerald-50 text-emerald-700"}`}>
-            <CheckCircle2 className="w-4 h-4" />
-          </div>
-        </button>
+              <div className="flex items-end justify-between gap-2">
+                <span className="text-[28px] font-extrabold leading-none tracking-tight sm:text-[32px]">{count}</span>
+                <span className={`hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:flex ${isActive ? "bg-white/15 text-white" : tone}`}>
+                  <Icon className="h-5 w-5" />
+                </span>
+              </div>
+              <p className={`hidden text-[13.5px] sm:block ${isActive ? "text-white/75" : "text-[#6b7ea3]"}`}>{sub}</p>
+            </button>
+          );
+        })}
       </div>
 
-      {/* ── Search Toolbar ── */}
-      <div className="bg-white rounded-2xl border border-[#d3e1f5] p-3 sm:p-4 shadow-xs flex items-center justify-between gap-3">
-        <div className="relative flex-1">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#3d5688]" />
+      {/* Search */}
+      <div className="flex items-center gap-3 rounded-2xl border border-[#d3e1f5] bg-white p-3 shadow-sm">
+        <div className="relative min-w-0 flex-1" title="Search by candidate name, field or directive text">
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#3d5688]" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search queries by candidate name, field, or directive details…"
-            className="w-full pl-10 pr-9 py-2.5 text-[15px] rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] text-[#082a63] placeholder-[#8a97b3] focus:outline-none focus:ring-4 focus:ring-[#1b57d8]/15 focus:border-[#1b57d8] focus:bg-white transition-all font-medium"
+            placeholder="Search notifications…"
+            className="h-11 w-full rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] pl-10 pr-10 text-[15px] font-medium text-[#082a63] outline-none transition placeholder:text-[#8a97b3] focus:border-[#1b57d8] focus:bg-white focus:ring-4 focus:ring-[#1b57d8]/15"
           />
           {search && (
-            <button
-              onClick={() => setSearch("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
-            >
-              <X className="w-3.5 h-3.5" />
+            <button onClick={() => setSearch("")} aria-label="Clear search" className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-[#4a6090] hover:bg-[#eaf2fd]">
+              <X className="h-4 w-4" />
             </button>
           )}
         </div>
-
-        <span className="text-[13px] sm:text-[15px] text-[#3d5688] font-semibold shrink-0 hidden sm:inline">
-          {filtered.length} {filtered.length === 1 ? "notice" : "notices"}
+        <span className="shrink-0 text-[14.5px] font-semibold text-[#082a63]">
+          {filtered.length} <span className="hidden sm:inline">{filtered.length === 1 ? "notice" : "notices"}</span>
         </span>
       </div>
 
-      {/* ── Notification List ── */}
+      {/* List */}
       {notifLoading ? (
-        <div className="flex flex-col items-center justify-center py-20 gap-3">
-          <div className="w-8 h-8 border-3 border-[#082a63]/20 border-t-[#082a63] rounded-full animate-spin" />
-          <p className="text-[15px] font-semibold text-[#3d5688]">Checking council directives…</p>
+        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-[#d3e1f5] bg-white py-20 shadow-sm">
+          <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#082a63]/20 border-t-[#082a63]" />
+          <p className="text-[15px] font-semibold text-[#3d5688]">Checking Board directives…</p>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-[#d3e1f5] shadow-xs space-y-3">
-          <div className="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
-            <CheckCircle2 className="w-7 h-7" />
-          </div>
-          <div className="text-center space-y-1">
-            <p className="text-base font-bold text-[#082a63]">
-              {search || filterTab !== "all"
-                ? "No matching notifications found"
-                : "No active queries or directives"}
-            </p>
-            <p className="text-[13px] sm:text-[15px] text-[#3d5688] max-w-sm">
-              {search || filterTab !== "all"
-                ? "Try clearing your search query or switching tabs."
-                : "All candidate admissions under your college are verified and in full council compliance."}
-            </p>
-          </div>
-          {(search || filterTab !== "all") && (
-            <button
-              onClick={() => {
-                setSearch("");
-                setFilterTab("all");
-              }}
-              className="text-[15px] font-bold text-[#082a63] underline hover:text-[#1b57d8] transition-colors"
-            >
+        <div className="flex flex-col items-center rounded-2xl border border-[#d3e1f5] bg-white px-4 py-14 text-center shadow-sm sm:py-16">
+          <span className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200">
+            <CheckCircle2 className="h-8 w-8" />
+          </span>
+          <p className="text-[17px] font-bold text-[#082a63]">{hasFilters ? "No matching notifications" : "No active queries or directives"}</p>
+          <p className="mt-1 max-w-sm text-[14.5px] text-[#3d5688]">
+            {hasFilters ? "Try a different search or switch the category." : "All candidate admissions under your college are verified and in full compliance."}
+          </p>
+          {hasFilters && (
+            <button onClick={() => { setSearch(""); setFilterTab("all"); }} className="mt-5 h-11 rounded-xl border border-[#d3e1f5] px-6 text-[14.5px] font-bold text-[#082a63] transition hover:bg-[#f4f8fe]">
               Show all notifications
             </button>
           )}
         </div>
       ) : (
-        <div className="space-y-3.5">
+        <div className="space-y-3">
           {filtered.map((notif) => {
             const isOpen = notif.status === "open";
+            const name = notif.student_registrations?.candidate_name || "Applicant";
             return (
               <div
                 key={notif.id}
-                className={`p-5 rounded-3xl border transition-all shadow-xs ${
-                  isOpen
-                    ? "bg-white border-amber-300 hover:border-amber-400 hover:shadow-sm ring-1 ring-amber-400/20"
-                    : "bg-white border-[#d3e1f5] hover:border-emerald-300"
+                className={`relative overflow-hidden rounded-2xl border bg-white p-4 shadow-sm transition sm:p-5 ${
+                  isOpen ? "border-amber-300 hover:border-amber-400" : "border-[#d3e1f5] hover:border-emerald-300"
                 }`}
               >
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="flex-1 space-y-2.5 min-w-0">
-                    {/* Badge Row */}
-                    <div className="flex flex-wrap items-center gap-2">
+                <span className={`absolute inset-y-0 left-0 w-1 ${isOpen ? "bg-amber-500" : "bg-emerald-500"}`} aria-hidden="true" />
+
+                <div className="flex flex-col gap-3 pl-2 lg:flex-row lg:items-start lg:justify-between lg:gap-5">
+                  <div className="min-w-0 flex-1 space-y-3">
+                    {/* badges */}
+                    <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
                       <span
-                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[13px] font-bold border ${
-                          isOpen
-                            ? "bg-amber-100 text-amber-800 border-amber-300"
-                            : "bg-emerald-100 text-emerald-800 border-emerald-300"
+                        className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-[13px] font-bold ${
+                          isOpen ? "border-amber-300 bg-amber-100 text-amber-800" : "border-emerald-300 bg-emerald-100 text-emerald-800"
                         }`}
                       >
                         {isOpen ? (
                           <>
-                            <span className="w-2 h-2 rounded-full bg-amber-600 animate-pulse" />
-                            Action Required
+                            <span className="h-2 w-2 animate-pulse rounded-full bg-amber-600" /> Action required
                           </>
                         ) : (
                           <>
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
-                            Resolved &amp; Approved
+                            <CheckCircle2 className="h-3.5 w-3.5" /> Resolved
                           </>
                         )}
                       </span>
-
                       {notif.field_name && (
-                        <span className="text-[13px] font-bold text-[#082a63] bg-[#f4f8fe] border border-[#d3e1f5] px-2.5 py-0.5 rounded-md capitalize">
-                          Field: {notif.field_name.replace(/_/g, " ")}
+                        <span className="rounded-md border border-[#d3e1f5] bg-[#f4f8fe] px-2.5 py-0.5 text-[13px] font-bold capitalize text-[#082a63]">
+                          {notif.field_name.replace(/_/g, " ")}
                         </span>
                       )}
-
-                      <span className="text-[13px] text-[#8a97b3] flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5 text-[#8a97b3]" />
-                        {new Date(notif.created_at).toLocaleDateString("en-IN", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                        })}
+                      <span className="inline-flex items-center gap-1 text-[13px] text-[#6b7ea3]">
+                        <Clock className="h-3.5 w-3.5" /> {fmtDate(notif.created_at)}
                       </span>
                     </div>
 
-                    {/* Query Comment */}
-                    <div className="p-4 rounded-2xl bg-[#f4f8fe] border border-[#d3e1f5] text-[15px] text-[#082a63]">
-                      <p className="font-semibold leading-relaxed">
-                        "{notif.message}"
-                      </p>
-                    </div>
+                    {/* message */}
+                    <blockquote className="rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] p-3.5 text-[15px] font-medium leading-relaxed text-[#082a63] sm:p-4">
+                      <span className="break-words">&ldquo;{notif.message}&rdquo;</span>
+                    </blockquote>
 
-                    {/* Student Context Strip */}
-                    <div className="flex flex-wrap items-center gap-3 text-[13px] sm:text-[15px] text-[#3d5688] pt-0.5">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-[#d3e1f5] text-[#082a63] font-bold text-[13px] flex items-center justify-center shrink-0">
-                          {notif.student_registrations?.candidate_name?.charAt(0) || "S"}
-                        </div>
-                        <span className="font-bold text-[#082a63] text-[15px]">
-                          {notif.student_registrations?.candidate_name || "Applicant"}
-                        </span>
-                      </div>
-
+                    {/* student */}
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[14px] text-[#3d5688]">
+                      <span className="flex items-center gap-2">
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#d3e1f5] text-[13px] font-bold text-[#082a63]">{name.charAt(0)}</span>
+                        <span className="break-words text-[15px] font-bold text-[#082a63]">{name}</span>
+                      </span>
                       {notif.student_registrations?.enrollment_no && (
-                        <>
-                          <span>•</span>
-                          <span className="font-mono text-[#082a63] font-semibold text-[13px] sm:text-[15px]">
-                            Enr: {notif.student_registrations.enrollment_no}
-                          </span>
-                        </>
+                        <span className="rounded-md bg-[#eaf2fd] px-2 py-0.5 font-mono text-[13px] font-semibold text-[#1245b8]">{notif.student_registrations.enrollment_no}</span>
                       )}
                     </div>
                   </div>
 
-                  {/* Action Button */}
-                  <div className="shrink-0 self-end sm:self-center">
-                    <button
-                      onClick={() => handleResolve(notif)}
-                      className={`inline-flex items-center gap-2 px-4.5 py-2.5 rounded-xl text-[15px] font-bold transition-all shadow-xs active:scale-95 ${
-                        isOpen
-                          ? "bg-amber-600 hover:bg-amber-700 text-white shadow-sm"
-                          : "bg-[#f4f8fe] hover:bg-[#082a63] text-[#082a63] hover:text-white border border-[#d3e1f5]"
-                      }`}
-                    >
-                      {isOpen ? (
-                        <>
-                          <span>Resolve &amp; Edit Dossier</span>
-                        </>
-                      ) : (
-                        <>
-                          <Eye className="w-4 h-4" />
-                          <span>View Application</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => handleResolve(notif)}
+                    className={`inline-flex h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-5 text-[14.5px] font-bold transition active:scale-95 ${
+                      isOpen
+                        ? "bg-amber-600 text-white shadow-sm hover:bg-amber-700"
+                        : "border border-[#d3e1f5] bg-white text-[#082a63] hover:border-[#082a63] hover:bg-[#082a63] hover:text-white"
+                    }`}
+                  >
+                    {isOpen ? (
+                      <>
+                        <Pencil className="h-4 w-4" /> Resolve &amp; edit <ArrowRight className="h-4 w-4" />
+                      </>
+                    ) : (
+                      <>
+                        <Eye className="h-4 w-4" /> View application
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
             );

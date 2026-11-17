@@ -27,7 +27,7 @@ const labelCls = "mb-1.5 block text-[13.5px] font-bold text-[#082a63]";
 const EMPTY_FORM = {
   code: "", name: "", address: "",
   city: "", state: "Goa", type: "", phone: "", email: "", website: "",
-  sort_order: 0,
+  sort_order: 0, show_on_website: true,
 };
 
 export default function InstituteManager({ onShowToast }) {
@@ -80,6 +80,7 @@ export default function InstituteManager({ onShowToast }) {
         email:      item.email      || "",
         website:    item.website    || "",
         sort_order: item.sort_order ?? 0,
+        show_on_website: item.show_on_website !== false,
       });
     } else {
       setEditingItem(null);
@@ -159,6 +160,25 @@ export default function InstituteManager({ onShowToast }) {
   // the list filter only offers states that actually exist in the data
   const filterStates = ["All", ...Array.from(new Set(institutes.map((i) => i.state).filter(Boolean)))];
 
+  const handleToggleWebsite = async (inst) => {
+    const next = inst.show_on_website === false;
+    setInstitutes((p) => p.map((i) => (i.id === inst.id ? { ...i, show_on_website: next } : i))); // optimistic
+    try {
+      const res = await fetch(`/api/admin/affiliated-institutes/${inst.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ show_on_website: next }),
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || "failed");
+      setInstitutes((p) => p.map((i) => (i.id === inst.id ? data.data : i)));
+      if (onShowToast) onShowToast(next ? "Now shown on the website." : "Hidden from the website.", "info");
+    } catch {
+      setInstitutes((p) => p.map((i) => (i.id === inst.id ? { ...i, show_on_website: !next } : i)));
+      if (onShowToast) onShowToast("Could not update. Try again.", "error");
+    }
+  };
+
   const filteredInstitutes = institutes.filter((item) => {
     const matchesState  = selectedState === "All" || item.state === selectedState;
     const matchesStatus = selectedStatus === "All"
@@ -173,13 +193,34 @@ export default function InstituteManager({ onShowToast }) {
   });
 
   const activeCount = institutes.filter((i) => i.is_active).length;
+  const shownCount = institutes.filter((i) => i.is_active && i.show_on_website !== false).length;
   const hasFilters = searchQuery || selectedState !== "All" || selectedStatus !== "All";
+  const hasList = !(loading && institutes.length === 0) && filteredInstitutes.length > 0;
+
+  const WebsiteSwitch = ({ inst }) => {
+    const on = inst.show_on_website !== false;
+    return (
+      <button
+        type="button"
+        role="switch"
+        aria-checked={on}
+        onClick={() => handleToggleWebsite(inst)}
+        title={on ? "Shown on the website. Click to hide." : "Hidden from the website. Click to show."}
+        className="inline-flex items-center gap-2 text-[13.5px] font-bold text-[#3d5688]"
+      >
+        <span className={`relative inline-flex h-6 w-11 shrink-0 rounded-full transition ${on ? "bg-[#1b57d8]" : "bg-[#b9cbe6]"}`}>
+          <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${on ? "left-[22px]" : "left-0.5"}`} />
+        </span>
+        {on ? "Shown" : "Hidden"}
+      </button>
+    );
+  };
 
   const StatusBadge = ({ inst }) => (
     <button
       onClick={() => handleToggleActive(inst)}
       title="Click to switch"
-      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-bold transition ${
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1 text-[13px] font-bold transition ${
         inst.is_active ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200" : "bg-red-100 text-red-800 hover:bg-red-200"
       }`}
     >
@@ -195,7 +236,7 @@ export default function InstituteManager({ onShowToast }) {
         <div>
           <h2 className="text-xl font-bold text-[#082a63]">Study Centres</h2>
           <p className="text-[14px] text-[#3d5688] sm:text-[15px]">
-            {institutes.length} {institutes.length === 1 ? "centre" : "centres"} · {activeCount} active. Shown on the public site.
+            {institutes.length} {institutes.length === 1 ? "centre" : "centres"} · {activeCount} active · {shownCount} shown on the website
           </p>
         </div>
         <div className="grid grid-cols-[auto_1fr] gap-2 sm:flex sm:items-center">
@@ -225,7 +266,7 @@ export default function InstituteManager({ onShowToast }) {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by code, name or city…"
+            placeholder="Search centres…"
             className={`${fieldCls} pl-10 pr-10`}
           />
           {searchQuery && (
@@ -238,12 +279,12 @@ export default function InstituteManager({ onShowToast }) {
           <Select size="lg" ariaLabel="Filter by state" className="sm:w-44" value={selectedState} onChange={setSelectedState}
             options={filterStates.map((st) => ({ value: st, label: st === "All" ? "All states" : st }))} />
           <Select size="lg" ariaLabel="Filter by status" className="sm:w-44" align="right" value={selectedStatus} onChange={setSelectedStatus}
-            options={[{ value: "All", label: "All statuses" }, { value: "Active", label: "Active" }, { value: "Inactive", label: "Inactive" }]} />
+            options={[{ value: "All", label: "All status" }, { value: "Active", label: "Active" }, { value: "Inactive", label: "Inactive" }]} />
         </div>
       </div>
 
       {/* List */}
-      <div className="overflow-hidden rounded-2xl border border-[#d3e1f5] bg-white shadow-sm">
+      <div className={hasList ? "lg:overflow-hidden lg:rounded-2xl lg:border lg:border-[#d3e1f5] lg:bg-white lg:shadow-sm" : "overflow-hidden rounded-2xl border border-[#d3e1f5] bg-white shadow-sm"}>
         {loading && institutes.length === 0 ? (
           <div className="p-12 text-center text-[#3d5688]">
             <RefreshCw className="mx-auto mb-3 h-8 w-8 animate-spin text-[#1b57d8]" />
@@ -272,33 +313,36 @@ export default function InstituteManager({ onShowToast }) {
               <table className="w-full text-left text-[15px]">
                 <thead className="border-b border-[#d3e1f5] bg-[#f4f8fe]">
                   <tr className="text-[12.5px] font-bold uppercase tracking-wider text-[#4a6090]">
-                    <th className="px-5 py-3.5">Code</th>
-                    <th className="px-5 py-3.5">Study Centre</th>
-                    <th className="px-5 py-3.5">Location</th>
-                    <th className="px-5 py-3.5">Program focus</th>
-                    <th className="px-5 py-3.5">Status</th>
-                    <th className="px-5 py-3.5 text-right">Actions</th>
+                    <th className="whitespace-nowrap px-4 py-3.5">Code</th>
+                    <th className="whitespace-nowrap px-4 py-3.5">Study Centre</th>
+                    <th className="whitespace-nowrap px-4 py-3.5">Location</th>
+                    <th className="whitespace-nowrap px-4 py-3.5">Program focus</th>
+                    <th className="whitespace-nowrap px-4 py-3.5">Status</th>
+                    <th className="whitespace-nowrap px-4 py-3.5">On website</th>
+                    <th className="whitespace-nowrap px-4 py-3.5 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#e4edf9]">
                   {filteredInstitutes.map((inst) => (
                     <tr key={inst.id} className="transition-colors hover:bg-[#f4f8fe]">
-                      <td className="px-5 py-3.5">
-                        <span className="rounded-md bg-[#eaf2fd] px-2 py-0.5 font-mono text-[13px] font-bold text-[#1245b8]">{inst.code}</span>
+                      <td className="whitespace-nowrap px-4 py-4 align-top">
+                        <span className="inline-block rounded-md bg-[#eaf2fd] px-2 py-0.5 font-mono text-[13px] font-bold text-[#1245b8]">{inst.code}</span>
                       </td>
-                      <td className="px-5 py-3.5">
+                      <td className="min-w-[14rem] px-4 py-4 align-top">
                         <p className="font-bold text-[#082a63]">{inst.name}</p>
-                        {(inst.phone || inst.email) && <p className="text-[13.5px] text-[#4a6090]">{[inst.phone, inst.email].filter(Boolean).join(" · ")}</p>}
+                        {inst.phone && <p className="mt-0.5 whitespace-nowrap text-[13.5px] text-[#4a6090]">{inst.phone}</p>}
+                        {inst.email && <p className="break-all text-[13.5px] text-[#4a6090]">{inst.email}</p>}
                       </td>
-                      <td className="px-5 py-3.5">
-                        <p className="flex items-center gap-1 font-semibold text-[#082a63]"><MapPin className="h-3.5 w-3.5 shrink-0 text-[#1b57d8]" /> {inst.city}</p>
-                        <p className="text-[13.5px] text-[#3d5688]">{inst.state}</p>
+                      <td className="px-4 py-4 align-top">
+                        <p className="flex items-center gap-1 whitespace-nowrap font-semibold text-[#082a63]"><MapPin className="h-3.5 w-3.5 shrink-0 text-[#1b57d8]" /> {inst.city}</p>
+                        <p className="pl-[18px] text-[13.5px] text-[#3d5688]">{inst.state}</p>
                       </td>
-                      <td className="px-5 py-3.5">
-                        {inst.type ? <span className="rounded-lg bg-[#eaf2fd] px-2.5 py-1 text-[13px] font-semibold text-[#0b3a85]">{inst.type}</span> : <span className="text-[#8a97b3]">—</span>}
+                      <td className="max-w-[13rem] px-4 py-4 align-top">
+                        {inst.type ? <p className="text-[14px] font-semibold leading-snug text-[#0b3a85]">{inst.type}</p> : <span className="text-[#8a97b3]">—</span>}
                       </td>
-                      <td className="px-5 py-3.5"><StatusBadge inst={inst} /></td>
-                      <td className="px-5 py-3.5">
+                      <td className="whitespace-nowrap px-4 py-4 align-top"><StatusBadge inst={inst} /></td>
+                      <td className="whitespace-nowrap px-4 py-4 align-top"><WebsiteSwitch inst={inst} /></td>
+                      <td className="px-4 py-4 align-top">
                         <div className="flex items-center justify-end gap-1.5">
                           <button onClick={() => openModal(inst)} title="Edit" aria-label="Edit study centre"
                             className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#d3e1f5] text-[#3d5688] transition hover:bg-[#eaf2fd]">
@@ -317,21 +361,23 @@ export default function InstituteManager({ onShowToast }) {
             </div>
 
             {/* cards (mobile / tablet) */}
-            <div className="grid grid-cols-1 gap-3 p-3 sm:p-4 md:grid-cols-2 lg:hidden">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:hidden">
               {filteredInstitutes.map((inst) => (
-                <div key={inst.id} className="min-w-0 rounded-xl border border-[#d3e1f5] bg-white p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <span className="rounded-md bg-[#eaf2fd] px-2 py-0.5 font-mono text-[12.5px] font-bold text-[#1245b8]">{inst.code}</span>
-                      <p className="mt-1.5 break-words text-[16px] font-bold text-[#082a63]">{inst.name}</p>
-                    </div>
+                <div key={inst.id} className="min-w-0 rounded-2xl border border-[#d3e1f5] bg-white p-4 shadow-sm">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="whitespace-nowrap rounded-md bg-[#eaf2fd] px-2 py-0.5 font-mono text-[12.5px] font-bold text-[#1245b8]">{inst.code}</span>
                     <StatusBadge inst={inst} />
                   </div>
+                  <p className="mt-2 break-words text-[17px] font-bold leading-snug text-[#082a63]">{inst.name}</p>
                   <div className="mt-2.5 space-y-1 text-[14px] text-[#3d5688]">
                     <p className="flex items-center gap-1.5"><MapPin className="h-4 w-4 shrink-0 text-[#1b57d8]" /> {[inst.city, inst.state].filter(Boolean).join(", ")}</p>
                     {inst.type && <p className="break-words">{inst.type}</p>}
                     {inst.phone && <p>{inst.phone}</p>}
                     {inst.email && <p className="break-all">{inst.email}</p>}
+                  </div>
+                  <div className="mt-3 flex items-center justify-between rounded-lg bg-[#f4f8fe] px-3 py-2">
+                    <span className="text-[13.5px] font-semibold text-[#4a6090]">On website</span>
+                    <WebsiteSwitch inst={inst} />
                   </div>
                   <div className="mt-3 grid grid-cols-2 gap-2">
                     <button onClick={() => openModal(inst)} className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#d3e1f5] bg-white py-2.5 text-[14px] font-bold text-[#082a63] hover:bg-[#f4f8fe]">
@@ -345,7 +391,7 @@ export default function InstituteManager({ onShowToast }) {
               ))}
             </div>
 
-            <div className="border-t border-[#d3e1f5] bg-[#f4f8fe] px-5 py-3 text-[13.5px] text-[#3d5688]">
+            <div className="px-1 pt-1 text-[13.5px] text-[#3d5688] lg:border-t lg:border-[#d3e1f5] lg:bg-[#f4f8fe] lg:px-5 lg:py-3">
               Showing {filteredInstitutes.length} of {institutes.length}
             </div>
           </>
@@ -440,6 +486,22 @@ export default function InstituteManager({ onShowToast }) {
                 <input type="url" value={formData.website} onChange={setField("website")} placeholder="https://"
                   className={fieldCls} />
               </label>
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] px-3.5 py-3 sm:col-span-2">
+                <div className="min-w-0">
+                  <p className="text-[14.5px] font-bold text-[#082a63]">Show on website</p>
+                  <p className="text-[13px] text-[#4a6090]">Turn off to hide this centre from the public Study Centres page. It stays available everywhere else.</p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={formData.show_on_website}
+                  aria-label="Show on website"
+                  onClick={() => setFormData((f) => ({ ...f, show_on_website: !f.show_on_website }))}
+                  className={`relative inline-flex h-7 w-12 shrink-0 rounded-full transition ${formData.show_on_website ? "bg-[#1b57d8]" : "bg-[#b9cbe6]"}`}
+                >
+                  <span className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-all ${formData.show_on_website ? "left-[22px]" : "left-0.5"}`} />
+                </button>
+              </div>
               <label className="block min-w-0">
                 <span className={labelCls}>Display order</span>
                 <input type="number" min={0} value={formData.sort_order} onChange={(e) => setFormData({ ...formData, sort_order: Number(e.target.value) || 0 })}

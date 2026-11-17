@@ -12,7 +12,7 @@ const ROLES = {
     icon: UserRound,
     title: "Board Login",
     heading: "Board Officials",
-    lead: "Secure sign-in for officials of Goa State Open School and the Directorate of Education.",
+    lead: "Secure sign-in for officials of Goa State Open School.",
     idLabel: "User ID",
     idPlaceholder: "Enter your User ID",
     points: ["Manage admissions and enrollments", "Examination, results and admit card management", "Notices, circulars and study centre approvals"],
@@ -47,7 +47,7 @@ export default async function LoginShell({ role }) {
               <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/15 ring-2 ring-white/30 sm:h-16 sm:w-16">
                 <Icon strokeWidth={1.6} className="size-6 sm:size-[30px]" />
               </span>
-              <p className="mt-4 text-[12.5px] font-bold uppercase tracking-[0.18em] text-sky sm:mt-5 sm:text-[13px] sm:tracking-[0.2em]">Goa State Open School</p>
+              <p className="mt-4 text-[12.5px] font-bold uppercase tracking-[0.18em] text-sky sm:mt-5 sm:text-[13px] sm:tracking-[0.2em]">Goa State Open School<span lang="kok" className="font-devanagari block normal-case tracking-normal text-[14.5px] font-semibold text-white/90">गोंय राज्य मुक्त शाळा</span></p>
               <h1 className="mt-1 text-[24px] font-extrabold leading-tight tracking-tight sm:text-[34px]">{r.heading}</h1>
               <p className="mt-2 max-w-[420px] text-[14px] font-medium leading-relaxed text-white/85 sm:mt-3 sm:text-[15px]">{r.lead}</p>
 
