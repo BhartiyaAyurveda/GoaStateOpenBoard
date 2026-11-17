@@ -1,12 +1,12 @@
 import Image from "next/image";
-import { SquarePen, ArrowRight, Info } from "lucide-react";
+import { SquarePen, Info } from "lucide-react";
 import { getHomeContent } from "@/lib/home-content";
 import { homeLinkProps, homeImageProps } from "@/lib/home-defaults";
 
 export default async function Hero() {
   const { hero } = await getHomeContent();
   return (
-    <section className="relative isolate overflow-hidden bg-gradient-to-b from-[#bcdcf8] via-[#d8ebfc] to-white max-sm:flex max-sm:min-h-[calc(100svh-58px)] max-sm:flex-col max-sm:from-[#c4e0fa] max-sm:via-[#e4f1fd]">
+    <section className="relative isolate overflow-hidden bg-gradient-to-b from-[#bcdcf8] via-[#d8ebfc] to-white max-sm:flex max-sm:flex-col max-sm:from-[#c4e0fa] max-sm:via-[#e4f1fd]">
       <div className="relative sm:h-[446px] md:h-[clamp(456px,calc(40vw+6px),606px)]">
         {/* tablet / desktop: photo behind the text */}
         <Image
@@ -34,29 +34,29 @@ export default async function Hero() {
           <path d="M0 30 C140 70 300 100 560 112 L560 120 L0 120 Z" fill="url(#swoosh)" />
         </svg>
 
-        <div className="mx-auto flex max-w-[1320px] flex-col justify-center px-4 max-sm:pb-6 max-sm:pt-9 sm:h-full sm:px-6">
-          <span className="mb-4 block h-[2px] w-[53px] bg-brand" />
-          <h2 className="max-w-[470px] font-serif text-[38px] font-extrabold leading-[1.05] tracking-[-0.03em] text-ink sm:text-[46px] md:max-w-[560px] md:text-[54px]">
+        <div className="mx-auto flex max-w-[1320px] flex-col justify-center px-4 max-sm:pb-4 max-sm:pt-6 sm:h-full sm:px-6">
+          <span className="mb-3 block h-[2px] w-[53px] bg-brand sm:mb-4" />
+          <h2 className="max-w-[470px] font-serif text-[32px] font-extrabold leading-[1.05] tracking-[-0.03em] text-ink sm:text-[46px] md:max-w-[560px] md:text-[54px]">
             {hero.heading}
           </h2>
-          <p className="mt-5 max-w-[360px] text-[15.5px] font-medium leading-[1.55] text-ink sm:max-w-[410px] sm:text-[17px] md:mt-6 md:max-w-[470px] md:text-[19px]">
+          <p className="mt-3 max-w-[360px] text-[15px] font-medium leading-[1.5] sm:mt-5 sm:leading-[1.55] text-ink sm:max-w-[410px] sm:text-[17px] md:mt-6 md:max-w-[470px] md:text-[19px]">
             {hero.text}
           </p>
-          <div className="mt-7 flex flex-wrap items-center gap-3.5 sm:gap-4">
+          <div className="mt-5 flex items-center gap-2.5 sm:mt-7 sm:flex-wrap sm:gap-4">
             {hero.primary.label && (
               <a
                 href={hero.primary.href}
                 {...homeLinkProps(hero.primary.href)}
-                className="flex h-[46px] items-center gap-2.5 rounded-md bg-gradient-to-b from-[#2b6ae6] to-[#1048bd] px-5 text-[15px] font-semibold text-white shadow-md shadow-blue-900/30 hover:brightness-110 sm:h-[44px]"
+                className="flex h-[46px] items-center gap-1.5 whitespace-nowrap rounded-md bg-gradient-to-b from-[#2b6ae6] to-[#1048bd] px-3 text-[13px] sm:gap-2.5 sm:px-5 sm:text-[15px] font-semibold text-white shadow-md shadow-blue-900/30 hover:brightness-110 sm:h-[44px]"
               >
-                <SquarePen size={17} /> {hero.primary.label} <ArrowRight size={16} />
+                <SquarePen size={17} /> {hero.primary.label}
               </a>
             )}
             {hero.secondary.label && (
               <a
                 href={hero.secondary.href}
                 {...homeLinkProps(hero.secondary.href)}
-                className="flex h-[46px] items-center gap-2.5 rounded-md border border-[#9db7e0] bg-white/80 px-5 text-[15px] font-semibold text-ink backdrop-blur-sm hover:bg-white sm:h-[44px] sm:bg-white/70"
+                className="flex h-[46px] items-center gap-1.5 whitespace-nowrap rounded-md border border-[#9db7e0] bg-white/80 px-3 text-[13px] sm:gap-2.5 sm:px-5 sm:text-[15px] font-semibold text-ink backdrop-blur-sm hover:bg-white sm:h-[44px] sm:bg-white/70"
               >
                 <Info size={17} /> {hero.secondary.label}
               </a>
@@ -66,11 +66,11 @@ export default async function Hero() {
       </div>
 
       {/* phone: hero fills the screen (100svh minus the 58px sticky navbar); the photo takes the space left under the text, fading into the sky, with a blue wave at the bottom */}
-      <div className="relative min-h-[260px] flex-1 sm:hidden">
+      <div className="relative h-[270px] shrink-0 sm:hidden">
         {/* plain <img>: fills the remaining height, cropped from the top so the church / palms at the bottom stay visible */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={homeImageProps(hero.imageMobile, 900).src} alt={hero.imageAlt} className="absolute inset-0 block h-full w-full object-cover object-bottom" loading="eager" decoding="async" />
-        <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-[#e4f1fd] via-[#e4f1fd]/70 to-transparent" aria-hidden="true" />
+        <img src={homeImageProps(hero.imageMobile, 900).src} alt={hero.imageAlt} className="absolute inset-0 block h-full w-full object-cover object-[50%_67%]" loading="eager" decoding="async" />
+        <div className="absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-[#e4f1fd] via-[#e4f1fd]/70 to-transparent" aria-hidden="true" />
         <svg aria-hidden="true" viewBox="0 0 390 70" preserveAspectRatio="none" className="absolute inset-x-0 bottom-0 h-[52px] w-full">
           <defs>
             <linearGradient id="wave-m" x1="0" x2="1" y1="0" y2="0">

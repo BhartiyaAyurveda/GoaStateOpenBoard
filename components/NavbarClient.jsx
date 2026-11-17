@@ -62,7 +62,7 @@ export default function NavbarClient({ phone = "0832–2743300", tel = "tel:+918
 
   return (
     <nav className="sticky top-0 z-50 print:hidden bg-gradient-to-r from-[#08265c] via-[#0a3170] to-[#0d3c82] text-white shadow-[0_2px_6px_rgba(4,20,60,0.35)]" aria-label="Primary">
-      <div className="mx-auto flex h-[58px] max-w-[1320px] items-center justify-between px-4 sm:px-6">
+      <div className="mx-auto flex h-[58px] max-w-[1320px] items-center justify-between gap-3 px-3 sm:px-6">
         <ul className="hidden h-full shrink-0 items-center lg:flex">
           {links.map(({ label, href, icon: Icon }) => {
             const active = href === pathname;
@@ -95,10 +95,10 @@ export default function NavbarClient({ phone = "0832–2743300", tel = "tel:+918
         </button>
 
         <div className="flex items-center gap-1.5 sm:gap-3">
-          <Link href="/board-login" className="flex h-[36px] items-center gap-1.5 whitespace-nowrap rounded-lg bg-white px-2.5 text-[12px] font-bold text-navy-deep shadow-sm hover:bg-sky-50 sm:h-[40px] sm:gap-2.5 sm:px-4 sm:text-[14px]">
+          <Link href="/board-login" className="flex h-[36px] w-[112px] items-center justify-center gap-1.5 sm:w-auto sm:justify-start whitespace-nowrap rounded-lg bg-white px-1.5 text-[12px] font-bold text-navy-deep shadow-sm hover:bg-sky-50 sm:h-[40px] sm:gap-2.5 sm:px-4 sm:text-[14px]">
             <User size={20} fill="currentColor" className="size-4 sm:size-5" /> Board Login
           </Link>
-          <Link href="/college-login" className="flex h-[36px] items-center gap-1.5 whitespace-nowrap rounded-lg bg-white px-2.5 text-[12px] font-bold text-navy-deep shadow-sm hover:bg-sky-50 sm:h-[40px] sm:gap-2.5 sm:px-4 sm:text-[14px]">
+          <Link href="/college-login" className="flex h-[36px] w-[112px] items-center justify-center gap-1.5 sm:w-auto sm:justify-start whitespace-nowrap rounded-lg bg-white px-1.5 text-[12px] font-bold text-navy-deep shadow-sm hover:bg-sky-50 sm:h-[40px] sm:gap-2.5 sm:px-4 sm:text-[14px]">
             <Landmark size={20} className="size-4 sm:size-5" /> College Login
           </Link>
         </div>

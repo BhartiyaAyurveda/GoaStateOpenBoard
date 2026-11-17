@@ -53,17 +53,21 @@ export default async function Header() {
             </span>
           </div>
         </div>
-        <div className="ml-2 flex shrink-0 flex-col items-center self-center sm:ml-6">
+        <div className="ml-2 flex shrink-0 flex-col items-center justify-center self-stretch sm:ml-6">
           <Image
             src="/images/emblem-nav.png"
             alt="Emblem of India"
             width={128}
             height={200}
-            className="h-[44px] w-auto sm:h-[72px] md:h-[84px]"
+            className="h-[58px] w-auto sm:h-[72px] md:h-[84px]"
           />
-          <p className="mt-0.5 text-[9px] font-bold leading-none tracking-tight text-[#44557a] sm:text-[10px]">NITI Aayog</p>
-          <p className="mt-0.5 max-w-[100px] text-center text-[7px] font-semibold leading-[1.15] text-[#44557a] sm:max-w-[150px] sm:text-[9px]">
-            Recognized by Under, MSME Trust - Education Act
+          <p lang="hi" className="mt-0.5 font-devanagari text-[7px] font-bold leading-none text-[#44557a] sm:text-[8px]">नीति आयोग</p>
+          <p className="mt-0.5 whitespace-nowrap text-center text-[7px] font-semibold leading-[1.2] text-[#44557a] sm:text-[9px]">
+            Recognized
+            <br />
+            MSME Trust<span className="hidden sm:inline"> - </span>
+            <br className="sm:hidden" />
+            Education Act
           </p>
         </div>
       </div>
