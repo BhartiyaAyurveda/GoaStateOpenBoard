@@ -10,6 +10,7 @@ import Courses from "@/components/Courses";
 import Testimonials from "@/components/Testimonials";
 import About from "@/components/About";
 import Stats from "@/components/Stats";
+import Recognitions from "@/components/Recognitions";
 import Footer from "@/components/Footer";
 
 export const revalidate = 60; // refresh notices from the dashboard every minute
@@ -36,6 +37,7 @@ export default function Home() {
         <div className="mx-auto w-full max-w-[1320px] px-4 sm:px-6">
           <About />
           <Stats />
+          <Recognitions />
         </div>
 
         <Testimonials />
