@@ -26,7 +26,7 @@ function Field({ label, error, htmlFor, icon: Icon, children }) {
         {label} <span className="text-[#e0242b]">*</span>
       </label>
       <div className="relative">
-        <Icon size={18} strokeWidth={1.8} className="pointer-events-none absolute left-3.5 top-[15px] text-[#5b78a8]" aria-hidden="true" />
+        <Icon size={18} strokeWidth={1.8} className="pointer-events-none absolute left-3.5 top-[15px] z-10 text-[#5b78a8]" aria-hidden="true" />
         {children}
       </div>
       {error && (
@@ -328,8 +328,8 @@ export default function AdmitCardLookup() {
         <label htmlFor="a-captcha" className="mb-1.5 block text-[14px] font-bold text-ink">
           Verification: sum the numbers <span className="text-[#e0242b]">*</span>
         </label>
-        <div className="flex items-stretch gap-3">
-          <div className="flex h-[48px] min-w-[170px] select-none items-center justify-center gap-2 whitespace-nowrap rounded-md border border-dashed border-[#7fa0d6] bg-[#eef4fc] px-4 text-[18px] font-extrabold tracking-widest text-navy">
+        <div className="flex items-stretch gap-2 sm:gap-3">
+          <div className="flex h-[48px] min-w-0 flex-1 select-none items-center justify-center gap-1.5 whitespace-nowrap rounded-md sm:min-w-[170px] sm:flex-none sm:gap-2 border border-dashed border-[#7fa0d6] bg-[#eef4fc] px-4 text-[18px] font-extrabold tracking-widest text-navy">
             <ShieldCheck size={18} strokeWidth={2} className="text-[#5b78a8]" aria-hidden="true" />
             {captcha.question ? `${captcha.question} =` : captcha.failed ? "—" : "..."}
           </div>
@@ -345,7 +345,7 @@ export default function AdmitCardLookup() {
               if (errors.captcha) setErrors((er) => ({ ...er, captcha: undefined }));
             }}
             placeholder="Sum"
-            className={`${controlCls(errors.captcha)} !w-[120px] !pl-4 shrink-0`}
+            className={`${controlCls(errors.captcha)} !w-[84px] !px-3 shrink-0 sm:!w-[120px] sm:!pl-4`}
           />
           <button
             type="button"

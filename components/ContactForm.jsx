@@ -32,7 +32,7 @@ function Field({ label, required, error, htmlFor, icon: Icon, className = "", ch
           <Icon
             size={18}
             strokeWidth={1.8}
-            className="pointer-events-none absolute left-3.5 top-[15px] text-[#5b78a8]"
+            className="pointer-events-none absolute left-3.5 top-[15px] z-10 text-[#5b78a8]"
             aria-hidden="true"
           />
         )}

@@ -62,7 +62,7 @@ export default function NoticesList({ notices: NOTICES = [] }) {
           />
         </div>
         <div className="relative">
-          <CalendarDays size={18} strokeWidth={1.8} className="pointer-events-none absolute left-3.5 top-[15px] text-[#5b78a8]" aria-hidden="true" />
+          <CalendarDays size={18} strokeWidth={1.8} className="pointer-events-none absolute left-3.5 top-[15px] z-10 text-[#5b78a8]" aria-hidden="true" />
           <Select
             variant="public"
             withIcon
