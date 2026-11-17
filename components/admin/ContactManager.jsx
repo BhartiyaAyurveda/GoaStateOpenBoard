@@ -20,6 +20,9 @@ const DEFAULT_CONTACT = {
   workingHoursSunday:  "Closed on Sundays and public holidays",
   registrationNote:    "",
   registrationUrl:     "",
+  headerLogoUrl:       "",
+  headerLogoAlt:       "",
+  headerLogoLink:      "",
 };
 
 const SITE_DEFAULTS = {
@@ -50,6 +53,8 @@ function validate(d) {
   }
   if (d.pincode && !/^\d{6}$/.test(d.pincode)) e.pincode = "Pincode must be 6 digits.";
   if (d.registrationUrl && !/^https?:\/\/\S+\.\S+/i.test(d.registrationUrl.trim())) e.registrationUrl = "Enter a full link starting with https://";
+  if (d.headerLogoUrl && !/^https:\/\/\S+\.\S+/i.test(d.headerLogoUrl.trim())) e.headerLogoUrl = "The logo link must start with https://";
+  if (d.headerLogoLink && !/^https?:\/\/\S+\.\S+/i.test(d.headerLogoLink.trim())) e.headerLogoLink = "Enter a full link starting with https://";
   return e;
 }
 
@@ -114,6 +119,27 @@ export default function ContactManager({ onShowToast }) {
     setData((p) => ({ ...p, [key]: value }));
     setJustSaved(false);
   };
+
+  const [logoUploading, setLogoUploading] = useState(false);
+  async function uploadLogo(file) {
+    if (!file) return;
+    setLogoUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/admin/home-content/upload", { method: "POST", body: fd });
+      const out = await res.json().catch(() => ({}));
+      if (res.ok && out.url) {
+        set("headerLogoUrl", out.url);
+        onShowToast?.("Logo uploaded. Press Save to show it in the header.", "success");
+      } else {
+        onShowToast?.(out.error || "Upload failed", "error");
+      }
+    } catch {
+      onShowToast?.("Network error while uploading.", "error");
+    }
+    setLogoUploading(false);
+  }
 
   const text = (key, props = {}) => (cls) => (
     <input value={data[key] || ""} onChange={(e) => set(key, e.target.value)} className={cls} {...props} />
@@ -238,6 +264,46 @@ export default function ContactManager({ onShowToast }) {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label="Weekdays" icon={Clock}>{text("workingHoursWeekday", { placeholder: "e.g. Monday – Saturday: 10:00 AM – 5:00 PM", maxLength: 120 })}</Field>
               <Field label="Sunday / holidays" icon={Clock}>{text("workingHoursSunday", { placeholder: "e.g. Closed on Sundays and public holidays", maxLength: 120 })}</Field>
+            </div>
+          </Section>
+
+          <Section icon={<ExternalLink className="h-5 w-5" />} tone="bg-violet-50 text-violet-700" title="Header logo" subtitle="An optional logo at the top right of the website header. Empty = nothing is shown.">
+            <div className="grid grid-cols-1 gap-4">
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex h-20 w-40 items-center justify-center overflow-hidden rounded-xl border border-dashed border-[#b9cbe6] bg-[#f4f8fe] p-2">
+                  {data.headerLogoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={data.headerLogoUrl} alt="Header logo preview" className="max-h-full max-w-full object-contain" />
+                  ) : (
+                    <span className="text-[13px] font-semibold text-[#8a9bbd]">No logo</span>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <label className={`inline-flex h-11 cursor-pointer items-center gap-2 rounded-xl bg-[#1b57d8] px-5 text-[14.5px] font-bold text-white transition hover:bg-[#1245b8] ${logoUploading ? "pointer-events-none opacity-60" : ""}`}>
+                    {logoUploading ? "Uploading…" : data.headerLogoUrl ? "Replace logo" : "Upload logo"}
+                    <input type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(e) => { uploadLogo(e.target.files?.[0]); e.target.value = ""; }} />
+                  </label>
+                  {data.headerLogoUrl && (
+                    <button type="button" onClick={() => set("headerLogoUrl", "")} className="h-11 rounded-xl border border-[#d3e1f5] bg-white px-5 text-[14.5px] font-bold text-[#082a63] transition hover:border-red-200 hover:bg-red-50 hover:text-red-600">
+                      Remove
+                    </button>
+                  )}
+                </div>
+              </div>
+              {data.headerLogoUrl && (
+                <>
+                  <Field label="Logo description" hint="(for screen readers)">
+                    {text("headerLogoAlt", { placeholder: "e.g. Partner logo", maxLength: 80 })}
+                  </Field>
+                  <Field label="Link when clicked" hint="(optional)" icon={ExternalLink} error={showErr("headerLogoLink")}>
+                    {text("headerLogoLink", { type: "url", placeholder: "https://…", maxLength: 300, autoComplete: "off" })}
+                  </Field>
+                </>
+              )}
+              {showErr("headerLogoUrl") && <p className="text-[13px] font-semibold text-red-600">{showErr("headerLogoUrl")}</p>}
+              <p className="rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-[13.5px] font-medium leading-relaxed text-amber-900">
+                PNG, JPG or WebP, up to 5 MB. Upload only a logo you have the right to use. The State Emblem of India and other government logos cannot be used without written permission.
+              </p>
             </div>
           </Section>
 

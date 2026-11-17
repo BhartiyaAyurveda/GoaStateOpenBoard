@@ -28,6 +28,12 @@ export async function GET(request, { params }) {
     data.status = "under_review";
   }
 
+  // the language option the student chose (shown in the admin detail page)
+  if (data.language_subject_id) {
+    const { data: lang } = await supabaseAdmin.from("course_subjects").select("subject_name").eq("id", data.language_subject_id).maybeSingle();
+    data.language_name = lang?.subject_name || null;
+  }
+
   // Fetch queries
   const { data: queries } = await supabaseAdmin
     .from("registration_queries")

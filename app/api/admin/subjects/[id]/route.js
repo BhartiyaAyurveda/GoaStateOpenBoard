@@ -9,9 +9,12 @@ export async function PATCH(request, { params }) {
   const body = await request.json();
   const { subject_name, subject_code, theory_max, practical_max, ca_max } = body;
 
+  const updates = { subject_name, subject_code, theory_max, practical_max, ca_max };
+  if (typeof body.is_language_option === "boolean") updates.is_language_option = body.is_language_option;
+
   const { data, error } = await supabaseAdmin
     .from("course_subjects")
-    .update({ subject_name, subject_code, theory_max, practical_max, ca_max })
+    .update(updates)
     .eq("id", (await params).id)
     .select()
     .single();

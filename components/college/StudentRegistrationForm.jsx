@@ -39,7 +39,16 @@ const INDIAN_STATES = [
   "Tripura","Uttar Pradesh","Uttarakhand","West Bengal",
 ];
 
-const SESSIONS = ["2026-2027","2025-2026","2024-2025","2023-2024"];
+// academic sessions from 2020-2021 up to the current one (the academic year starts in July), newest first
+const FIRST_SESSION_YEAR = 2020;
+function buildSessions() {
+  const now = new Date();
+  const current = now.getMonth() >= 6 ? now.getFullYear() : now.getFullYear() - 1;
+  const list = [];
+  for (let y = current; y >= FIRST_SESSION_YEAR; y--) list.push(`${y}-${y + 1}`);
+  return list;
+}
+const SESSIONS = buildSessions();
 
 const STEPS = [
   { id: 1, label: "Personal",   desc: "Candidate Info",   icon: User },
@@ -56,9 +65,10 @@ const blank = {
   gender:"Male", category:"General", aadhar_no:"",
   // Contact
   phone:"", email:"", address:"", district:"", city:"",
-  state:"Uttar Pradesh", pincode:"", academic_session:"2026-2027",
+  state:"Goa", pincode:"", academic_session:"2026-2027",
   // Course
   course_id:"",
+  language_subject_id:"",
   // Education
   education: {
     high_school:  { board:"", year:"", total:"", obtained:"", percentage:"" },
@@ -410,6 +420,8 @@ function DocUpload({ label, required, hint, value, onChange, accept = "image/*,.
 export default function StudentRegistrationForm({ courses = [], college, onSuccess, draftId: initialDraftId = null, initialData = null }) {
   const [step, setStep]             = useState(initialData?.step || 1);
   const [form, setForm]             = useState(initialData?.form ? { ...blank, ...initialData.form } : blank);
+  // language options of the selected course (English and the other subjects are compulsory)
+  const languageOptions = courses.find((c) => c.id === form.course_id)?.language_options || [];
   const [errors, setErrors]         = useState({});
   const [submitting, setSubmitting] = useState(false);
 
@@ -578,6 +590,7 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
     }
     if (s === 3) {
       if (!form.course_id) e.course_id = "Please select an approved course";
+      else if (languageOptions.length > 0 && !form.language_subject_id) e.language_subject_id = "Please choose a language option";
     }
     if (s === 4) {
       const hs = form.education.high_school;
@@ -903,10 +916,25 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
             <CourseSelect
               courses={courses}
               value={form.course_id}
-              onChange={(id) => set("course_id", id)}
+              onChange={(id) => { set("course_id", id); set("language_subject_id", ""); }}
               error={errors.course_id}
             />
           </Field>
+
+          {languageOptions.length > 0 && (
+            <Field label="Language option / भास निवड (choose one)" req error={errors.language_subject_id}>
+              <Select
+                variant="form"
+                invalid={Boolean(errors.language_subject_id)}
+                ariaLabel="Language option"
+                placeholder="Select a language"
+                value={form.language_subject_id}
+                onChange={(v) => set("language_subject_id", v)}
+                options={languageOptions.map((l) => ({ value: l.id, label: l.code ? `${l.name} (${l.code})` : l.name }))}
+              />
+              <p className="mt-1.5 text-[13px] text-[#3d5688]">English is compulsory. The student studies English and the one language chosen here.</p>
+            </Field>
+          )}
 
         </div>
 
@@ -1059,6 +1087,7 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
               </p>
               <p className="text-[13px] sm:text-[15px] text-[#3d5688]">
                 Session: {form.academic_session} • {college?.college_name}
+                {languageOptions.length > 0 && <> • Language: {languageOptions.find((l) => l.id === form.language_subject_id)?.name || "not chosen"}</>}
               </p>
             </div>
           </div>

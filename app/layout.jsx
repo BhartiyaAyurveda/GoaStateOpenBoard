@@ -17,7 +17,7 @@ const inter = Inter({
 export const metadata = {
   title: "Goa State Open School | गोंय राज्य मुक्त शाळा",
   description:
-    "Goa State Open School – open schooling, flexible learning and second chance education for Secondary (Class X) and Senior Secondary (Class XII).",
+    "Goa State Open School – an autonomous body for open schooling, flexible learning and second chance education for Secondary (Class X) and Senior Secondary (Class XII).",
 };
 
 export const viewport = {

@@ -40,7 +40,7 @@ export const revalidate = 60; // homepage content (stats) comes from the dashboa
 export const metadata = {
   title: "About Us | Goa State Open School",
   description:
-    "About Goa State Open School – overview, mission, vision, values and examination scheme of the open schooling institution.",
+    "About Goa State Open School – an autonomous body for open schooling: overview, mission, vision, values and examination scheme.",
 };
 
 // NOTE: the sections below (benefits, who can join, aims, learner journey) are
@@ -146,19 +146,45 @@ export default function AboutPage() {
           <Panel icon={Landmark} title="Overview">
             <div className="grid grid-cols-1 gap-8 p-6 sm:p-9 lg:min-h-[420px] lg:grid-cols-[1fr_1.25fr] lg:items-center lg:gap-10 lg:p-10">
               <div className="space-y-5 text-[16.5px] font-medium leading-[1.8] text-ink">
-                <p>
-                  Goa State Open School is an open schooling institution. It offers an alternative and flexible mode of education to learners who
-                  are unable to pursue regular schooling, enabling them to complete their Secondary (Class X) and Senior
-                  Secondary (Class XII) education.
+                <p className="inline-flex items-center gap-2.5 rounded-md bg-navy px-5 py-2.5 text-[18px] font-extrabold uppercase tracking-[0.16em] text-white shadow-md sm:text-[20px]">
+                  <span className="h-2.5 w-2.5 rounded-full bg-sky" aria-hidden="true" /> An Autonomous Body
                 </p>
                 <p>
-                  The school is meant especially for learners who have missed formal education or left school early, such
-                  as working youth, homemakers, learners in remote areas and persons with disabilities, and gives them a
-                  second chance to learn and earn a recognised certificate.
+                  Goa State Open School (GSOS) is <strong className="font-extrabold text-navy underline decoration-brand decoration-2 underline-offset-4">an autonomous body</strong> set up to provide education up to the Secondary (Class X) and Senior Secondary
+                  (Class XII) level to learners in Goa who cannot attend a regular school. There is a need to reach
+                  learners who are socially, educationally, economically or geographically disadvantaged: those who left
+                  school early, working youth, homemakers, learners in remote talukas, the girl child and persons with
+                  disabilities. To accelerate the pace and progress of secondary education across the State, GSOS offers
+                  flexible open schooling that brings education to the learner&apos;s doorstep.
                 </p>
                 <p>
-                  Learners study at their own pace with the help of study material and contact sessions at accredited
-                  study centres, and appear for public examinations conducted by the school.
+                  A detailed scheme of syllabus along with the scheme of examination for the Secondary and Senior
+                  Secondary programmes is given in the admission prospectus. For the purpose of certification, a learner
+                  studies 6 subjects for Secondary and 5 subjects for Senior Secondary, and may study one more subject as
+                  per his or her convenience. The curriculum in each subject is planned for 100 hours of study time: 40
+                  hours at the Study Centre in personal contact classes and 60 hours as self-study.
+                </p>
+                <p>
+                  GSOS conducts public examinations twice a year. A learner gets nine chances to appear in the public
+                  examinations over a period of five years from the date of registration to complete the Secondary or
+                  Senior Secondary course, and GSOS issues pass certificates under its emblem to all who qualify. A
+                  learner can choose to appear in any one or more subjects in any examination and earn credits, which are
+                  accumulated until all subjects required for certification are completed within five years of
+                  registration. Learners who have already passed certain subjects in another recognised Board or Council
+                  can get their credits transferred for up to a maximum of two subjects.
+                </p>
+                <p>
+                  Learning support is given through Study Centres across Goa. At least one institution in each taluka is
+                  nominated as a Study Centre, and there is no restriction on opening more centres where there is demand.
+                  Study Centres and vocational study centres are approved through appropriate agreements to implement the
+                  open and distance learning programmes.{" "}
+                  <Link href="/study-centres" className="font-bold text-brand underline underline-offset-2 hover:text-navy">
+                    Find a Study Centre
+                  </Link>
+                  .
+                </p>
+                <p>
+                  GSOS is a self-sustained body without any financial commitment on the part of the State Government.
                 </p>
               </div>
               <div className="self-start overflow-hidden rounded-lg bg-[#dbe9f9] shadow-md ring-1 ring-black/5">

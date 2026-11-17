@@ -6,11 +6,11 @@ import Image from "next/image";
 // Layout follows the Bhartiya Ayurveda student marksheet: header band, title bar, candidate box with photo,
 // subject-wise marks, summary boxes, grading scale and an authorisation strip.
 
-const NAVY = "#0B1E36";
-const NAVY_2 = "#132E52";
-const BRAND = "#1b57d8";
-const BRAND_DARK = "#1245b8";
-const SKY = "#8ec9fa";
+const NAVY = "#1b1b1b";
+const NAVY_2 = "#2a2a2a";
+const BRAND = "#545454";
+const BRAND_DARK = "#434343";
+const SKY = "#bdbdbd";
 
 const GRADING = [["A1", "90–100%"], ["A2", "80–89%"], ["B1", "70–79%"], ["B2", "60–69%"], ["C1", "50–59%"], ["C2", "40–49%"], ["D", "33–39%"], ["E", "<33%"]];
 
@@ -33,8 +33,8 @@ function SectionBar({ children }) {
 function Row({ label, value, bold, mono, top }) {
   return (
     <div className="flex items-center gap-2 px-4 py-[5px]" style={top ? { alignItems: "flex-start" } : undefined}>
-      <span style={{ color: "#64748b", fontSize: 9.5, fontWeight: 600, minWidth: 96, flexShrink: 0 }}>{label}</span>
-      <span style={{ color: "#94a3b8", fontSize: 10 }}>:</span>
+      <span style={{ color: "#727272", fontSize: 9.5, fontWeight: 600, minWidth: 96, flexShrink: 0 }}>{label}</span>
+      <span style={{ color: "#a1a1a1", fontSize: 10 }}>:</span>
       <span style={{ color: NAVY, fontSize: bold ? 11.5 : 10.5, fontWeight: 700, fontFamily: mono ? "monospace" : undefined, letterSpacing: mono ? "0.05em" : undefined, lineHeight: 1.4 }}>{value || "—"}</span>
     </div>
   );
@@ -43,11 +43,11 @@ function Row({ label, value, bold, mono, top }) {
 function Signature({ title, sub, width = 160 }) {
   return (
     <div style={{ width, maxWidth: "100%", textAlign: "center" }}>
-      <div style={{ height: 44, borderBottom: "1.5px solid #94a3b8", marginBottom: 6, marginLeft: 8, marginRight: 8, position: "relative" }}>
+      <div style={{ height: 44, borderBottom: "1.5px solid #a1a1a1", marginBottom: 6, marginLeft: 8, marginRight: 8, position: "relative" }}>
         <div style={{ position: "absolute", bottom: -4, left: "50%", transform: "translateX(-50%)", width: 6, height: 6, borderRadius: "50%", background: BRAND }} />
       </div>
       <div style={{ fontSize: 10, fontWeight: 800, color: NAVY, letterSpacing: "0.03em" }}>{title}</div>
-      <div style={{ fontSize: 8.5, color: "#64748b", fontWeight: 600, marginTop: 1 }}>{sub}</div>
+      <div style={{ fontSize: 8.5, color: "#727272", fontWeight: 600, marginTop: 1 }}>{sub}</div>
     </div>
   );
 }
@@ -60,11 +60,12 @@ export default function ResultMarksheet({ data }) {
   const printZoom = subjects.length <= 6 ? 1 : subjects.length === 7 ? 0.95 : subjects.length === 8 ? 0.91 : 0.87;
 
   return (
-    <div className="result-marksheet-wrapper mx-auto w-full max-w-[860px] font-sans text-[#0F172A] shadow-2xl print:shadow-none">
+    <div className="result-marksheet-wrapper mx-auto w-full max-w-[860px] font-sans text-[#171717] shadow-2xl print:shadow-none">
       <style>{`
+        .result-marksheet-wrapper img { filter: grayscale(1); }
         @media print {
           @page { size: A4 portrait; margin: 8mm 8mm 6mm 8mm; }
-          html, body { background: #fff !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; margin: 0 !important; padding: 0 !important; }
+          html, body { background: #ffffff !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; margin: 0 !important; padding: 0 !important; }
           .result-marksheet-wrapper { width: calc(194mm / ${printZoom}) !important; max-width: calc(194mm / ${printZoom}) !important; margin: 0 auto !important; zoom: ${printZoom} !important; box-shadow: none !important; }
         }
       `}</style>
@@ -77,7 +78,7 @@ export default function ResultMarksheet({ data }) {
 
         <div className="relative z-10">
           {/* 1. header band */}
-          <div style={{ background: "linear-gradient(135deg,#071527 0%,#0B1E36 40%,#132E52 100%)" }} className="flex items-center gap-4 px-5 py-4 print:py-3">
+          <div style={{ background: "linear-gradient(135deg,#131313 0%,#1b1b1b 40%,#2a2a2a 100%)" }} className="flex items-center gap-4 px-5 py-4 print:py-3">
             <div className="flex h-[90px] w-[90px] shrink-0 items-center justify-center rounded-full bg-white" style={{ border: `2.5px solid ${BRAND}`, boxShadow: `0 0 0 4px ${BRAND}30, 0 4px 16px #00000060` }}>
               <Image src="/images/logo.png" alt="Goa State Open School logo" width={78} height={44} style={{ width: 70, height: "auto", objectFit: "contain" }} />
             </div>
@@ -88,7 +89,7 @@ export default function ResultMarksheet({ data }) {
               <h1 className="mt-1 text-[12px] font-bold uppercase leading-tight tracking-[0.16em] text-white sm:text-[13px]">Goa State Open School</h1>
               <div className="mt-1.5 flex items-center justify-center gap-2">
                 <div className="h-px max-w-[80px] flex-1" style={{ background: `linear-gradient(90deg,transparent,${BRAND})` }} />
-                <span className="whitespace-nowrap px-1 text-[8.5px] font-medium tracking-wider text-[#A2B7CF]">Open schooling &nbsp;✦&nbsp; Flexible learning &nbsp;✦&nbsp; Second chance education</span>
+                <span className="whitespace-nowrap px-1 text-[8.5px] font-medium tracking-wider text-[#b3b3b3]">Open schooling &nbsp;✦&nbsp; Flexible learning &nbsp;✦&nbsp; Second chance education</span>
                 <div className="h-px max-w-[80px] flex-1" style={{ background: `linear-gradient(90deg,${BRAND},transparent)` }} />
               </div>
             </div>
@@ -99,7 +100,7 @@ export default function ResultMarksheet({ data }) {
           <div style={{ height: 4, background: `linear-gradient(90deg,${BRAND_DARK},${BRAND},${SKY},${BRAND},${BRAND_DARK})` }} />
 
           {/* 2. title */}
-          <div style={{ background: "linear-gradient(180deg,#F5F8FB,#EBF1F7)" }} className="border-b border-[#D0DCE7] px-6 py-2.5 text-center">
+          <div style={{ background: "linear-gradient(180deg,#f7f7f7,#f0f0f0)" }} className="border-b border-[#dadada] px-6 py-2.5 text-center">
             <div className="flex items-center justify-center gap-3">
               <div className="h-px flex-1" style={{ background: `linear-gradient(90deg,transparent,${BRAND})` }} />
               <div>
@@ -125,20 +126,20 @@ export default function ResultMarksheet({ data }) {
                     [["Father's Name", data.fatherName?.toUpperCase()], ["Enrollment No.", data.enrolmentNo, false, true]],
                     [["Mother's Name", data.motherName?.toUpperCase()], ["Date of Birth", fmtDate(data.dob)]],
                   ].map((row, ri) => (
-                    <div key={ri} className="grid grid-cols-1 sm:grid-cols-2 print:grid-cols-2" style={{ borderBottom: "1px dashed #E2E8F0" }}>
+                    <div key={ri} className="grid grid-cols-1 sm:grid-cols-2 print:grid-cols-2" style={{ borderBottom: "1px dashed #e7e7e7" }}>
                       {row.map(([label, val, bold, mono]) => (
                         <Row key={label} label={label} value={val} bold={bold} mono={mono} />
                       ))}
                     </div>
                   ))}
-                  <div style={{ borderBottom: "1px dashed #E2E8F0" }}>
+                  <div style={{ borderBottom: "1px dashed #e7e7e7" }}>
                     <Row label="Programme / Course" value={data.course?.toUpperCase()} top />
                   </div>
                   <Row label="Study Centre" value={`${data.institute || ""}${data.instituteCode ? ` (${data.instituteCode})` : ""}`.toUpperCase()} top />
                 </div>
 
-                <div className="flex w-[96px] shrink-0 flex-col items-center justify-center gap-1 p-2" style={{ borderLeft: "1px dashed #E2E8F0", background: "#F8FAFC" }}>
-                  <div style={{ border: `2px solid ${NAVY}`, width: 78, height: 100, overflow: "hidden", background: "#F1F5F9", position: "relative", boxShadow: "2px 2px 6px #0003" }}>
+                <div className="flex w-[96px] shrink-0 flex-col items-center justify-center gap-1 p-2" style={{ borderLeft: "1px dashed #e7e7e7", background: "#fafafa" }}>
+                  <div style={{ border: `2px solid ${NAVY}`, width: 78, height: 100, overflow: "hidden", background: "#f4f4f4", position: "relative", boxShadow: "2px 2px 6px #00000033" }}>
                     {data.photoUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={data.photoUrl} alt={data.name} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top" }} />
@@ -151,7 +152,7 @@ export default function ResultMarksheet({ data }) {
                       </div>
                     )}
                   </div>
-                  <div style={{ fontSize: 7.5, color: "#64748b", textAlign: "center" }}>Passport Size</div>
+                  <div style={{ fontSize: 7.5, color: "#727272", textAlign: "center" }}>Passport Size</div>
                 </div>
               </div>
             </div>
@@ -163,36 +164,48 @@ export default function ResultMarksheet({ data }) {
                 <table className="w-full min-w-[560px] border-collapse text-left">
                   <thead>
                     <tr style={{ background: NAVY }} className="text-white">
-                      <th className="border-r border-white/10 px-2 py-2.5 text-center font-bold uppercase tracking-wide" style={{ width: "12%", fontSize: 11 }}>Code</th>
-                      <th className="border-r border-white/10 px-3 py-2.5 font-bold uppercase tracking-wide" style={{ width: "30%", fontSize: 11 }}>Subject Name</th>
-                      {[["Max", "Marks"], ["Theory", "Obtained"], ["Practical", "Obtained"], ["CA", "Marks"], ["Total", "Obtained"]].map(([a, b]) => (
+                      <th className="border-r border-white/10 px-2 py-2.5 text-center font-bold uppercase tracking-wide" style={{ width: "10%", fontSize: 11 }}>Code</th>
+                      <th className="border-r border-white/10 px-3 py-2.5 font-bold uppercase tracking-wide" style={{ width: "31%", fontSize: 11 }}>Subject Name</th>
+                      {[["Theory", "marks / max"], ["Practical", "marks / max"], ["CA", "marks / max"], ["Total", "marks / max"]].map(([a, b]) => (
                         <th key={a} className="border-r border-white/10 px-2 py-2.5 text-center font-bold uppercase tracking-wide" style={{ fontSize: 10.5 }}>
                           {a}<br /><span style={{ fontWeight: 400, fontSize: 8.5, color: "rgba(255,255,255,0.6)", textTransform: "none" }}>{b}</span>
                         </th>
                       ))}
-                      <th className="px-2 py-2.5 text-center font-bold uppercase tracking-wide" style={{ width: "7%", fontSize: 11 }}>Grade</th>
+                      <th className="px-2 py-2.5 text-center font-bold uppercase tracking-wide" style={{ width: "8%", fontSize: 11 }}>Grade</th>
                     </tr>
                   </thead>
                   <tbody>
                     {subjects.map((s, i) => (
-                      <tr key={`${s.code}-${i}`} style={{ background: !s.pass ? "#fff1f2" : i % 2 === 0 ? "#ffffff" : "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
+                      <tr key={`${s.code}-${i}`} style={{ background: !s.pass ? "#f5f5f5" : i % 2 === 0 ? "#ffffff" : "#fafafa", borderBottom: "1px solid #e7e7e7" }}>
                         <td className="border-r border-slate-200 px-2 py-2 print:py-1.5 text-center font-mono font-extrabold" style={{ color: BRAND_DARK, fontSize: 11 }}>{s.code || "—"}</td>
                         <td className="border-r border-slate-200 px-3 py-2 print:py-1.5" style={{ fontWeight: 700, color: NAVY, fontSize: 12 }}>{s.name}</td>
-                        <td className="border-r border-slate-200 px-2 py-2 print:py-1.5 text-center" style={{ color: "#64748b", fontWeight: 600, fontSize: 11 }}>{s.totalMax}</td>
-                        <td className="border-r border-slate-200 px-2 py-2 print:py-1.5 text-center font-mono" style={{ fontWeight: 700, color: NAVY, fontSize: 11.5 }}>{num(s.thObt)}</td>
-                        <td className="border-r border-slate-200 px-2 py-2 print:py-1.5 text-center font-mono" style={{ fontWeight: 700, color: NAVY, fontSize: 11.5 }}>{s.prMax > 0 ? num(s.prObt) : "—"}</td>
-                        <td className="border-r border-slate-200 px-2 py-2 print:py-1.5 text-center font-mono" style={{ fontWeight: 600, color: "#64748b", fontSize: 11 }}>{s.caMax > 0 ? num(s.caObt) : "—"}</td>
-                        <td className={`border-r border-slate-200 px-2 py-2 print:py-1.5 text-center font-mono font-extrabold ${!s.pass ? "text-red-600" : ""}`} style={{ fontSize: 14, color: s.pass ? NAVY : undefined }}>{s.totalObt}</td>
-                        <td className="px-2 py-2 print:py-1.5 text-center font-extrabold" style={{ fontSize: 13, color: s.pass ? BRAND_DARK : "#dc2626" }}>{s.grade || "—"}</td>
+                        {[[s.thObt, s.thMax], [s.prObt, s.prMax], [s.caObt, s.caMax]].map(([obt, max], k) => (
+                          <td key={k} className="border-r border-slate-200 px-2 py-2 print:py-1.5 text-center font-mono" style={{ fontSize: 11.5 }}>
+                            {max > 0 ? (
+                              <>
+                                <span style={{ fontWeight: 800, color: NAVY }}>{num(obt)}</span>
+                                <span style={{ color: "#a1a1a1", fontSize: 10, fontWeight: 600 }}> / {max}</span>
+                              </>
+                            ) : (
+                              <span style={{ color: "#d3d3d3" }}>—</span>
+                            )}
+                          </td>
+                        ))}
+                        <td className={`border-r border-slate-200 px-2 py-2 print:py-1.5 text-center font-mono ${!s.pass ? "text-black" : ""}`} style={{ color: s.pass ? NAVY : undefined }}>
+                          <span style={{ fontSize: 14, fontWeight: 900 }}>{s.totalObt}</span>
+                          <span style={{ color: "#a1a1a1", fontSize: 10, fontWeight: 600 }}> / {s.totalMax}</span>
+                        </td>
+                        <td className="px-2 py-2 print:py-1.5 text-center font-extrabold" style={{ fontSize: 13, color: s.pass ? BRAND_DARK : "#000000" }}>{s.grade || "—"}</td>
                       </tr>
                     ))}
-                    <tr style={{ background: "linear-gradient(90deg,#071527,#0B1E36,#132E52)", borderTop: `2px solid ${BRAND}` }}>
-                      <td colSpan={2} className="border-r border-white/15 px-3 py-2.5 text-right" style={{ fontSize: 9.5, fontWeight: 800, color: SKY, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                    <tr style={{ background: "linear-gradient(90deg,#131313,#1b1b1b,#2a2a2a)", borderTop: `2px solid ${BRAND}` }}>
+                      <td colSpan={5} className="border-r border-white/15 px-3 py-2.5 text-right" style={{ fontSize: 9.5, fontWeight: 800, color: SKY, textTransform: "uppercase", letterSpacing: "0.08em" }}>
                         Grand Total / <span lang="kok" className="font-devanagari normal-case tracking-normal">एकूण गूण</span>
                       </td>
-                      <td className="border-r border-white/15 px-2 py-2.5 text-center font-bold text-white">{data.grandTotalMax}</td>
-                      <td colSpan={3} className="border-r border-white/15 py-2.5 text-center" style={{ fontSize: 9, color: "rgba(255,255,255,0.4)" }}>— combined —</td>
-                      <td className="border-r border-white/15 px-2 py-2.5 text-center font-mono font-extrabold" style={{ fontSize: 16, color: SKY }}>{data.grandTotalObt}</td>
+                      <td className="border-r border-white/15 px-2 py-2.5 text-center font-mono font-extrabold" style={{ color: SKY }}>
+                        <span style={{ fontSize: 16 }}>{data.grandTotalObt}</span>
+                        <span style={{ color: "rgba(255,255,255,0.65)", fontSize: 10.5, fontWeight: 600 }}> / {data.grandTotalMax}</span>
+                      </td>
                       <td className={`px-2 py-2.5 text-center text-[12px] font-extrabold ${pass ? "" : "text-red-300"}`} style={pass ? { color: SKY } : undefined}>{data.status}</td>
                     </tr>
                   </tbody>
@@ -208,23 +221,23 @@ export default function ResultMarksheet({ data }) {
                 { label: "Final Result", value: pass ? "✓ PASS" : "✗ FAIL", sub: pass ? "उत्तीर्ण" : "अनुत्तीर्ण", tone: pass ? "brand" : "red", kok: true },
               ].map((b) => (
                 <div key={b.label} style={{
-                  border: `1.5px solid ${b.tone === "red" ? "#dc2626" : BRAND}`, borderRadius: 6,
-                  background: b.tone === "red" ? "linear-gradient(135deg,#fef2f2,#fee2e2)" : "linear-gradient(135deg,#f4f8fe,#e3edfa)",
+                  border: `1.5px solid ${b.tone === "red" ? "#5c5c5c" : BRAND}`, borderRadius: 6,
+                  background: b.tone === "red" ? "linear-gradient(135deg,#f6f6f6,#eaeaea)" : "linear-gradient(135deg,#f7f7f7,#ebebeb)",
                   padding: "10px 8px", textAlign: "center",
                 }}>
-                  <div style={{ fontSize: 8, color: b.tone === "red" ? "#b91c1c" : BRAND_DARK, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>{b.label}</div>
-                  <div style={{ fontSize: 26, fontWeight: 900, lineHeight: 1, color: b.tone === "red" ? "#dc2626" : NAVY, fontFamily: b.kok ? undefined : "monospace" }}>{b.value}</div>
-                  <div lang={b.kok ? "kok" : undefined} className={b.kok ? "font-devanagari" : ""} style={{ fontSize: 9, fontWeight: 700, marginTop: 3, color: b.tone === "red" ? "#dc2626" : BRAND_DARK }}>{b.sub}</div>
+                  <div style={{ fontSize: 8, color: b.tone === "red" ? "#4b4b4b" : BRAND_DARK, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>{b.label}</div>
+                  <div style={{ fontSize: 26, fontWeight: 900, lineHeight: 1, color: b.tone === "red" ? "#5c5c5c" : NAVY, fontFamily: b.kok ? undefined : "monospace" }}>{b.value}</div>
+                  <div lang={b.kok ? "kok" : undefined} className={b.kok ? "font-devanagari" : ""} style={{ fontSize: 9, fontWeight: 700, marginTop: 3, color: b.tone === "red" ? "#5c5c5c" : BRAND_DARK }}>{b.sub}</div>
                 </div>
               ))}
             </div>
 
             {/* 6. grading scale */}
-            <div style={{ border: "1px solid #CBD5E1", borderRadius: 4, background: "#F8FAFC", padding: "7px 14px" }}>
+            <div style={{ border: "1px solid #d3d3d3", borderRadius: 4, background: "#fafafa", padding: "7px 14px" }}>
               <span style={{ fontSize: 8.5, fontWeight: 800, color: NAVY, textTransform: "uppercase", letterSpacing: "0.12em", marginRight: 10 }}>Grading Scale:</span>
               {GRADING.map(([g, r]) => (
-                <span key={g} style={{ marginRight: 10, fontSize: 10, color: "#475569", whiteSpace: "nowrap" }}>
-                  <strong style={{ color: g === "E" ? "#dc2626" : g === "D" ? "#b45309" : NAVY, fontSize: 10.5 }}>{g}</strong> {r}
+                <span key={g} style={{ marginRight: 10, fontSize: 10, color: "#535353", whiteSpace: "nowrap" }}>
+                  <strong style={{ color: g === "E" ? "#5c5c5c" : g === "D" ? "#686868" : NAVY, fontSize: 10.5 }}>{g}</strong> {r}
                 </span>
               ))}
               <span style={{ fontSize: 9, fontWeight: 700, color: NAVY, marginLeft: 6, paddingLeft: 10, borderLeft: `1px solid ${BRAND}`, whiteSpace: "nowrap" }}>✦ Min. Pass: 33%</span>
@@ -233,14 +246,14 @@ export default function ResultMarksheet({ data }) {
             {/* 7. authorisation */}
             <div style={{ border: `1px solid ${BRAND}`, borderRadius: 4, overflow: "hidden" }}>
               <SectionBar>Authorisation &amp; Verification</SectionBar>
-              <div className="flex flex-wrap items-center justify-around gap-6 px-7 py-3" style={{ background: "linear-gradient(180deg,#ffffff,#F8FAFC)" }}>
+              <div className="flex flex-wrap items-center justify-around gap-6 px-7 py-3" style={{ background: "linear-gradient(180deg,#ffffff,#fafafa)" }}>
                 <Signature title="Prepared By" sub="Tabulation Section" />
                 <Signature title="Checked By" sub="Examination Cell" />
                 <Signature title="Secretary" sub="Goa State Open School" width={220} />
               </div>
             </div>
 
-            <p className="text-center text-[9.5px] font-medium leading-relaxed text-[#64748b]">
+            <p className="text-center text-[9.5px] font-medium leading-relaxed text-[#727272]">
               This is a provisional online statement for information only. Errors, if any, must be reported to the Study Centre / Goa State Open School within the notified period. The original marksheet issued by Goa State Open School is final.
             </p>
           </div>

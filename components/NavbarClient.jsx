@@ -85,7 +85,7 @@ export default function NavbarClient({ phone = "0832–2743300", tel = "tel:+918
 
         <button
           ref={menuBtnRef}
-          className="flex items-center gap-2 text-sm font-semibold lg:hidden"
+          className="flex shrink-0 items-center gap-1.5 text-[13px] font-semibold sm:gap-2 sm:text-sm lg:hidden"
           onClick={() => setOpen(true)}
           aria-expanded={open}
           aria-controls="mobile-menu"
@@ -94,12 +94,12 @@ export default function NavbarClient({ phone = "0832–2743300", tel = "tel:+918
           <Menu size={22} /> Menu
         </button>
 
-        <div className="flex items-center gap-3">
-          <Link href="/board-login" className="flex h-[40px] items-center gap-2.5 whitespace-nowrap rounded-lg bg-white px-4 text-[14px] font-bold text-navy-deep shadow-sm hover:bg-sky-50">
-            <User size={20} fill="currentColor" /> Board Login
+        <div className="flex items-center gap-1.5 sm:gap-3">
+          <Link href="/board-login" className="flex h-[36px] items-center gap-1.5 whitespace-nowrap rounded-lg bg-white px-2.5 text-[12px] font-bold text-navy-deep shadow-sm hover:bg-sky-50 sm:h-[40px] sm:gap-2.5 sm:px-4 sm:text-[14px]">
+            <User size={20} fill="currentColor" className="size-4 sm:size-5" /> Board Login
           </Link>
-          <Link href="/college-login" className="hidden h-[40px] items-center gap-2.5 whitespace-nowrap rounded-lg bg-white px-4 text-[14px] font-bold text-navy-deep shadow-sm hover:bg-sky-50 sm:flex">
-            <Landmark size={20} /> College Login
+          <Link href="/college-login" className="flex h-[36px] items-center gap-1.5 whitespace-nowrap rounded-lg bg-white px-2.5 text-[12px] font-bold text-navy-deep shadow-sm hover:bg-sky-50 sm:h-[40px] sm:gap-2.5 sm:px-4 sm:text-[14px]">
+            <Landmark size={20} className="size-4 sm:size-5" /> College Login
           </Link>
         </div>
       </div>

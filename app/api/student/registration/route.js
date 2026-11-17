@@ -21,6 +21,20 @@ export async function POST(request) {
       .from("courses").select("id").eq("id", body.course_id).maybeSingle();
     if (!course) return NextResponse.json({ error: "Invalid course." }, { status: 400 });
 
+    // Language option: when the course has language options the student must pick exactly one of them
+    const { data: courseRow } = await supabaseAdmin.from("courses").select("course_name").eq("id", body.course_id).maybeSingle();
+    const { data: langOptions } = await supabaseAdmin
+      .from("course_subjects")
+      .select("id")
+      .eq("course_name", courseRow?.course_name || "")
+      .eq("is_language_option", true);
+    let language_subject_id = null;
+    if (langOptions && langOptions.length > 0) {
+      if (!body.language_subject_id) return NextResponse.json({ error: "Please choose a language option." }, { status: 400 });
+      if (!langOptions.some((l) => l.id === body.language_subject_id)) return NextResponse.json({ error: "Invalid language option for this course." }, { status: 400 });
+      language_subject_id = body.language_subject_id;
+    }
+
     const { data: college } = await supabaseAdmin
       .from("colleges")
       .select("college_code")
@@ -55,6 +69,7 @@ export async function POST(request) {
       academic_session:    body.academic_session || null,
       // Course
       course_id:           body.course_id,
+      language_subject_id,
       college_id:          session.college_id,
       session_label:       body.session_label  || null,
       // Education (jsonb)

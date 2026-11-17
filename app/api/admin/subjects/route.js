@@ -30,7 +30,7 @@ export async function POST(request) {
 
   const { data, error } = await supabaseAdmin
     .from("course_subjects")
-    .insert({ course_name, subject_name, subject_code: subject_code || null, theory_max: theory_max ?? 100, practical_max: practical_max ?? 0, ca_max: ca_max ?? 0, year_number: year_number ?? 1 })
+    .insert({ course_name, subject_name, subject_code: subject_code || null, theory_max: theory_max ?? 100, practical_max: practical_max ?? 0, ca_max: ca_max ?? 0, year_number: year_number ?? 1, is_language_option: body.is_language_option === true })
     .select()
     .single();
 

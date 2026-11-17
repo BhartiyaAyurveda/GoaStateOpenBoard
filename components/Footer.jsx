@@ -45,6 +45,7 @@ export default async function Footer() {
               <p className="text-[20px] font-bold tracking-wide">GOA STATE OPEN SCHOOL</p>
               <p lang="kok" className="font-devanagari text-[15px] font-semibold">गोंय राज्य मुक्त शाळा</p>
               <p className="mt-1 text-[14px] font-medium">Open Schooling | Flexible Learning</p>
+              <p className="text-[14px] font-extrabold">An Autonomous Body</p>
             </div>
           </div>
 

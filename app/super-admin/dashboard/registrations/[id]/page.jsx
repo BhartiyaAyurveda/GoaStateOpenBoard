@@ -302,6 +302,7 @@ export default function RegistrationDetailPage({ params }) {
             <Section n="2" title="Enrolled course / अभ्यासक्रम">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <Info label="Course name" value={reg.courses?.course_name || reg.course_name} />
+                {reg.language_name && <Info label="Language option" value={reg.language_name} />}
                 <div className="rounded-xl border border-[#d3e1f5] bg-[#eaf2fd] px-4 py-2.5">
                   <span className="block text-[13px] font-semibold text-[#6b7ea3]">Academic session</span>
                   <span className="text-[16px] font-bold text-[#1245b8]">{reg.session_label || reg.academic_session || "—"}</span>

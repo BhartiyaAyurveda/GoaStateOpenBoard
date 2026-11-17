@@ -193,7 +193,7 @@ function SubjectsTab({
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
-  const [addForm, setAddForm] = useState({ subject_name: "", subject_code: "", theory_max: 100, practical_max: 0, ca_max: 0 });
+  const [addForm, setAddForm] = useState({ subject_name: "", subject_code: "", theory_max: 100, practical_max: 0, ca_max: 0, is_language_option: false });
   const [saving, setSaving] = useState(false);
 
   const handleYearChange = async (newYear) => {
@@ -234,7 +234,7 @@ function SubjectsTab({
     if (!res.ok) { showToast(json.error || "Failed", "error"); }
     else {
       showToast(`Subject added to Year ${selectedYear}!`);
-      setAddForm({ subject_name: "", subject_code: "", theory_max: 100, practical_max: 0, ca_max: 0 });
+      setAddForm({ subject_name: "", subject_code: "", theory_max: 100, practical_max: 0, ca_max: 0, is_language_option: false });
       load(selectedCourse, selectedYear);
     }
     setSaving(false);
@@ -265,7 +265,7 @@ function SubjectsTab({
   const total = (s) => (Number(s.theory_max) || 0) + (Number(s.practical_max) || 0) + (Number(s.ca_max) || 0);
   const startEdit = (s) => {
     setEditingId(s.id);
-    setEditForm({ subject_name: s.subject_name, subject_code: s.subject_code, theory_max: s.theory_max, practical_max: s.practical_max, ca_max: s.ca_max });
+    setEditForm({ subject_name: s.subject_name, subject_code: s.subject_code, theory_max: s.theory_max, practical_max: s.practical_max, ca_max: s.ca_max, is_language_option: !!s.is_language_option });
   };
   const patchEdit = (key, isNum) => (e) => setEditForm((f) => ({ ...f, [key]: isNum ? (e.target.value === "" ? "" : +e.target.value) : e.target.value }));
   const patchAdd = (key, isNum) => (e) => setAddForm((f) => ({ ...f, [key]: isNum ? (e.target.value === "" ? "" : +e.target.value) : e.target.value }));
@@ -334,6 +334,10 @@ function SubjectsTab({
                 className="col-span-2 inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-[#1b57d8] px-6 text-[15px] font-bold text-white transition hover:bg-[#1245b8] disabled:opacity-60 lg:col-span-1">
                 <Plus className="h-4 w-4" /> {saving ? "Saving..." : "Add Subject"}
               </button>
+              <label className="col-span-2 flex cursor-pointer items-start gap-2.5 rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] px-3.5 py-2.5 lg:col-span-6">
+                <input type="checkbox" checked={!!addForm.is_language_option} onChange={(e) => setAddForm((f) => ({ ...f, is_language_option: e.target.checked }))} className="mt-0.5 h-4 w-4 accent-[#1b57d8]" />
+                <span className="text-[13.5px] font-medium leading-snug text-[#3d5688]"><b className="text-[#082a63]">Language option.</b> Each student takes only ONE of the language options (chosen at registration). Leave unticked for compulsory subjects such as English.</span>
+              </label>
             </form>
           </div>
 
@@ -376,7 +380,10 @@ function SubjectsTab({
                         <tr key={s.id} className={editingId === s.id ? "bg-[#f4f8fe]" : "transition-colors hover:bg-[#f4f8fe]"}>
                           {editingId === s.id ? (
                             <>
-                              <td className="px-5 py-2.5"><input value={editForm.subject_name || ""} onChange={patchEdit("subject_name")} className={cellCls} /></td>
+                              <td className="px-5 py-2.5">
+                                <input value={editForm.subject_name || ""} onChange={patchEdit("subject_name")} className={cellCls} />
+                                <label className="mt-1.5 flex cursor-pointer items-center gap-2 text-[13px] font-semibold text-[#3d5688]"><input type="checkbox" checked={!!editForm.is_language_option} onChange={(e) => setEditForm((f) => ({ ...f, is_language_option: e.target.checked }))} className="h-4 w-4 accent-[#1b57d8]" /> Language option</label>
+                              </td>
                               <td className="w-32 px-3 py-2.5"><input value={editForm.subject_code || ""} onChange={patchEdit("subject_code")} className={cellCls} /></td>
                               <td className="w-24 px-3 py-2.5"><input type="number" min={0} value={num(editForm.theory_max)} onChange={patchEdit("theory_max", true)} className={`${cellCls} text-center`} /></td>
                               <td className="w-24 px-3 py-2.5"><input type="number" min={0} value={num(editForm.practical_max)} onChange={patchEdit("practical_max", true)} className={`${cellCls} text-center`} /></td>
@@ -391,7 +398,7 @@ function SubjectsTab({
                             </>
                           ) : (
                             <>
-                              <td className="px-5 py-3 font-bold text-[#082a63]">{s.subject_name}</td>
+                              <td className="px-5 py-3 font-bold text-[#082a63]">{s.subject_name}{s.is_language_option && <span className="ml-2 rounded-full bg-violet-100 px-2 py-0.5 align-middle text-[11.5px] font-bold text-violet-800">Language option</span>}</td>
                               <td className="px-3 py-3">{s.subject_code ? <span className="rounded-md bg-[#eaf2fd] px-2 py-0.5 font-mono text-[13px] font-bold text-[#1245b8]">{s.subject_code}</span> : <span className="text-[#8a97b3]">—</span>}</td>
                               <td className="px-3 py-3 text-center"><Marks v={s.theory_max} /></td>
                               <td className="px-3 py-3 text-center"><Marks v={s.practical_max} /></td>
@@ -418,6 +425,7 @@ function SubjectsTab({
                       {editingId === s.id ? (
                         <div className="space-y-3">
                           <label className="block"><span className={labelCls}>Subject name</span><input value={editForm.subject_name || ""} onChange={patchEdit("subject_name")} className={fieldCls} /></label>
+                          <label className="flex cursor-pointer items-center gap-2 text-[14px] font-semibold text-[#3d5688]"><input type="checkbox" checked={!!editForm.is_language_option} onChange={(e) => setEditForm((f) => ({ ...f, is_language_option: e.target.checked }))} className="h-4 w-4 accent-[#1b57d8]" /> Language option (student picks one)</label>
                           <label className="block"><span className={labelCls}>Code</span><input value={editForm.subject_code || ""} onChange={patchEdit("subject_code")} className={fieldCls} /></label>
                           <div className="grid grid-cols-3 gap-2">
                             <label className="block"><span className={labelCls}>Theory</span><input type="number" min={0} value={num(editForm.theory_max)} onChange={patchEdit("theory_max", true)} className={fieldCls} /></label>
@@ -432,7 +440,7 @@ function SubjectsTab({
                       ) : (
                         <>
                           <div className="flex items-start justify-between gap-3">
-                            <p className="min-w-0 break-words text-[16px] font-bold text-[#082a63]">{s.subject_name}</p>
+                            <p className="min-w-0 break-words text-[16px] font-bold text-[#082a63]">{s.subject_name}{s.is_language_option && <span className="ml-2 rounded-full bg-violet-100 px-2 py-0.5 align-middle text-[11.5px] font-bold text-violet-800">Language option</span>}</p>
                             {s.subject_code && <span className="shrink-0 rounded-md bg-[#eaf2fd] px-2 py-0.5 font-mono text-[13px] font-bold text-[#1245b8]">{s.subject_code}</span>}
                           </div>
                           <div className="mt-3 grid grid-cols-4 gap-2 text-center">
