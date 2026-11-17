@@ -39,26 +39,26 @@ export default function RollNumberAuditPage() {
         {/* Header */}
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <nav className="flex items-center gap-2 text-[13px] text-[#4a6090] mb-2">
+            <nav className="flex items-center gap-2 text-[15px] text-[#4a6090] mb-2">
               <Link href="/super-admin/dashboard" className="hover:text-[#082a63] font-medium flex items-center gap-1">
                 Dashboard
               </Link>
               <span>/</span>
               <span className="font-bold text-[#082a63]">Roll Number Audit</span>
             </nav>
-            <h1 className="text-xl font-black text-[#082a63] flex items-center gap-2">
+            <h1 className="text-2xl font-black text-[#082a63] flex items-center gap-2">
               <Hash className="w-5 h-5" /> Roll Number Audit
             </h1>
-            <p className="text-[13px] text-[#4a6090] mt-1">Detect duplicate roll numbers, missing assignments, and enrollment gaps.</p>
+            <p className="text-[15px] text-[#4a6090] mt-1">Detect duplicate roll numbers, missing assignments, and enrollment gaps.</p>
           </div>
           <button onClick={load} disabled={loading}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#082a63] text-white text-[13px] font-bold rounded-lg hover:bg-[#06204f]">
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#082a63] text-white text-[15px] font-bold rounded-lg hover:bg-[#06204f]">
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh Audit
           </button>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-[15px]">{error}</div>
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-[17px]">{error}</div>
         )}
 
         {loading ? (
@@ -71,22 +71,22 @@ export default function RollNumberAuditPage() {
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
               <div className="bg-white rounded-xl border border-[#d3e1f5] p-4 flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-[#e3edfa] flex items-center justify-center shrink-0"><Users className="w-5 h-5 text-[#082a63]" /></div>
-                <div><p className="text-[13px] text-[#3d5688]">Total Approved</p><p className="font-bold text-[#082a63] text-lg">{data.total_approved}</p></div>
+                <div><p className="text-[15px] text-[#3d5688]">Total Approved</p><p className="font-bold text-[#082a63] text-xl">{data.total_approved}</p></div>
               </div>
               <div className={`bg-white rounded-xl border p-4 flex items-center gap-3 ${data.mismatch_count > 0 ? "border-red-200" : "border-[#d3e1f5]"}`}>
                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${data.mismatch_count > 0 ? "bg-red-100" : "bg-emerald-100"}`}>
                   {data.mismatch_count > 0 ? <AlertTriangle className="w-5 h-5 text-red-600" /> : <CheckCircle2 className="w-5 h-5 text-emerald-600" />}
                 </div>
                 <div>
-                  <p className="text-[13px] text-[#3d5688]">Mismatches Found</p>
-                  <p className={`font-bold text-lg ${data.mismatch_count > 0 ? "text-red-700" : "text-emerald-700"}`}>{data.mismatch_count}</p>
+                  <p className="text-[15px] text-[#3d5688]">Mismatches Found</p>
+                  <p className={`font-bold text-xl ${data.mismatch_count > 0 ? "text-red-700" : "text-emerald-700"}`}>{data.mismatch_count}</p>
                 </div>
               </div>
               <div className="bg-white rounded-xl border border-[#d3e1f5] p-4 flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-[#e3edfa] flex items-center justify-center shrink-0"><Hash className="w-5 h-5 text-[#1b57d8]" /></div>
                 <div>
-                  <p className="text-[13px] text-[#3d5688]">With Roll No.</p>
-                  <p className="font-bold text-[#082a63] text-lg">{data.total_approved - (data.mismatches?.filter(m => m.type === "missing_roll_no").length || 0)}</p>
+                  <p className="text-[15px] text-[#3d5688]">With Roll No.</p>
+                  <p className="font-bold text-[#082a63] text-xl">{data.total_approved - (data.mismatches?.filter(m => m.type === "missing_roll_no").length || 0)}</p>
                 </div>
               </div>
             </div>
@@ -94,15 +94,15 @@ export default function RollNumberAuditPage() {
             {data.mismatch_count === 0 ? (
               <div className="text-center py-16 bg-white rounded-xl border border-[#d3e1f5]">
                 <CheckCircle2 className="w-10 h-10 mx-auto text-emerald-500 mb-3" />
-                <p className="font-bold text-[#082a63] text-lg">All Clear!</p>
-                <p className="text-[15px] text-[#3d5688] mt-1">No roll number mismatches or issues found.</p>
+                <p className="font-bold text-[#082a63] text-xl">All Clear!</p>
+                <p className="text-[17px] text-[#3d5688] mt-1">No roll number mismatches or issues found.</p>
               </div>
             ) : (
               <>
                 {/* Type filter */}
                 <div className="flex gap-2 flex-wrap mb-4">
                   <button onClick={() => setTypeFilter("all")}
-                    className={`px-3 py-1.5 rounded-lg text-[13px] font-bold ${typeFilter === "all" ? "bg-[#082a63] text-white" : "bg-white border border-[#d3e1f5] text-[#374151]"}`}>
+                    className={`px-3 py-1.5 rounded-lg text-[15px] font-bold ${typeFilter === "all" ? "bg-[#082a63] text-white" : "bg-white border border-[#d3e1f5] text-[#374151]"}`}>
                     All ({data.mismatch_count})
                   </button>
                   {Object.keys(TYPE_LABELS).map(type => {
@@ -110,7 +110,7 @@ export default function RollNumberAuditPage() {
                     if (!count) return null;
                     return (
                       <button key={type} onClick={() => setTypeFilter(type)}
-                        className={`px-3 py-1.5 rounded-lg text-[13px] font-bold ${typeFilter === type ? "bg-[#082a63] text-white" : "bg-white border border-[#d3e1f5] text-[#374151]"}`}>
+                        className={`px-3 py-1.5 rounded-lg text-[15px] font-bold ${typeFilter === type ? "bg-[#082a63] text-white" : "bg-white border border-[#d3e1f5] text-[#374151]"}`}>
                         {TYPE_LABELS[type].label} ({count})
                       </button>
                     );
@@ -119,7 +119,7 @@ export default function RollNumberAuditPage() {
 
                 {/* Mismatch table */}
                 <div className="bg-white rounded-xl border border-[#d3e1f5] overflow-hidden">
-                  <table className="w-full text-[13px]">
+                  <table className="w-full text-[15px]">
                     <thead className="bg-[#eaf2fd] border-b border-[#d3e1f5]">
                       <tr>
                         <th className="px-4 py-3 text-left font-bold text-[#082a63] uppercase">Type</th>
@@ -133,7 +133,7 @@ export default function RollNumberAuditPage() {
                       {filtered.map((m, i) => (
                         <tr key={i} className="hover:bg-[#f4f8fe]">
                           <td className="px-4 py-3">
-                            <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full border ${TYPE_LABELS[m.type]?.color || "bg-gray-100 text-gray-700 border-gray-300"}`}>
+                            <span className={`text-[14px] font-bold px-2 py-0.5 rounded-full border ${TYPE_LABELS[m.type]?.color || "bg-gray-100 text-gray-700 border-gray-300"}`}>
                               {TYPE_LABELS[m.type]?.label || m.type}
                             </span>
                           </td>
@@ -142,7 +142,7 @@ export default function RollNumberAuditPage() {
                           <td className="px-4 py-3 text-[#374151]">{m.detail}</td>
                           <td className="px-4 py-3 text-right">
                             <Link href={`/super-admin/dashboard/registrations/${m.id}`}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#eaf2fd] text-[#082a63] text-[12px] font-bold hover:bg-[#e3edfa] transition-colors">
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#eaf2fd] text-[#082a63] text-[14px] font-bold hover:bg-[#e3edfa] transition-colors">
                               Fix
                             </Link>
                           </td>

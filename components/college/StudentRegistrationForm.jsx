@@ -648,9 +648,9 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
   const stepContent = {
     1: (
       <div className="space-y-5">
-        <SectionLabel>Identity / पहचान</SectionLabel>
+        <SectionLabel>Identity / ओळख</SectionLabel>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Field label="Candidate Full Name / अभ्यर्थी का पूरा नाम" req icon={User} error={errors.candidate_name}>
+          <Field label="Candidate Full Name / उमेदवाराचें पुराय नांव" req icon={User} error={errors.candidate_name}>
             <input
               value={form.candidate_name}
               onChange={(e) => set("candidate_name", e.target.value)}
@@ -659,7 +659,7 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
             />
           </Field>
 
-          <Field label="Father's Name / पिता का नाम" req icon={Users} error={errors.father_name}>
+          <Field label="Father's Name / बापायचें नांव" req icon={Users} error={errors.father_name}>
             <input
               value={form.father_name}
               onChange={(e) => set("father_name", e.target.value)}
@@ -668,7 +668,7 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
             />
           </Field>
 
-          <Field label="Mother's Name / माता का नाम" icon={Users}>
+          <Field label="Mother's Name / आवयचें नांव" icon={Users}>
             <input
               value={form.mother_name}
               onChange={(e) => set("mother_name", e.target.value)}
@@ -678,9 +678,9 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
           </Field>
         </div>
 
-        <SectionLabel>Personal Info / व्यक्तिगत जानकारी</SectionLabel>
+        <SectionLabel>Personal Info / वैयक्तिक म्हायती</SectionLabel>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Date of Birth / जन्म तिथि" req icon={Calendar} error={errors.dob}>
+          <Field label="Date of Birth / जल्मतारीख" req icon={Calendar} error={errors.dob}>
             <input
               type="date"
               value={form.dob}
@@ -695,25 +695,25 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
               onChange={(e) => set("gender", e.target.value)}
               className={inputIconCls}
             >
-              {["Male / पुरुष", "Female / महिला", "Other / अन्य"].map((g) => (
+              {["Male / दादलो", "Female / बायल", "Other / हेर"].map((g) => (
                 <option key={g} value={g.split(" /")[0]}>{g}</option>
               ))}
             </select>
           </Field>
 
-          <Field label="Category / Reservation / आरक्षण श्रेणी" icon={BadgeCheck}>
+          <Field label="Category / Reservation / आरक्षण वर्ग" icon={BadgeCheck}>
             <select
               value={form.category}
               onChange={(e) => set("category", e.target.value)}
               className={inputIconCls}
             >
-              {["General / सामान्य", "OBC / अन्य पिछड़ा वर्ग", "SC / अनुसूचित जाति", "ST / अनुसूचित जनजाति", "EWS / आर्थिक रूप से कमजोर"].map((c) => (
+              {["General / सर्वसादारण", "OBC / हेर मागासवर्गीय", "SC / अनुसूचित जात", "ST / अनुसूचित जमात", "EWS / आर्थिक दृष्ट्या दुबळो"].map((c) => (
                 <option key={c} value={c.split(" /")[0]}>{c}</option>
               ))}
             </select>
           </Field>
 
-          <Field label="Aadhaar Number / आधार संख्या" icon={CreditCard}>
+          <Field label="Aadhaar Number / आधार क्रमांक" icon={CreditCard}>
             <input
               value={form.aadhar_no}
               onChange={(e) => set("aadhar_no", e.target.value)}
@@ -729,7 +729,7 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
     2: (
       <div className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Mobile Number / मोबाइल नंबर" req error={errors.phone}>
+          <Field label="Mobile Number / मोबाइल क्रमांक" req error={errors.phone}>
             <input
               value={form.phone}
               onChange={(e) => set("phone", e.target.value)}
@@ -740,7 +740,7 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
           </Field>
 
           <div className="space-y-2">
-            <Field label="Email Address / ईमेल पता" req error={errors.email}>
+            <Field label="Email Address / ईमेल पत्तो" req error={errors.email}>
               <div className="flex gap-2">
                 <input
                   type="email"
@@ -771,7 +771,7 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
             {emailVerified ? (
               <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-[13px] font-bold animate-in fade-in">
                 <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
-                Email verified successfully! / ईमेल सत्यापित हो गया
+                Email verified successfully! / ईमेल पडताळणी जाली
               </div>
             ) : otpSuccess && (
               <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-[13px] font-semibold animate-in fade-in">
@@ -782,7 +782,7 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
               <div className="rounded-2xl border border-[#1b57d8]/40 bg-gradient-to-br from-[#FFFBF2] to-[#f4f8fe] p-4 space-y-3 animate-in fade-in">
                 <p className="text-[13px] font-bold uppercase tracking-widest text-[#1245b8] flex items-center gap-1.5">
                   <ShieldCheck className="w-3.5 h-3.5" />
-                  Enter OTP / ओटीपी दर्ज करें
+                  Enter OTP / ओटीपी नोंद करात
                 </p>
                 <div className="flex items-center gap-1.5 sm:gap-2 w-full">
                   {otpDigits.map((d, i) => (
@@ -828,14 +828,14 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
                 >
                   {otpLoading
                     ? <><RefreshCw className="w-4 h-4 animate-spin" /> Verifying…</>
-                    : <><CheckCircle2 className="w-4 h-4" /> Verify OTP / सत्यापित करें</>}
+                    : <><CheckCircle2 className="w-4 h-4" /> Verify OTP / पडताळणी करात</>}
                 </button>
               </div>
             )}
           </div>
 
           <div className="sm:col-span-2">
-            <Field label="Permanent Address / स्थायी पता" req error={errors.address}>
+            <Field label="Permanent Address / कायमचो पत्तो" req error={errors.address}>
               <textarea
                 value={form.address}
                 onChange={(e) => set("address", e.target.value)}
@@ -846,7 +846,7 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
             </Field>
           </div>
 
-          <Field label="District / जिला">
+          <Field label="District / जिल्लो">
             <input
               value={form.district}
               onChange={(e) => set("district", e.target.value)}
@@ -855,7 +855,7 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
             />
           </Field>
 
-          <Field label="City / Town / शहर">
+          <Field label="City / Town / शार">
             <input
               value={form.city}
               onChange={(e) => set("city", e.target.value)}
@@ -886,7 +886,7 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
             />
           </Field>
 
-          <Field label="Academic Session / शैक्षणिक सत्र">
+          <Field label="Academic Session / शैक्षणीक सत्र">
             <select
               value={form.academic_session}
               onChange={(e) => set("academic_session", e.target.value)}
@@ -904,7 +904,7 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
     3: (
       <div className="space-y-4">
         <div className="grid grid-cols-1 gap-4">
-          <Field label="Course Program / पाठ्यक्रम" req error={errors.course_id}>
+          <Field label="Course Program / अभ्यासक्रम" req error={errors.course_id}>
             <CourseSelect
               courses={courses}
               value={form.course_id}
@@ -922,7 +922,7 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
               Affiliation Enrollment Note
             </p>
             <p className="text-[#3d5688] text-[13px] sm:text-[15px] leading-relaxed">
-              This registration will be lodged under <strong>{college?.college_name}</strong>. The Goa Open School Board's Examination Directorate will review candidate credentials and issue official Enrollment and Roll Numbers upon approval.
+              This registration will be lodged under <strong>{college?.college_name}</strong>. The Goa State Open School Board's Examination Directorate will review candidate credentials and issue official Enrollment and Roll Numbers upon approval.
             </p>
           </div>
         </div>
@@ -939,7 +939,7 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
           <table className="w-full min-w-[640px] text-left border-collapse">
             <thead>
               <tr className="bg-[#f4f8fe] border-b border-slate-300 text-[13px] sm:text-[13px] font-bold text-[#082a63] uppercase tracking-wide">
-                <th className="py-3 px-3.5 w-[22%]">Examination / परीक्षा</th>
+                <th className="py-3 px-3.5 w-[22%]">Examination / परिक्षा</th>
                 <th className="py-3 px-3.5 w-[28%]">Board / University</th>
                 <th className="py-3 px-3.5 w-[13%]">Passing Year</th>
                 <th className="py-3 px-3.5 w-[12%]">Total Marks</th>
@@ -948,16 +948,16 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-slate-200">
-              <EduRow label="High School (10th)" hindiLabel="हाई स्कूल" required
+              <EduRow label="High School (10th)" hindiLabel="हायस्कूल" required
                 value={form.education.high_school}
                 onChange={v => setForm(f => ({ ...f, education: { ...f.education, high_school: v } }))} />
               <EduRow label="Intermediate (12th / 10+2)" hindiLabel="इंटरमीडिएट" required
                 value={form.education.intermediate}
                 onChange={v => setForm(f => ({ ...f, education: { ...f.education, intermediate: v } }))} />
-              <EduRow label="Graduation" hindiLabel="स्नातक (वैकल्पिक)" allowCgpa
+              <EduRow label="Graduation" hindiLabel="पदवी (ऐच्छिक)" allowCgpa
                 value={form.education.graduation}
                 onChange={v => setForm(f => ({ ...f, education: { ...f.education, graduation: v } }))} />
-              <EduRow label="Other / Diploma" hindiLabel="अन्य / डिप्लोमा" allowCgpa
+              <EduRow label="Other / Diploma" hindiLabel="हेर / डिप्लोमा" allowCgpa
                 value={form.education.other}
                 onChange={v => setForm(f => ({ ...f, education: { ...f.education, other: v } }))} />
             </tbody>
@@ -1148,12 +1148,12 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
           <div className="bg-gradient-to-r from-[#082a63] to-[#1245b8] px-4 sm:px-5 py-3 flex items-center gap-2.5">
             <ShieldCheck className="w-4 h-4 text-[#1b57d8] shrink-0" />
             <span className="text-white font-bold text-[13px] sm:text-[15px] tracking-wide uppercase">
-              Security Verification / सुरक्षा सत्यापन
+              Security Verification / सुरक्षा पडताळणी
             </span>
             <span className="text-red-400 font-bold ml-0.5">*</span>
           </div>
           <div className="p-4 sm:p-5">
-            <p className="text-[13px] text-[#3d5688] mb-3">Enter the characters shown below to verify you are human / नीचे दिखाए गए कोड को दर्ज करें।</p>
+            <p className="text-[13px] text-[#3d5688] mb-3">Enter the characters shown below to verify you are human / सकयल दाखयल्लो कोड नोंद करात.</p>
             <div className="flex flex-wrap items-center gap-3">
               {/* SVG Captcha Display */}
               <div className="flex items-center gap-2 shrink-0">
@@ -1226,7 +1226,7 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
             I hereby declare on behalf of the institution that all particulars provided in this student registration dossier are authentic and verified against original certificates.
             <br />
             <span className="font-bold text-[#082a63] mt-1 block font-devanagari">
-              मैं प्रमाणित करता/करती हूँ कि इस आवेदन में दी गई सभी जानकारियाँ मूल अभिलेखों से सत्यापित एवं सत्य हैं।
+              हांव प्रमाणीत करतां कीं ह्या अर्जांत दिल्लीं सगळीं म्हायती मूळ कागदपत्रांवरवीं पडताळून पळयल्ली आनी खरी आसात.
             </span>
           </span>
         </label>
@@ -1250,7 +1250,7 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
             <FileCheck className="w-5 h-5 text-amber-700" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[15px] font-bold text-amber-900">Resuming saved draft / सहेजा हुआ प्रारूप जारी है</p>
+            <p className="text-[15px] font-bold text-amber-900">Resuming saved draft / सांठयल्लो मसुदो चालू आसा</p>
             <p className="text-[13px] text-amber-700 mt-0.5">
               Your progress has been loaded. Continue from Step {step}. Changes are auto-saved as you advance.
             </p>
@@ -1267,7 +1267,7 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
       <div className="bg-[#FFF9E6] border-l-4 border-[#1b57d8] p-4 rounded-r-xl shadow-xs">
         <h4 className="font-bold text-[#082a63] mb-1.5 flex items-center gap-2 text-[15px]">
           <AlertTriangle className="w-4 h-4 text-[#B13B1C]" />
-          Important Instructions / महाविद्यालय हेतु महत्त्वपूर्ण निर्देश
+          Important Instructions / महाविद्यालयां खातीर म्हत्वाच्यो सूचना
         </h4>
         <ul className="list-disc list-inside space-y-1 text-[13px] text-[#082a63] ml-1 leading-relaxed">
           <li>Verify candidate's personal and academic particulars with original certificates before submission.</li>
@@ -1346,12 +1346,12 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
               {step}
             </span>
             <h2 className="text-white font-bold text-[13px] sm:text-[15px] tracking-wide leading-tight">
-              {step === 1 && <><span className="uppercase">Personal Details</span><span className="text-[#1b57d8]/80"> / व्यक्तिगत विवरण</span></>}
-              {step === 2 && <><span className="uppercase">Contact &amp; Address</span><span className="text-[#1b57d8]/80"> / संपर्क एवं पता</span></>}
-              {step === 3 && <><span className="uppercase">Course &amp; Session</span><span className="text-[#1b57d8]/80"> / पाठ्यक्रम विवरण</span></>}
-              {step === 4 && <><span className="uppercase">Education</span><span className="text-[#1b57d8]/80"> / शैक्षणिक योग्यता</span></>}
-              {step === 5 && <><span className="uppercase">Documents</span><span className="text-[#1b57d8]/80"> / दस्तावेज़ अपलोड</span></>}
-              {step === 6 && <><span className="uppercase">Review</span><span className="text-[#1b57d8]/80"> / समीक्षा एवं घोषणा</span></>}
+              {step === 1 && <><span className="uppercase">Personal Details</span><span className="text-[#1b57d8]/80"> / वैयक्तिक तपशील</span></>}
+              {step === 2 && <><span className="uppercase">Contact &amp; Address</span><span className="text-[#1b57d8]/80"> / संपर्क आनी पत्तो</span></>}
+              {step === 3 && <><span className="uppercase">Course &amp; Session</span><span className="text-[#1b57d8]/80"> / अभ्यासक्रम तपशील</span></>}
+              {step === 4 && <><span className="uppercase">Education</span><span className="text-[#1b57d8]/80"> / शैक्षणीक पात्रता</span></>}
+              {step === 5 && <><span className="uppercase">Documents</span><span className="text-[#1b57d8]/80"> / दस्तावेज अपलोड</span></>}
+              {step === 6 && <><span className="uppercase">Review</span><span className="text-[#1b57d8]/80"> / पुनरावलोकन आनी घोशणा</span></>}
             </h2>
           </div>
           <span className="text-[12px] font-semibold text-[#bccbe6] hidden sm:inline-block shrink-0">
@@ -1375,7 +1375,7 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
           >
             <ChevronLeft className="w-4 h-4 shrink-0" />
             <span className="hidden xs:inline">Previous /</span>
-            <span> पिछला</span>
+            <span> फाटीं</span>
           </button>
 
           {draftSaving && (
@@ -1391,7 +1391,7 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
               className="px-4 sm:px-6 py-2.5 rounded-xl bg-[#082a63] hover:bg-[#0b3a85] active:scale-95 text-white text-[15px] font-bold flex items-center gap-1.5 sm:gap-2 transition-all shadow-sm cursor-pointer"
             >
               <span className="hidden sm:inline">Save &amp; Continue /</span>
-              <span>आगे बढ़ें</span>
+              <span>फुडें</span>
               <ChevronRight className="w-4 h-4 shrink-0" />
             </button>
           ) : (
@@ -1405,13 +1405,13 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
                 <>
                   <RefreshCw className="w-4 h-4 animate-spin shrink-0" />
                   <span className="hidden sm:inline">Submitting… /</span>
-                  <span>जमा हो रहा है…</span>
+                  <span>सादर जाता आसा…</span>
                 </>
               ) : (
                 <>
                   <CheckCircle2 className="w-4 h-4 shrink-0" />
                   <span className="hidden sm:inline">Submit Registration /</span>
-                  <span>पंजीकरण जमा करें</span>
+                  <span>नोंदणी सादर करात</span>
                 </>
               )}
             </button>

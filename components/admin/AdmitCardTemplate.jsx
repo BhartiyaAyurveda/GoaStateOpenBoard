@@ -25,6 +25,8 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
   if (!data) return null;
 
   const subjects = data.subjects || [];
+  // keep one A4 page whatever the number of subjects: shrink a little when there are more than 6
+  const printZoom = subjects.length <= 6 ? 1 : subjects.length === 7 ? 0.95 : subjects.length === 8 ? 0.91 : 0.87;
 
   return (
     <div
@@ -46,8 +48,9 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
           }
           .no-print { display: none !important; }
           .result-marksheet-wrapper {
-            width: 192mm !important;
-            max-width: 192mm !important;
+            width: calc(192mm / ${printZoom}) !important;
+            max-width: calc(192mm / ${printZoom}) !important;
+            zoom: ${printZoom} !important;
             margin: 10mm auto 0 auto !important;
             box-sizing: border-box !important;
             box-shadow: none !important;
@@ -91,7 +94,7 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
             >
               <img
                 src="/images/logo.png"
-                alt="BA Logo"
+                alt="Goa State Open School logo"
                 style={{ width: 78, height: 78, objectFit: "contain" }}
               />
             </div>
@@ -100,12 +103,13 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
             <div className="flex-1 text-center">
               <div
                 className="text-[#5db0f4] text-[18px] sm:text-[20px] font-extrabold tracking-wide leading-tight"
-                style={{ fontFamily: "'Noto Sans Devanagari', sans-serif" }}
+                lang="kok"
+                style={{ fontFamily: "var(--font-noto-deva), 'Noto Sans Devanagari', sans-serif" }}
               >
-                भारतीय आयुर्वेदा योग एवं प्राकृतिक चिकित्सा परिषद्
+                गोंय राज्य मुक्त शाळा
               </div>
               <h1 className="text-white text-[12px] sm:text-[13px] font-bold tracking-[0.16em] uppercase leading-tight mt-1">
-                Goa Open School
+                Goa State Open School
               </h1>
               <div className="flex items-center justify-center gap-2 mt-1.5">
                 <div
@@ -113,7 +117,7 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
                   style={{ background: "linear-gradient(90deg, transparent, #1b57d8)" }}
                 />
                 <span className="text-[#A2B7CF] text-[8.5px] font-medium tracking-wider whitespace-nowrap px-1">
-                  Regd. Under Indian Trust Act 2013 &nbsp;✦&nbsp; ISO 9001:2015 Certified &nbsp;✦&nbsp; Examination Division
+                  Open schooling &nbsp;✦&nbsp; Flexible learning &nbsp;✦&nbsp; Examination Division
                 </span>
                 <div
                   className="h-px flex-1 max-w-[80px]"
@@ -181,7 +185,7 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
                   }}
                 />
                 <span className="text-[9.5px] font-extrabold text-white uppercase tracking-[0.15em]">
-                  Candidate &amp; Examination Particulars / अभ्यर्थी विवरण
+                  Candidate &amp; Examination Particulars / उमेदवार तपशील
                 </span>
               </div>
               <div className="flex items-stretch">
@@ -368,7 +372,7 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
                   }}
                 />
                 <span className="text-[9.5px] font-extrabold text-white uppercase tracking-[0.15em]">
-                  Examination Schedule / परीक्षा कार्यक्रम
+                  Examination Schedule / परिक्षा वेळापत्रक
                 </span>
               </div>
               <div className="overflow-x-auto">
@@ -377,31 +381,31 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
                     <tr style={{ background: "#0B1E36" }} className="text-white">
                       <th
                         className="py-2.5 px-2 text-center font-bold uppercase tracking-wide border-r border-white/10"
-                        style={{ width: "8%", fontSize: 10.5 }}
+                        style={{ width: "6%", fontSize: 10.5 }}
                       >
                         S.No.
                       </th>
                       <th
                         className="py-2.5 px-3 text-center font-bold uppercase tracking-wide border-r border-white/10"
-                        style={{ width: "16%", fontSize: 10.5 }}
+                        style={{ width: "13%", fontSize: 10.5 }}
                       >
                         Subject Code
                       </th>
                       <th
                         className="py-2.5 px-3 font-bold uppercase tracking-wide border-r border-white/10"
-                        style={{ width: "42%", fontSize: 10.5 }}
+                        style={{ width: "36%", fontSize: 10.5 }}
                       >
                         Subject Name
                       </th>
                       <th
                         className="py-2.5 px-3 text-center font-bold uppercase tracking-wide border-r border-white/10"
-                        style={{ width: "17%", fontSize: 10.5 }}
+                        style={{ width: "18%", fontSize: 10.5 }}
                       >
                         Exam Date
                       </th>
                       <th
                         className="py-2.5 px-3 text-center font-bold uppercase tracking-wide"
-                        style={{ width: "17%", fontSize: 10.5 }}
+                        style={{ width: "27%", fontSize: 10.5 }}
                       >
                         Shift / Timing
                       </th>
@@ -418,25 +422,25 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
                           }}
                         >
                           <td
-                            className="py-2.5 px-2 text-center font-bold border-r border-slate-200"
+                            className="py-2 print:py-1.5 px-2 text-center font-bold border-r border-slate-200"
                             style={{ color: "#1245b8", fontSize: 11 }}
                           >
                             {idx + 1}
                           </td>
                           <td
-                            className="py-2.5 px-3 text-center font-mono font-extrabold border-r border-slate-200"
+                            className="py-2 print:py-1.5 px-3 text-center font-mono font-extrabold border-r border-slate-200"
                             style={{ color: "#1245b8", fontSize: 10.5 }}
                           >
                             {sub.subject_code || "—"}
                           </td>
                           <td
-                            className="py-2.5 px-3 border-r border-slate-200"
+                            className="py-2 print:py-1.5 px-3 border-r border-slate-200"
                             style={{ fontWeight: 700, color: "#0B1E36", fontSize: 11.5 }}
                           >
                             {sub.subject_name}
                           </td>
                           <td
-                            className="py-2.5 px-3 text-center border-r border-slate-200"
+                            className="py-2 print:py-1.5 px-3 text-center border-r border-slate-200"
                             style={{
                               color: "#0B1E36",
                               fontWeight: 700,
@@ -447,8 +451,8 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
                             {fmtExamDate(sub.exam_date)}
                           </td>
                           <td
-                            className="py-2.5 px-3 text-center"
-                            style={{ color: "#475569", fontWeight: 600, fontSize: 10.5 }}
+                            className="py-2 print:py-1.5 px-3 text-center"
+                            style={{ color: "#475569", fontWeight: 600, fontSize: 10.5, whiteSpace: "nowrap" }}
                           >
                             {sub.exam_time || "—"}
                           </td>
@@ -489,7 +493,7 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
                   }}
                 />
                 <span className="text-[9.5px] font-extrabold text-white uppercase tracking-[0.15em]">
-                  Important Instructions / महत्वपूर्ण निर्देश
+                  Important Instructions / म्हत्वाच्यो सूचना
                 </span>
               </div>
               <div className="grid grid-cols-2 bg-[#ffffff]">
@@ -512,10 +516,10 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
 
                 <div className="p-3 font-devanagari">
                   {[
-                    "इस प्रवेश पत्र के साथ वैध सरकारी फोटो पहचान पत्र (आधार / पैन) लाना अनिवार्य है।",
-                    "परीक्षा प्रारंभ होने के कम से कम 30 मिनट पूर्व परीक्षा केंद्र पर उपस्थित होना आवश्यक है।",
-                    "केवल नीले/काले बॉल पेन की अनुमति है। मोबाइल फोन व इलेक्ट्रॉनिक उपकरण पूर्णतः वर्जित हैं।",
-                    "प्रवेश पूर्णतः अनंतिम है; किसी भी प्रकार के अनुचित साधन के प्रयोग पर अभ्यर्थिता रद्द होगी।",
+                    "ह्या प्रवेशपत्राभाशेन मान्य सरकारी फोटो ओळखपत्र (आधार / पॅन) हाडप सक्तीचें आसा.",
+                    "परिक्षा सुरू जावपाच्या कमींत कमी 30 मिनटां आदीं परिक्षा केंद्रार हाजीर रावप गरजेचें आसा.",
+                    "फकत निळो/काळो बॉल पेन वापरपाक परवानगी आसा. मोबाइल फोन आनी इलेक्ट्रॉनिक साधनां पुरायपणान निशिद्ध.",
+                    "प्रवेश पुरायपणान तात्पुरतो आसा; कसल्याय अयोग्य मार्गाचो वापर केल्यार उमेदवारी रद्द जातली.",
                   ].map((item, idx) => (
                     <div
                       key={idx}
@@ -550,7 +554,7 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
                   }}
                 />
                 <span className="text-[9.5px] font-extrabold text-white uppercase tracking-[0.15em]">
-                  Authorisation &amp; Verification / प्राधिकृत सत्यापन
+                  Authorisation &amp; Verification / प्राधिकृत पडताळणी
                 </span>
               </div>
 
@@ -649,7 +653,7 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
                       Official Seal
                     </div>
                     <div style={{ fontSize: 7, color: "#1245b8", fontWeight: 700 }}>
-                      B.A.Y.E.P.C.P.
+                      GOA STATE OPEN SCHOOL
                     </div>
                   </div>
                 </div>
@@ -699,7 +703,7 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
                 }}
               />
               <div className="text-center py-1 text-[8px] text-[#64748b] tracking-wide">
-                Official Computer-generated Examination Hall Ticket ✦ No manual signature required ✦ यह कंप्यूटर जनित आधिकारिक प्रवेश पत्र है
+                Official Computer-generated Examination Hall Ticket ✦ No manual signature required ✦ हें संगणकान तयार केल्लें अधिकृत प्रवेशपत्र आसा
               </div>
             </div>
           </div>

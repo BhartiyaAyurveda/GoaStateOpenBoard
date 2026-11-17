@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin, requireCollege } from "@/lib/auth";
 import { getImageKit } from "@/lib/imagekit";
+import { optimizePdf } from "@/lib/pdf-optimize";
 
 export const dynamic = "force-dynamic";
 
@@ -43,8 +44,11 @@ export async function POST(request) {
     const kind = sniff(buffer);
     if (!kind) return NextResponse.json({ error: "Only JPG, PNG, WEBP or PDF files are allowed" }, { status: 400 });
 
+    // PDFs are compressed before they are stored (falls back to the original if that fails)
+    const toStore = kind.mime === "application/pdf" ? (await optimizePdf(buffer)).buffer : buffer;
+
     const result = await getImageKit().upload({
-      file: buffer,
+      file: toStore,
       fileName: `doc.${kind.ext}`, // server-chosen name; the client name is never used
       folder: UPLOAD_FOLDER,
       useUniqueFileName: true,

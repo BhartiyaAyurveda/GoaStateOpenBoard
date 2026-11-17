@@ -1,14 +1,17 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import LegalPage from "@/components/LegalPage";
+import { getHomeContent } from "@/lib/home-content";
+
+export const revalidate = 60; // contact details (header menu, footer, help boxes) come from the dashboard
 
 export const metadata = {
-  title: "Sitemap | Goa Open School",
-  description: "A list of all pages of the Goa Open School website.",
+  title: "Sitemap | Goa State Open School",
+  description: "A list of all pages of the Goa State Open School website.",
 };
 
 // pdf: opens in a new tab
-const groups = [
+const BASE_GROUPS = [
   {
     title: "Main Pages",
     links: [
@@ -30,8 +33,10 @@ const groups = [
   {
     title: "Programmes",
     links: [
+      { label: "All Courses & Subjects", href: "/courses" },
       { label: "Secondary Programme – Class X", href: "/programmes/class-x" },
       { label: "Senior Secondary Programme – Class XII", href: "/programmes/class-xii" },
+      { label: "Study Centres", href: "/study-centres" },
     ],
   },
   {
@@ -40,7 +45,7 @@ const groups = [
       { label: "Admission Form – Class X (PDF)", href: "/forms/Admission-Form-Class-X.pdf", pdf: true },
       { label: "Admission Form – Class XII (PDF)", href: "/forms/Admission-Form-Class-XII.pdf", pdf: true },
       { label: "Affiliation Form (PDF)", href: "/forms/Affiliation-Form.pdf", pdf: true },
-      { label: "Syllabus 2026–27 (PDF)", href: "/downloads/Syllabus-2026-27.pdf", pdf: true },
+      { label: "SYLLABUS", href: "#syllabus", pdf: true }, // replaced with the uploaded PDF below
     ],
   },
   {
@@ -61,7 +66,12 @@ const groups = [
   },
 ];
 
-export default function SitemapPage() {
+export default async function SitemapPage() {
+  const { syllabus } = await getHomeContent();
+  const groups = BASE_GROUPS.map((g) => ({
+    ...g,
+    links: g.links.map((l) => (l.label === "SYLLABUS" ? { ...l, label: `${syllabus.title} (PDF)`, href: syllabus.url } : l)),
+  }));
   return (
     <LegalPage current="sitemap" title="Sitemap" intro="All the pages of this website in one place." showUpdated={false}>
       <div className="grid grid-cols-1 gap-x-8 gap-y-8 md:grid-cols-2">

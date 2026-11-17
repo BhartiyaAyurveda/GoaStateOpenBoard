@@ -10,7 +10,7 @@ import SectionTitle from "./SectionTitle";
 const testimonials = [
   {
     quote:
-      "I had to leave school to support my family. Goa Open School let me study at my own pace and finally complete my Class X.",
+      "I had to leave school to support my family. Goa State Open School let me study at my own pace and finally complete my Class X.",
     name: "Rohan N.",
     meta: "Student, Panaji",
   },
@@ -100,7 +100,7 @@ export default function Testimonials() {
       <div className="mx-auto max-w-[1320px] px-4 sm:px-6">
         <SectionTitle light>Testimonials</SectionTitle>
         <p className="mx-auto mt-3 max-w-[560px] text-center text-[15px] font-medium text-white/85">
-          Here is what our learners and their parents say about Goa Open School.
+          Here is what our learners and their parents say about Goa State Open School.
         </p>
 
         <div

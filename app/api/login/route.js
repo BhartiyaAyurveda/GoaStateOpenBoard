@@ -98,7 +98,7 @@ export async function POST(request) {
     }
 
     if (!authConfigured()) {
-      return json({ ok: false, error: "Login is not available right now. Please contact Goa Open School." }, 503);
+      return json({ ok: false, error: "Login is not available right now. Please contact Goa State Open School." }, 503);
     }
 
     const session = await authenticate({ role, identifier, password });

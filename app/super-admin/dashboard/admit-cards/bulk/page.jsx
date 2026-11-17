@@ -62,12 +62,12 @@ function BulkAdmitCardContent() {
       `}</style>
       <div className="no-print flex items-center gap-3 mb-4 p-4">
         <button onClick={() => setPrintMode(false)}
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#5b78a8] hover:text-[#082a63]">
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#5b78a8] hover:text-[#082a63]">
           Back to Preview
         </button>
         <div className="flex-1" />
         <button onClick={() => window.print()}
-          className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-[#082a63] text-white text-sm font-bold">
+          className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-[#082a63] text-white text-base font-bold">
           <Printer className="w-4 h-4" /> Print All ({admitCards.length})
         </button>
       </div>
@@ -84,29 +84,29 @@ function BulkAdmitCardContent() {
       {/* Header */}
       <div className="flex items-center gap-3 flex-wrap">
         <button onClick={() => router.push("/super-admin/dashboard/exam-management")}
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#5b78a8] hover:text-[#082a63]">
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#5b78a8] hover:text-[#082a63]">
           Exam Management
         </button>
         <div className="flex-1" />
         {admitCards.length > 0 && (
           <button onClick={() => setPrintMode(true)}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#082a63] hover:bg-[#0b3a85] text-white text-sm font-bold">
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#082a63] hover:bg-[#0b3a85] text-white text-base font-bold">
             <Printer className="w-4 h-4" /> Print All ({admitCards.length})
           </button>
         )}
       </div>
 
       <div>
-        <h2 className="text-lg font-bold text-[#082a63]">Bulk Admit Cards</h2>
-        <p className="text-xs text-[#5b78a8] mt-0.5">Generate and print admit cards for all eligible students in a session</p>
+        <h2 className="text-xl font-bold text-[#082a63]">Bulk Admit Cards</h2>
+        <p className="text-sm text-[#5b78a8] mt-0.5">Generate and print admit cards for all eligible students in a session</p>
       </div>
 
       {/* Session selector */}
       <div className="bg-white rounded-2xl border border-[#d3e1f5] p-4 flex flex-wrap items-end gap-3">
         <div>
-          <label className="block text-[10px] font-bold text-[#5b78a8] uppercase mb-1">Select Exam Session</label>
+          <label className="block text-[12px] font-bold text-[#5b78a8] uppercase mb-1">Select Exam Session</label>
           <select value={selSession} onChange={e => setSelSession(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] text-sm text-[#082a63] focus:outline-none focus:ring-2 focus:ring-[#1b57d8] min-w-[260px]">
+            className="px-3 py-2 rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] text-base text-[#082a63] focus:outline-none focus:ring-2 focus:ring-[#1b57d8] min-w-[260px]">
             <option value="">— Select Session —</option>
             {sessions.map(s => (
               <option key={s.id} value={s.id}>{s.session_label || s.session_name}</option>
@@ -114,13 +114,13 @@ function BulkAdmitCardContent() {
           </select>
         </div>
         <button onClick={() => load(selSession)} disabled={!selSession || loading}
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#eaf2fd] text-[#082a63] text-sm font-bold hover:bg-[#d3e1f5] disabled:opacity-50">
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#eaf2fd] text-[#082a63] text-base font-bold hover:bg-[#d3e1f5] disabled:opacity-50">
           <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} /> Refresh
         </button>
       </div>
 
       {error && (
-        <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+        <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-base">
           <AlertTriangle className="w-4 h-4 shrink-0" />{error}
         </div>
       )}
@@ -137,15 +137,15 @@ function BulkAdmitCardContent() {
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             <div className="bg-white rounded-xl border border-[#d3e1f5] p-4 flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0"><CheckCircle2 className="w-5 h-5 text-emerald-600" /></div>
-              <div><p className="text-xs text-[#5b78a8]">Ready</p><p className="font-bold text-[#082a63] text-lg">{admitCards.length}</p></div>
+              <div><p className="text-sm text-[#5b78a8]">Ready</p><p className="font-bold text-[#082a63] text-xl">{admitCards.length}</p></div>
             </div>
             <div className="bg-white rounded-xl border border-[#d3e1f5] p-4 flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-red-100 flex items-center justify-center shrink-0"><XCircle className="w-5 h-5 text-red-500" /></div>
-              <div><p className="text-xs text-[#5b78a8]">Skipped</p><p className="font-bold text-[#082a63] text-lg">{skipped.length}</p></div>
+              <div><p className="text-sm text-[#5b78a8]">Skipped</p><p className="font-bold text-[#082a63] text-xl">{skipped.length}</p></div>
             </div>
             <div className="bg-white rounded-xl border border-[#d3e1f5] p-4 flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-[#eaf2fd] flex items-center justify-center shrink-0"><Users className="w-5 h-5 text-[#1b57d8]" /></div>
-              <div><p className="text-xs text-[#5b78a8]">Total</p><p className="font-bold text-[#082a63] text-lg">{admitCards.length + skipped.length}</p></div>
+              <div><p className="text-sm text-[#5b78a8]">Total</p><p className="font-bold text-[#082a63] text-xl">{admitCards.length + skipped.length}</p></div>
             </div>
           </div>
 
@@ -153,13 +153,13 @@ function BulkAdmitCardContent() {
           {admitCards.length > 0 && (
             <div className="bg-white rounded-2xl border border-[#d3e1f5] overflow-hidden">
               <div className="bg-[#eaf2fd] px-4 py-2.5 border-b border-[#d3e1f5] flex items-center justify-between">
-                <p className="text-xs font-bold text-[#082a63] uppercase">Ready to Print — {admitCards.length} Students</p>
+                <p className="text-sm font-bold text-[#082a63] uppercase">Ready to Print — {admitCards.length} Students</p>
                 <button onClick={() => setPrintMode(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#082a63] text-white text-xs font-bold hover:bg-[#0b3a85]">
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#082a63] text-white text-sm font-bold hover:bg-[#0b3a85]">
                   <Printer className="w-3.5 h-3.5" /> Print All
                 </button>
               </div>
-              <table className="w-full text-xs">
+              <table className="w-full text-sm">
                 <thead className="border-b border-[#d3e1f5] bg-[#f4f8fe]">
                   <tr>
                     <th className="px-4 py-2.5 text-left font-bold text-[#082a63] uppercase">Roll No.</th>
@@ -180,7 +180,7 @@ function BulkAdmitCardContent() {
                       <td className="px-4 py-2.5 text-center text-[#082a63]">{card.subjects?.length || 0}</td>
                       <td className="px-4 py-2.5 text-right">
                         <a href={`/super-admin/dashboard/admit-cards/${card.id}`} target="_blank" rel="noreferrer"
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#eaf2fd] text-[#082a63] text-[10px] font-bold hover:bg-[#d3e1f5]">
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#eaf2fd] text-[#082a63] text-[12px] font-bold hover:bg-[#d3e1f5]">
                           <Eye className="w-3 h-3" /> View
                         </a>
                       </td>
@@ -195,9 +195,9 @@ function BulkAdmitCardContent() {
           {skipped.length > 0 && (
             <div className="bg-white rounded-2xl border border-red-200 overflow-hidden">
               <div className="bg-red-50 px-4 py-2.5 border-b border-red-200">
-                <p className="text-xs font-bold text-red-700 uppercase">Skipped — {skipped.length} Students (Incomplete Setup)</p>
+                <p className="text-sm font-bold text-red-700 uppercase">Skipped — {skipped.length} Students (Incomplete Setup)</p>
               </div>
-              <table className="w-full text-xs">
+              <table className="w-full text-sm">
                 <thead className="border-b border-red-100 bg-red-50/50">
                   <tr>
                     <th className="px-4 py-2 text-left font-bold text-red-700 uppercase">Roll No.</th>
@@ -221,8 +221,8 @@ function BulkAdmitCardContent() {
           {admitCards.length === 0 && skipped.length === 0 && (
             <div className="text-center py-16 bg-white rounded-2xl border border-[#d3e1f5]">
               <Hash className="w-10 h-10 mx-auto text-[#d3e1f5] mb-2" />
-              <p className="font-semibold text-[#5b78a8] text-sm">No eligible students found</p>
-              <p className="text-xs text-[#6a7fa6] mt-1">Approve students and allot roll numbers first.</p>
+              <p className="font-semibold text-[#5b78a8] text-base">No eligible students found</p>
+              <p className="text-sm text-[#6a7fa6] mt-1">Approve students and allot roll numbers first.</p>
             </div>
           )}
         </>

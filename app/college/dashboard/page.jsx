@@ -35,7 +35,7 @@ export default function CollegeDashboardOverviewPage() {
             Welcome, <span className="text-[#5db0f4]">{college?.college_name}</span>
           </h1>
           <p className="text-[15px] sm:text-base text-[#d3e1f5] max-w-xl leading-relaxed">
-            Manage student admissions, verify candidates, assign roll numbers, and coordinate with the Goa Open School Board.
+            Manage student admissions, verify candidates, assign roll numbers, and coordinate with the Goa State Open School Board.
           </p>
 
           <div className="pt-2 flex flex-wrap items-center gap-2.5">
@@ -220,7 +220,7 @@ export default function CollegeDashboardOverviewPage() {
       <div className="flex items-start gap-3 p-4 rounded-2xl bg-[#eaf2fd] border border-[#1b57d8]/20 text-[13px] sm:text-[15px] text-[#1245b8]">
         <ShieldCheck className="w-4 h-4 shrink-0 text-[#1b57d8] mt-0.5" />
         <span className="leading-relaxed">
-          Student roll numbers and marksheet records are issued under institutional authority and ratified by the Goa Open School Board. For compliance and verification updates, contact the council IT cell.
+          Student roll numbers and marksheet records are issued under institutional authority and ratified by the Goa State Open School Board. For compliance and verification updates, contact the council IT cell.
         </span>
       </div>
     </div>

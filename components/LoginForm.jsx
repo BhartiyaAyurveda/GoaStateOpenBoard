@@ -148,7 +148,7 @@ export default function LoginForm({ role, idLabel, idPlaceholder }) {
       <p className="text-center text-[14px] font-medium text-[#44557a]">
         Forgot your password or ID?{" "}
         <Link href="/contact" className="font-bold text-brand underline underline-offset-2 hover:text-navy">
-          Contact Goa Open School
+          Contact Goa State Open School
         </Link>
       </p>
     </form>

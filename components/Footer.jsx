@@ -2,15 +2,18 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChevronRight, MapPin, Phone, Mail } from "lucide-react";
 import { getContactInfo } from "@/lib/site-settings";
+import SocialLinks from "@/components/SocialLinks";
+import { getHomeContent } from "@/lib/home-content";
 
 const quick = ["About Us", "Enrollment Card", "Admit Card", "Result", "Contact Us"];
 // pages of this website (a .pdf opens in a new tab)
-const important = [
+const importantBase = [
+  { label: "Courses", href: "/courses" },
+  { label: "Study Centres", href: "/study-centres" },
   { label: "FAQs", href: "/faq" },
   { label: "Notices", href: "/notices" },
   { label: "Class X Programme", href: "/programmes/class-x" },
   { label: "Class XII Programme", href: "/programmes/class-xii" },
-  { label: "Syllabus", href: "/downloads/Syllabus-2026-27.pdf" },
 ];
 const legal = [
   { label: "Disclaimer", href: "/disclaimer" },
@@ -21,6 +24,8 @@ const legal = [
 
 export default async function Footer() {
   const contact = await getContactInfo();
+  const { syllabus } = await getHomeContent();
+  const important = [...importantBase, { label: "Syllabus", href: syllabus.url }];
   return (
     <footer id="contact" className="print:hidden">
       <div className="bg-navy text-white">
@@ -38,14 +43,15 @@ export default async function Footer() {
               <span className="h-[56px] w-px bg-[#c4cde0]" aria-hidden="true" />
               <Image
                 src="/images/logo.png"
-                alt="Goa Open School logo"
+                alt="Goa State Open School logo"
                 width={480}
                 height={266}
                 className="h-[52px] w-auto"
               />
             </div>
             <div className="leading-snug">
-              <p className="text-[20px] font-bold tracking-wide">GOA OPEN SCHOOL</p>
+              <p className="text-[20px] font-bold tracking-wide">GOA STATE OPEN SCHOOL</p>
+              <p lang="kok" className="font-devanagari text-[15px] font-semibold">गोंय राज्य मुक्त शाळा</p>
               <p className="mt-1 text-[14px] font-medium">Directorate of Education</p>
               <p className="text-[14px] font-medium">Government of Goa</p>
             </div>
@@ -114,13 +120,14 @@ export default async function Footer() {
                 </a>
               </li>
             </ul>
+            <SocialLinks className="mt-6" />
           </div>
         </div>
       </div>
 
       <div className="bg-[#e8eef8] text-[13px] font-medium text-ink">
         <div className="mx-auto flex min-h-[72px] max-w-[1320px] flex-col items-center justify-between gap-2 px-4 py-3 sm:px-6 md:flex-row">
-          <p className="text-center">© 2026 Goa Open School. All Rights Reserved.</p>
+          <p className="text-center">© 2020 Goa State Open School. All Rights Reserved.</p>
           <ul className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5">
             {legal.map(({ label, href }, i) => (
               <li key={label} className={i > 0 ? "sm:border-l sm:border-ink/50 sm:pl-5" : ""}>

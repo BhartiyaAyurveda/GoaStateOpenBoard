@@ -27,6 +27,12 @@ export async function POST(request) {
     return NextResponse.json({ error: "college_name, username, and password are required." }, { status: 400 });
   }
 
+  // phone is optional, but when given it must be exactly 10 digits
+  const phoneClean = String(phone ?? "").trim();
+  if (phoneClean && !/^\d{10}$/.test(phoneClean)) {
+    return NextResponse.json({ error: "Phone number must be exactly 10 digits." }, { status: 400 });
+  }
+
   const password_hash = await bcrypt.hash(password, 10);
 
   // Auto-assign college_code: next sequential 2-digit code
@@ -35,7 +41,7 @@ export async function POST(request) {
 
   const { data, error } = await supabaseAdmin
     .from("colleges")
-    .insert({ college_name, username: username.trim().toLowerCase(), password_hash, email, phone, city, state, address, college_code })
+    .insert({ college_name, username: username.trim().toLowerCase(), password_hash, email, phone: phoneClean || null, city, state, address, college_code })
     .select("id, college_name, username, email, phone, city, state, college_code, is_active, created_at")
     .single();
 

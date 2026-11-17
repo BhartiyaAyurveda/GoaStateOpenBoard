@@ -1,22 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
-import {
-  Share2,
-  AtSign,
-  Camera,
-  Video,
-  Briefcase,
-  ThumbsUp,
-  Send,
-  Save,
-  RotateCcw,
-  CheckCircle2,
-  ExternalLink,
-  Sparkles,
-  RefreshCw,
-} from "lucide-react";
+import SocialIcon from "@/components/icons/SocialIcon";
+import { Share2, Save, RotateCcw, ExternalLink, Sparkles, RefreshCw } from "lucide-react";
 
 const DEFAULT_SOCIALS = [
   {
@@ -128,16 +114,31 @@ export default function SocialLinksManager({ onShowToast }) {
 
   const handleSave = async (e) => {
     e?.preventDefault();
+
+    // only https links are allowed (the website ignores anything else)
+    for (const item of socials) {
+      if (item.url && !/^https:\/\/\S+$/i.test(item.url.trim())) {
+        onShowToast?.(`${item.name}: the profile URL must start with https://`, "error");
+        return;
+      }
+      if (item.enabled && !item.url.trim() && (!item.handle.trim() || item.id === "whatsapp")) {
+        onShowToast?.(`${item.name}: add the profile URL, or switch it off.`, "error");
+        return;
+      }
+    }
+
+    const clean = socials.map((s) => ({ ...s, url: s.url.trim(), handle: s.handle.trim() }));
     try {
       const res = await fetch("/api/admin/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: "social_links", value: JSON.stringify(socials) }),
+        body: JSON.stringify({ key: "social_links", value: JSON.stringify(clean) }),
       });
       const data = await res.json();
       if (data.ok) {
+        setSocials(clean);
         setIsSaved(true);
-        onShowToast?.("Social media links saved to database!", "success");
+        onShowToast?.("Social media links saved. Switched-on profiles are live on the website.", "success");
         setTimeout(() => setIsSaved(false), 3000);
       } else {
         onShowToast?.(data.error || "Save failed", "error");
@@ -153,27 +154,7 @@ export default function SocialLinksManager({ onShowToast }) {
     onShowToast?.("Social links restored to defaults.", "info");
   };
 
-  // Render proper icon based on id
-  const getIcon = (id) => {
-    switch (id) {
-      case "twitter":
-        return <AtSign className="w-4 h-4" />;
-      case "instagram":
-        return <Camera className="w-4 h-4" />;
-      case "youtube":
-        return <Video className="w-4 h-4" />;
-      case "linkedin":
-        return <Briefcase className="w-4 h-4" />;
-      case "facebook":
-        return <ThumbsUp className="w-4 h-4" />;
-      case "whatsapp":
-        return <WhatsAppIcon className="w-4 h-4" />;
-      case "telegram":
-        return <Send className="w-4 h-4" />;
-      default:
-        return <Share2 className="w-4 h-4" />;
-    }
-  };
+  const getIcon = (id) => <SocialIcon id={id} className="w-4 h-4" />;
 
   if (loading) return <div className="p-10 text-center"><RefreshCw className="w-6 h-6 animate-spin mx-auto text-[#1b57d8]" /></div>;
 
@@ -187,7 +168,7 @@ export default function SocialLinksManager({ onShowToast }) {
             Social Media Links &amp; Channels
           </h2>
           <p className="text-[13px] text-[#3d5688] mt-0.5">
-            Configure official social profiles, public handles, and active visibility across header and footer.
+            Switched-on profiles appear as icons in the website footer and on the Contact page. Use the full https:// profile link.
           </p>
         </div>
 
@@ -206,7 +187,7 @@ export default function SocialLinksManager({ onShowToast }) {
             onClick={handleSave}
             className="px-5 py-2 text-[13px] font-bold text-white bg-[#082a63] hover:bg-[#0b3a85] rounded-xl shadow-sm transition-all flex items-center gap-1.5"
           >
-            <Save className="w-4 h-4 text-[#1b57d8]" />
+            <Save className="w-4 h-4 text-white" />
             <span>{isSaved ? "Saved!" : "Save Social Links"}</span>
           </button>
         </div>

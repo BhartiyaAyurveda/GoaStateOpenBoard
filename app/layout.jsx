@@ -1,5 +1,12 @@
-import { Inter } from "next/font/google";
+import { Inter, Noto_Sans_Devanagari } from "next/font/google";
 import "./globals.css";
+
+// Konkani (Devanagari script) text, e.g. the Konkani name of the school.
+const devanagari = Noto_Sans_Devanagari({
+  subsets: ["devanagari"],
+  variable: "--font-noto-deva",
+  display: "swap",
+});
 
 const inter = Inter({
   subsets: ["latin"],
@@ -8,9 +15,9 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "Goa Open School | Directorate of Education, Government of Goa",
+  title: "Goa State Open School | Directorate of Education, Government of Goa",
   description:
-    "Goa Open School – open schooling, flexible learning and second chance education for Secondary (Class X) and Senior Secondary (Class XII).",
+    "Goa State Open School – open schooling, flexible learning and second chance education for Secondary (Class X) and Senior Secondary (Class XII).",
 };
 
 export const viewport = {
@@ -20,7 +27,7 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={`${inter.variable} ${devanagari.variable}`}>
       <body>{children}</body>
     </html>
   );

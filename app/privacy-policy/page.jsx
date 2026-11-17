@@ -1,9 +1,11 @@
 import Link from "next/link";
 import LegalPage, { Bullets, PolicySection, ReviewNote } from "@/components/LegalPage";
 
+export const revalidate = 60; // contact details (header menu, footer, help boxes) come from the dashboard
+
 export const metadata = {
-  title: "Privacy Policy | Goa Open School",
-  description: "How the Goa Open School website handles your information.",
+  title: "Privacy Policy | Goa State Open School",
+  description: "How the Goa State Open School website handles your information.",
 };
 
 export default function PrivacyPolicyPage() {
@@ -51,7 +53,7 @@ export default function PrivacyPolicyPage() {
 
       <PolicySection n="5" heading="Sharing of information">
         <p>
-          Your personal information is not sold or rented. It is shared only with the officials of Goa Open School and the Directorate
+          Your personal information is not sold or rented. It is shared only with the officials of Goa State Open School and the Directorate
           of Education who need it to serve you, or where disclosure is required by law.
         </p>
       </PolicySection>
@@ -59,7 +61,7 @@ export default function PrivacyPolicyPage() {
       <PolicySection n="6" heading="Your responsibilities">
         <Bullets
           items={[
-            "Never share your password, OTP or Acknowledgement Number with anyone. Goa Open School never asks for them by phone, email or message.",
+            "Never share your password, OTP or Acknowledgement Number with anyone. Goa State Open School never asks for them by phone, email or message.",
             "Keep your login credentials confidential and log out on shared computers.",
           ]}
         />

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import { CalendarDays, Hash, Loader2, Printer, RotateCcw, Search, ShieldCheck } from "lucide-react";
 import { ENROLLMENT_PATTERN } from "@/lib/result-options";
+import AdmitCardTemplate from "@/components/admin/AdmitCardTemplate";
 
 const EMPTY = { enrollment: "", dob: "" };
 
@@ -80,7 +81,8 @@ function AdmitCardSheet({ data, onReset }) {
         <header className="flex items-center gap-4 border-b-[3px] border-navy bg-[#f4f8fe] px-5 py-4">
           <Image src="/images/logo.png" alt="" width={480} height={266} className="h-[54px] w-auto" />
           <div className="flex-1 text-center">
-            <p className="text-[22px] font-extrabold tracking-wide text-navy sm:text-[26px]">GOA OPEN SCHOOL</p>
+            <p className="text-[22px] font-extrabold tracking-wide text-navy sm:text-[26px]">GOA STATE OPEN SCHOOL</p>
+            <p lang="kok" className="font-devanagari text-[15px] font-semibold text-navy">गोंय राज्य मुक्त शाळा</p>
             <p className="text-[13.5px] font-semibold text-[#44557a]">Directorate of Education, Government of Goa</p>
           </div>
           <span className="hidden w-[54px] sm:block" />
@@ -172,12 +174,12 @@ function AdmitCardSheet({ data, onReset }) {
         <div className="grid grid-cols-3 gap-6 px-5 pb-5 pt-14 text-center text-[13px] font-bold italic text-ink">
           <div className="border-t border-[#111] pt-1">Signature of the Candidate</div>
           <div className="border-t border-[#111] pt-1">Study Centre Coordinator (with seal)</div>
-          <div className="border-t border-[#111] pt-1">Authorised Signatory, Goa Open School</div>
+          <div className="border-t border-[#111] pt-1">Authorised Signatory, Goa State Open School</div>
         </div>
 
         <p className="border-t border-dashed border-[#9db7e0] bg-[#fff8e6] px-5 py-2.5 text-[12.5px] font-medium leading-relaxed text-[#5a4300]">
           <b>Note:</b> This is a computer-generated admit card. Candidates must carry a printed copy to the examination centre. Report
-          any error to the Study Centre / Goa Open School immediately.
+          any error to the Study Centre / Goa State Open School immediately.
         </p>
       </article>
     </div>
@@ -265,8 +267,22 @@ export default function AdmitCardLookup() {
 
   if (status === "done" && card) {
     return (
-      <div className="p-5 sm:p-7 print:p-0">
-        <AdmitCardSheet data={card} onReset={reset} />
+      <div className="p-4 sm:p-7 print:p-0">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 print:hidden">
+        <button
+          onClick={reset}
+          className="inline-flex h-[40px] items-center gap-2 rounded-md border border-[#9db7e0] bg-white px-5 text-[14px] font-bold text-ink hover:bg-[#f2f7fe]"
+        >
+          <RotateCcw size={16} /> Search another
+        </button>
+        <button
+          onClick={() => window.print()}
+          className="inline-flex h-[40px] items-center gap-2 rounded-md bg-navy px-5 text-[14px] font-bold text-white hover:bg-brand"
+        >
+          <Printer size={16} /> Print / Download Admit Card
+        </button>
+      </div>
+        {card.template ? <AdmitCardTemplate data={card.template} /> : <AdmitCardSheet data={card} onReset={reset} />}
       </div>
     );
   }
@@ -379,7 +395,7 @@ export default function AdmitCardLookup() {
 
       <p className="rounded-md border border-[#f3d28a] bg-[#fff8e6] px-4 py-3 text-[13px] font-medium leading-relaxed text-[#5a4300]">
         <b>Note:</b> Candidates must carry a printed copy of the admit card to the examination centre. If your admit card is not
-        available or has an error, contact your Study Centre or Goa Open School.
+        available or has an error, contact your Study Centre or Goa State Open School.
       </p>
     </form>
   );

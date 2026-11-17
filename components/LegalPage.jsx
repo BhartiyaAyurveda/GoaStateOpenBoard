@@ -1,3 +1,4 @@
+import { getContactInfo } from "@/lib/site-settings";
 import Link from "next/link";
 import { ChevronRight, FileText, Headphones, Lock, ScrollText, ShieldAlert, Map } from "lucide-react";
 import TopBar from "@/components/TopBar";
@@ -15,7 +16,8 @@ export const LEGAL_PAGES = [
 export const LAST_UPDATED = "16 November 2026";
 
 // Shared layout for the footer pages. `current` is one of LEGAL_PAGES[].key.
-export default function LegalPage({ current, title, intro, children, showUpdated = true }) {
+export default async function LegalPage({ current, title, intro, children, showUpdated = true }) {
+  const contact = await getContactInfo();
   const page = LEGAL_PAGES.find((p) => p.key === current);
   const Icon = page?.icon ?? FileText;
 
@@ -38,7 +40,7 @@ export default function LegalPage({ current, title, intro, children, showUpdated
           </nav>
 
           <div className="mt-4 border-l-[6px] border-navy bg-gradient-to-r from-[#e3edfa] to-white px-5 py-5 sm:px-7">
-            <p className="text-[13px] font-bold uppercase tracking-[0.18em] text-[#44557a]">Goa Open School</p>
+            <p className="text-[13px] font-bold uppercase tracking-[0.18em] text-[#44557a]">Goa State Open School</p>
             <h1 className="mt-1 flex items-center gap-3 text-[26px] font-extrabold leading-tight tracking-tight text-ink sm:text-[34px]">
               <Icon size={30} strokeWidth={1.8} className="shrink-0 text-navy" aria-hidden="true" />
               {title}
@@ -80,8 +82,8 @@ export default function LegalPage({ current, title, intro, children, showUpdated
               </span>
               <div className="text-[14px] font-medium leading-snug">
                 <p className="text-[13px] font-bold uppercase tracking-wider text-sky">Any queries?</p>
-                <a href="tel:+918322743300" className="text-[20px] font-extrabold leading-tight hover:text-sky">
-                  0832–2743300
+                <a href={contact.tel} className="text-[20px] font-extrabold leading-tight hover:text-sky">
+                  {contact.phone}
                 </a>
                 <p className="text-white/80">
                   or{" "}
@@ -141,7 +143,7 @@ export function ReviewNote() {
   return (
     <p className="mt-8 rounded-md border border-[#f3d28a] bg-[#fff8e6] px-4 py-3 text-[13.5px] font-medium leading-relaxed text-[#5a4300]">
       <b>Note for the website owner:</b> this page is general draft text. Have it reviewed by the Directorate of Education / legal
-      section and update it to match the actual practices of Goa Open School before publishing.
+      section and update it to match the actual practices of Goa State Open School before publishing.
     </p>
   );
 }

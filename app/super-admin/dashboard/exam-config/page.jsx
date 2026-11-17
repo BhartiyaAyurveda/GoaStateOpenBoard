@@ -1,56 +1,105 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Pencil, Trash2, RefreshCw, X, CheckCircle2, AlertTriangle, Building2 } from "lucide-react";
+import { Plus, Pencil, Trash2, RefreshCw, X, CheckCircle2, AlertTriangle, Building2, CalendarDays, Clock, Users } from "lucide-react";
+import AdminPageShell from "@/components/admin/AdminPageShell";
+import Select from "@/components/ui/Select";
 
 const EMPTY_FORM = { course_id: "", exam_center: "", exam_date: "", exam_time: "", session_label: "", max_students: 100 };
+const TIMINGS = ["Morning (10:00 AM - 1:00 PM)", "Evening (2:00 PM - 5:00 PM)"];
+
+const inputCls =
+  "h-11 w-full rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] px-3.5 text-[15px] text-[#082a63] outline-none placeholder:text-[#8a97b3] focus:border-[#1b57d8] focus:bg-white focus:ring-2 focus:ring-[#1b57d8]/15";
+
+function Field({ label, required, className = "", children }) {
+  return (
+    <label className={`block min-w-0 ${className}`}>
+      <span className="mb-1.5 block text-[13.5px] font-bold text-[#082a63]">
+        {label} {required && <span className="text-red-500">*</span>}
+      </span>
+      {children}
+    </label>
+  );
+}
 
 export default function ExamConfigPage() {
-  const [configs, setConfigs]   = useState([]);
-  const [courses, setCourses]   = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState("");
+  const [configs, setConfigs] = useState([]);
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
-  const [editId, setEditId]     = useState(null);
-  const [form, setForm]         = useState(EMPTY_FORM);
-  const [saving, setSaving]     = useState(false);
-  const [saveMsg, setSaveMsg]   = useState("");
-  const [saveErr, setSaveErr]   = useState("");
+  const [editId, setEditId] = useState(null);
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState("");
+  const [saveErr, setSaveErr] = useState("");
   const [deleting, setDeleting] = useState(null);
 
   const load = useCallback(async () => {
-    setLoading(true); setError("");
+    setLoading(true);
+    setError("");
     try {
-      const [cfgRes, crsRes] = await Promise.all([
-        fetch("/api/admin/course-exam-config"),
-        fetch("/api/admin/courses"),
-      ]);
+      const [cfgRes, crsRes] = await Promise.all([fetch("/api/admin/course-exam-config"), fetch("/api/admin/courses")]);
       const [cfgJson, crsJson] = await Promise.all([cfgRes.json(), crsRes.json()]);
       setConfigs(cfgJson.data || []);
       setCourses(crsJson.data || []);
-    } catch { setError("Failed to load data."); }
+    } catch {
+      setError("Failed to load data.");
+    }
     setLoading(false);
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
-  const openCreate = () => { setForm(EMPTY_FORM); setEditId(null); setSaveMsg(""); setSaveErr(""); setShowForm(true); };
-  const openEdit   = (cfg) => {
-    setForm({ course_id: cfg.course_id, exam_center: cfg.exam_center, exam_date: cfg.exam_date || "", exam_time: cfg.exam_time || "", session_label: cfg.session_label || "", max_students: cfg.max_students ?? 100 });
-    setEditId(cfg.id); setSaveMsg(""); setSaveErr(""); setShowForm(true);
+  const openCreate = () => {
+    setForm(EMPTY_FORM);
+    setEditId(null);
+    setSaveMsg("");
+    setSaveErr("");
+    setShowForm(true);
+  };
+  const openEdit = (cfg) => {
+    setForm({
+      course_id: cfg.course_id,
+      exam_center: cfg.exam_center,
+      exam_date: cfg.exam_date || "",
+      exam_time: cfg.exam_time || "",
+      session_label: cfg.session_label || "",
+      max_students: cfg.max_students ?? 100,
+    });
+    setEditId(cfg.id);
+    setSaveMsg("");
+    setSaveErr("");
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleSave = async () => {
-    if (!form.course_id || !form.exam_center.trim()) { setSaveErr("Course and exam center are required."); return; }
-    setSaving(true); setSaveErr(""); setSaveMsg("");
+  const handleSave = async (e) => {
+    e?.preventDefault();
+    if (!form.course_id || !form.exam_center.trim()) {
+      setSaveErr("Course and exam center are required.");
+      return;
+    }
+    setSaving(true);
+    setSaveErr("");
+    setSaveMsg("");
     try {
-      const url   = editId ? `/api/admin/course-exam-config/${editId}` : "/api/admin/course-exam-config";
+      const url = editId ? `/api/admin/course-exam-config/${editId}` : "/api/admin/course-exam-config";
       const method = editId ? "PATCH" : "POST";
-      const res  = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
       const json = await res.json();
-      if (!res.ok) { setSaveErr(json.error || "Save failed."); }
-      else { setSaveMsg(editId ? "Updated successfully." : "Created successfully."); setShowForm(false); load(); }
-    } catch { setSaveErr("Network error."); }
+      if (!res.ok) {
+        setSaveErr(json.error || "Save failed.");
+      } else {
+        setSaveMsg(editId ? "Updated successfully." : "Created successfully.");
+        setShowForm(false);
+        load();
+      }
+    } catch {
+      setSaveErr("Network error.");
+    }
     setSaving(false);
   };
 
@@ -59,149 +108,251 @@ export default function ExamConfigPage() {
     setDeleting(id);
     try {
       const res = await fetch(`/api/admin/course-exam-config/${id}`, { method: "DELETE" });
-      if (res.ok) { setConfigs((c) => c.filter((x) => x.id !== id)); }
-      else { const j = await res.json(); alert(j.error || "Delete failed."); }
-    } catch { alert("Network error."); }
+      if (res.ok) {
+        setConfigs((c) => c.filter((x) => x.id !== id));
+      } else {
+        const j = await res.json();
+        alert(j.error || "Delete failed.");
+      }
+    } catch {
+      alert("Network error.");
+    }
     setDeleting(null);
   };
 
-  const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+  const fmtDate = (d) => (d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—");
+
+  const actions = (
+    <div className="flex items-center gap-2">
+      <button
+        onClick={load}
+        disabled={loading}
+        aria-label="Refresh"
+        title="Refresh"
+        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#d3e1f5] bg-white text-[#082a63] transition hover:bg-[#f4f8fe] disabled:opacity-60"
+      >
+        <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+      </button>
+      <button
+        onClick={openCreate}
+        className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-[#1b57d8] px-3.5 text-[14px] font-bold text-white transition hover:bg-[#1245b8] sm:px-4"
+      >
+        <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Add Config</span>
+        <span className="sm:hidden">Add</span>
+      </button>
+    </div>
+  );
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-[#082a63]">Exam Configuration</h1>
-          <p className="text-[15px] text-[#3d5688] mt-0.5">Configure exam centers, dates and sessions per course</p>
-        </div>
-        <button onClick={openCreate} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#082a63] hover:bg-[#0b3a85] text-white text-[15px] font-bold transition-colors">
-          <Plus className="w-4 h-4" /> Add Config
-        </button>
-      </div>
-
-      {/* Inline form */}
-      {showForm && (
-        <div className="bg-white rounded-2xl border border-[#d3e1f5] p-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <p className="font-bold text-[#082a63] text-[15px]">{editId ? "Edit Configuration" : "New Exam Configuration"}</p>
-            <button onClick={() => setShowForm(false)}><X className="w-4 h-4 text-[#8a97b3]" /></button>
+    <AdminPageShell
+      title="Exam Configuration"
+      subtitle="Exam centers, dates and sessions per course. Used for bulk admit card generation."
+      backHref="/super-admin/dashboard?tab=exam"
+      backLabel="Exam Management"
+      actions={actions}
+    >
+      <div className="space-y-5">
+        {saveMsg && !showForm && (
+          <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-[14.5px] font-semibold text-emerald-700">
+            <CheckCircle2 className="h-4 w-4 shrink-0" /> {saveMsg}
           </div>
+        )}
 
-          {saveErr && <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-[13px]"><AlertTriangle className="w-4 h-4" />{saveErr}</div>}
-          {saveMsg && <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-[13px]"><CheckCircle2 className="w-4 h-4" />{saveMsg}</div>}
+        {/* Form */}
+        {showForm && (
+          <form onSubmit={handleSave} className="rounded-2xl border border-[#d3e1f5] bg-white p-4 shadow-sm sm:p-5">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2 className="flex items-center gap-2 text-[17px] font-bold text-[#082a63]">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#eaf2fd] text-[#1b57d8]">
+                  {editId ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                </span>
+                {editId ? "Edit Configuration" : "New Exam Configuration"}
+              </h2>
+              <button type="button" onClick={() => setShowForm(false)} aria-label="Close form" className="rounded-lg p-2 text-[#4a6090] hover:bg-[#eaf2fd]">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            <div className="sm:col-span-2 lg:col-span-1">
-              <label className="block text-[12px] font-bold uppercase text-[#3d5688] mb-1">Course *</label>
-              <select value={form.course_id} onChange={e => setForm(f => ({ ...f, course_id: e.target.value }))}
-                className="w-full px-3 py-2 rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] text-[15px] text-[#082a63] focus:outline-none focus:ring-2 focus:ring-[#1b57d8]">
-                <option value="">— Select course —</option>
-                {courses.map(c => <option key={c.id} value={c.id}>{c.course_name}</option>)}
-              </select>
+            {saveErr && (
+              <div className="mb-4 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-[14.5px] text-red-700">
+                <AlertTriangle className="h-4 w-4 shrink-0" /> {saveErr}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <Field label="Course" required>
+                <Select size="lg" ariaLabel="Course" placeholder="Select course" value={form.course_id}
+                  onChange={(v) => setForm((f) => ({ ...f, course_id: v }))}
+                  options={courses.map((c) => ({ value: c.id, label: c.course_name }))} />
+              </Field>
+              <Field label="Exam Center" required className="sm:col-span-2">
+                <input
+                  type="text"
+                  value={form.exam_center}
+                  onChange={(e) => setForm((f) => ({ ...f, exam_center: e.target.value }))}
+                  placeholder="e.g. Government High School, Panaji"
+                  className={inputCls}
+                />
+              </Field>
+              <Field label="Exam Date">
+                <input type="date" value={form.exam_date} onChange={(e) => setForm((f) => ({ ...f, exam_date: e.target.value }))} className={inputCls} />
+              </Field>
+              <Field label="Exam Time">
+                <Select size="lg" ariaLabel="Exam time" placeholder="Select timing" value={form.exam_time || ""}
+                  onChange={(v) => setForm((f) => ({ ...f, exam_time: v }))}
+                  options={[
+                    { value: "", label: "No timing" },
+                    ...TIMINGS.map((t) => ({ value: t, label: t })),
+                    ...(form.exam_time && !TIMINGS.includes(form.exam_time) ? [{ value: form.exam_time, label: form.exam_time }] : []),
+                  ]} />
+              </Field>
+              <Field label="Session Label">
+                <input
+                  type="text"
+                  value={form.session_label}
+                  onChange={(e) => setForm((f) => ({ ...f, session_label: e.target.value }))}
+                  placeholder="e.g. 2025-26"
+                  className={inputCls}
+                />
+              </Field>
+              <Field label="Max Students">
+                <input
+                  type="number"
+                  min={1}
+                  value={form.max_students}
+                  onChange={(e) => setForm((f) => ({ ...f, max_students: parseInt(e.target.value) || 100 }))}
+                  className={inputCls}
+                />
+              </Field>
             </div>
-            <div className="sm:col-span-2 lg:col-span-2">
-              <label className="block text-[12px] font-bold uppercase text-[#3d5688] mb-1">Exam Center *</label>
-              <input type="text" value={form.exam_center} onChange={e => setForm(f => ({ ...f, exam_center: e.target.value }))}
-                placeholder="e.g. Lucknow Examination Hall"
-                className="w-full px-3 py-2 rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] text-[15px] text-[#082a63] focus:outline-none focus:ring-2 focus:ring-[#1b57d8]" />
-            </div>
-            <div>
-              <label className="block text-[12px] font-bold uppercase text-[#3d5688] mb-1">Exam Date</label>
-              <input type="date" value={form.exam_date} onChange={e => setForm(f => ({ ...f, exam_date: e.target.value }))}
-                className="w-full px-3 py-2 rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] text-[15px] text-[#082a63] focus:outline-none focus:ring-2 focus:ring-[#1b57d8]" />
-            </div>
-            <div>
-              <label className="block text-[12px] font-bold uppercase text-[#3d5688] mb-1">Exam Time</label>
-              <select
-                value={form.exam_time || ""}
-                onChange={e => setForm(f => ({ ...f, exam_time: e.target.value }))}
-                className="w-full px-3 py-2 rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] text-[15px] text-[#082a63] focus:outline-none focus:ring-2 focus:ring-[#1b57d8]"
+
+            <div className="mt-5 flex flex-col-reverse gap-2 border-t border-[#d3e1f5] pt-4 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setShowForm(false)}
+                className="h-11 rounded-xl border border-[#d3e1f5] px-6 text-[15px] font-bold text-[#082a63] hover:bg-[#f4f8fe]"
               >
-                <option value="">— Select Timing —</option>
-                <option value="Morning (10:00 AM - 1:00 PM)">Morning (10:00 AM - 1:00 PM)</option>
-                <option value="Evening (2:00 PM - 5:00 PM)">Evening (2:00 PM - 5:00 PM)</option>
-                {form.exam_time && !["Morning (10:00 AM - 1:00 PM)", "Evening (2:00 PM - 5:00 PM)"].includes(form.exam_time) && (
-                  <option value={form.exam_time}>{form.exam_time}</option>
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={saving}
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#1b57d8] px-7 text-[15px] font-bold text-white transition hover:bg-[#1245b8] disabled:opacity-60"
+              >
+                {saving ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 animate-spin" /> Saving…
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="h-4 w-4" /> Save
+                  </>
                 )}
-              </select>
+              </button>
             </div>
-            <div>
-              <label className="block text-[12px] font-bold uppercase text-[#3d5688] mb-1">Session Label</label>
-              <input type="text" value={form.session_label} onChange={e => setForm(f => ({ ...f, session_label: e.target.value }))}
-                placeholder="e.g. 2025-26"
-                className="w-full px-3 py-2 rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] text-[15px] text-[#082a63] focus:outline-none focus:ring-2 focus:ring-[#1b57d8]" />
-            </div>
-            <div>
-              <label className="block text-[12px] font-bold uppercase text-[#3d5688] mb-1">Max Students</label>
-              <input type="number" min={1} value={form.max_students} onChange={e => setForm(f => ({ ...f, max_students: parseInt(e.target.value) || 100 }))}
-                className="w-full px-3 py-2 rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] text-[15px] text-[#082a63] focus:outline-none focus:ring-2 focus:ring-[#1b57d8]" />
-            </div>
-          </div>
+          </form>
+        )}
 
-          <div className="flex justify-end gap-2 pt-2 border-t border-[#d3e1f5]">
-            <button onClick={() => setShowForm(false)} className="px-5 py-2 rounded-xl border border-[#d3e1f5] text-[15px] font-semibold text-[#082a63] hover:bg-[#f4f8fe]">Cancel</button>
-            <button onClick={handleSave} disabled={saving}
-              className="inline-flex items-center gap-2 px-6 py-2 rounded-xl bg-[#1b57d8] hover:bg-[#1245b8] text-white text-[15px] font-bold disabled:opacity-60 transition-colors">
-              {saving ? <><RefreshCw className="w-3.5 h-3.5 animate-spin" />Saving…</> : <><CheckCircle2 className="w-3.5 h-3.5" />Save</>}
-            </button>
+        {/* List */}
+        {loading ? (
+          <div className="flex justify-center py-16">
+            <RefreshCw className="h-6 w-6 animate-spin text-[#1b57d8]" />
           </div>
-        </div>
-      )}
+        ) : error ? (
+          <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-[15px] text-red-700">{error}</div>
+        ) : configs.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-[#b9cbe6] bg-white px-4 py-14 text-center">
+            <Building2 className="mx-auto mb-3 h-10 w-10 text-[#a9bde0]" />
+            <p className="text-[16px] font-bold text-[#082a63]">No exam configurations yet</p>
+            <p className="mt-1 text-[14px] text-[#4a6090]">Add a configuration to set the center, date and timing for a course.</p>
+            {!showForm && (
+              <button onClick={openCreate} className="mt-5 inline-flex h-11 items-center gap-1.5 rounded-xl bg-[#1b57d8] px-6 text-[15px] font-bold text-white hover:bg-[#1245b8]">
+                <Plus className="h-4 w-4" /> Add Config
+              </button>
+            )}
+          </div>
+        ) : (
+          <>
+            {/* cards (mobile / tablet) */}
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:hidden">
+              {configs.map((cfg) => (
+                <div key={cfg.id} className="min-w-0 rounded-2xl border border-[#d3e1f5] bg-white p-4 shadow-sm">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="break-words text-[16px] font-bold text-[#082a63]">{cfg.courses?.course_name || "—"}</p>
+                      <p className="mt-0.5 break-words text-[14px] text-[#3d5688]">{cfg.exam_center}</p>
+                    </div>
+                    {cfg.session_label && (
+                      <span className="shrink-0 rounded-full bg-[#eaf2fd] px-2.5 py-0.5 text-[12.5px] font-bold text-[#1245b8]">{cfg.session_label}</span>
+                    )}
+                  </div>
+                  <div className="mt-3 grid grid-cols-1 gap-1.5 text-[14px] text-[#3d5688] sm:grid-cols-2">
+                    <span className="flex items-center gap-2"><CalendarDays className="h-4 w-4 shrink-0 text-[#1b57d8]" /> {fmtDate(cfg.exam_date)}</span>
+                    <span className="flex items-center gap-2"><Users className="h-4 w-4 shrink-0 text-[#1b57d8]" /> Max {cfg.max_students}</span>
+                    <span className="flex items-center gap-2 sm:col-span-2"><Clock className="h-4 w-4 shrink-0 text-[#1b57d8]" /> {cfg.exam_time || "—"}</span>
+                  </div>
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    <button onClick={() => openEdit(cfg)} className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#d3e1f5] bg-white py-2.5 text-[14px] font-bold text-[#082a63] hover:bg-[#f4f8fe]">
+                      <Pencil className="h-4 w-4" /> Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(cfg.id)}
+                      disabled={deleting === cfg.id}
+                      className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#d3e1f5] bg-white py-2.5 text-[14px] font-bold text-[#082a63] hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+                    >
+                      {deleting === cfg.id ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />} Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
 
-      {/* Table */}
-      {loading ? (
-        <div className="flex justify-center py-16"><RefreshCw className="w-6 h-6 animate-spin text-[#1b57d8]" /></div>
-      ) : error ? (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-[15px]">{error}</div>
-      ) : configs.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-2xl border border-[#d3e1f5]">
-          <Building2 className="w-10 h-10 mx-auto text-[#d3e1f5] mb-3" />
-          <p className="text-[#3d5688] text-[15px] font-semibold">No exam configurations yet</p>
-          <p className="text-[#8a97b3] text-[13px] mt-1">Click "Add Config" to create the first one</p>
-        </div>
-      ) : (
-        <div className="bg-white rounded-2xl border border-[#d3e1f5] overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-[13px] sm:text-[15px]">
-              <thead>
-                <tr className="bg-[#f4f8fe] border-b border-[#d3e1f5]">
-                  <th className="text-left px-4 py-3 font-bold text-[#3d5688] uppercase text-[12px] tracking-wide">Course</th>
-                  <th className="text-left px-4 py-3 font-bold text-[#3d5688] uppercase text-[12px] tracking-wide">Exam Center</th>
-                  <th className="text-left px-4 py-3 font-bold text-[#3d5688] uppercase text-[12px] tracking-wide">Date</th>
-                  <th className="text-left px-4 py-3 font-bold text-[#3d5688] uppercase text-[12px] tracking-wide">Time</th>
-                  <th className="text-left px-4 py-3 font-bold text-[#3d5688] uppercase text-[12px] tracking-wide">Session</th>
-                  <th className="text-left px-4 py-3 font-bold text-[#3d5688] uppercase text-[12px] tracking-wide">Max</th>
-                  <th className="px-4 py-3" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#d3e1f5]">
-                {configs.map((cfg) => (
-                  <tr key={cfg.id} className="hover:bg-[#f4f8fe] transition-colors">
-                    <td className="px-4 py-3 font-semibold text-[#082a63]">{cfg.courses?.course_name || "—"}</td>
-                    <td className="px-4 py-3 text-[#3d5688]">{cfg.exam_center}</td>
-                    <td className="px-4 py-3 text-[#3d5688]">{fmtDate(cfg.exam_date)}</td>
-                    <td className="px-4 py-3 text-[#3d5688]">{cfg.exam_time || "—"}</td>
-                    <td className="px-4 py-3 text-[#3d5688]">{cfg.session_label || "—"}</td>
-                    <td className="px-4 py-3 text-[#3d5688]">{cfg.max_students}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-1.5 justify-end">
-                        <button onClick={() => openEdit(cfg)} className="p-1.5 rounded-lg hover:bg-[#d3e1f5] text-[#3d5688] transition-colors" title="Edit">
-                          <Pencil className="w-3.5 h-3.5" />
-                        </button>
-                        <button onClick={() => handleDelete(cfg.id)} disabled={deleting === cfg.id}
-                          className="p-1.5 rounded-lg hover:bg-red-100 text-[#9A3B2A] transition-colors disabled:opacity-50" title="Delete">
-                          {deleting === cfg.id ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-                        </button>
-                      </div>
-                    </td>
+            {/* table (laptops) */}
+            <div className="hidden overflow-hidden rounded-2xl border border-[#d3e1f5] bg-white shadow-sm lg:block">
+              <table className="w-full text-left text-[15px]">
+                <thead className="border-b border-[#d3e1f5] bg-[#f4f8fe]">
+                  <tr>
+                    {["Course", "Exam Center", "Date", "Time", "Session", "Max"].map((h) => (
+                      <th key={h} className="px-5 py-3.5 text-[12.5px] font-bold uppercase tracking-wider text-[#4a6090]">{h}</th>
+                    ))}
+                    <th className="px-5 py-3.5" />
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-    </div>
+                </thead>
+                <tbody className="divide-y divide-[#e4edf9]">
+                  {configs.map((cfg) => (
+                    <tr key={cfg.id} className="transition-colors hover:bg-[#f4f8fe]">
+                      <td className="px-5 py-3.5 font-bold text-[#082a63]">{cfg.courses?.course_name || "—"}</td>
+                      <td className="px-5 py-3.5 text-[#3d5688]">{cfg.exam_center}</td>
+                      <td className="whitespace-nowrap px-5 py-3.5 text-[#3d5688]">{fmtDate(cfg.exam_date)}</td>
+                      <td className="px-5 py-3.5 text-[#3d5688]">{cfg.exam_time || "—"}</td>
+                      <td className="px-5 py-3.5">
+                        {cfg.session_label ? <span className="rounded-full bg-[#eaf2fd] px-2.5 py-0.5 text-[13px] font-bold text-[#1245b8]">{cfg.session_label}</span> : "—"}
+                      </td>
+                      <td className="px-5 py-3.5 text-[#3d5688]">{cfg.max_students}</td>
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button onClick={() => openEdit(cfg)} title="Edit" aria-label="Edit" className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#d3e1f5] text-[#3d5688] transition hover:bg-[#eaf2fd]">
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(cfg.id)}
+                            disabled={deleting === cfg.id}
+                            title="Delete"
+                            aria-label="Delete"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#d3e1f5] text-[#3d5688] transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+                          >
+                            {deleting === cfg.id ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+      </div>
+    </AdminPageShell>
   );
 }

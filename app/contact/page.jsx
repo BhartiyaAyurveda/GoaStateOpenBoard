@@ -1,14 +1,15 @@
-import { Clock, ExternalLink, Headphones, Mail, MapPin, MapPinned, MessageSquareText, Phone } from "lucide-react";
+import { Clock, ExternalLink, Headphones, Mail, MapPin, MapPinned, MessageCircle, MessageSquareText, Phone } from "lucide-react";
 import TopBar from "@/components/TopBar";
 import Header from "@/components/Header";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ContactForm from "@/components/ContactForm";
 import { getContactInfo } from "@/lib/site-settings";
+import SocialLinks from "@/components/SocialLinks";
 
 export const metadata = {
-  title: "Contact Us | Goa Open School",
-  description: "Contact Goa Open School, Directorate of Education, Government of Goa – address, phone, email and enquiry form.",
+  title: "Contact Us | Goa State Open School",
+  description: "Contact Goa State Open School, Directorate of Education, Government of Goa – address, phone, email and enquiry form.",
 };
 
 
@@ -28,12 +29,30 @@ export const revalidate = 60;
 
 export default async function ContactPage() {
   const contact = await getContactInfo();
+  const mail = (e) => `mailto:${e}`;
   const details = [
-    { icon: MapPin, label: "Address", value: contact.addressLines },
-    { icon: Phone, label: "Phone", value: [contact.phone], href: contact.tel },
-    { icon: Mail, label: "Email", value: [contact.email], href: `mailto:${contact.email}` },
-    { icon: Clock, label: "Office Hours", value: [contact.hoursWeekday, contact.hoursOther] },
-  ];
+    { icon: MapPin, label: "Address", lines: contact.addressLines.map((text) => ({ text })) },
+    {
+      icon: Phone,
+      label: "Phone",
+      lines: [{ text: contact.phone, href: contact.tel }, contact.phone2 && { text: contact.phone2, href: contact.tel2 }].filter(Boolean),
+    },
+    contact.whatsappLink && {
+      icon: MessageCircle,
+      label: "WhatsApp",
+      lines: [{ text: contact.whatsapp, href: contact.whatsappLink, external: true }],
+    },
+    {
+      icon: Mail,
+      label: "Email",
+      lines: [
+        { text: contact.email, href: mail(contact.email) },
+        contact.admissionsEmail && { text: `Admissions: ${contact.admissionsEmail}`, href: mail(contact.admissionsEmail) },
+        contact.verificationEmail && { text: `Verification: ${contact.verificationEmail}`, href: mail(contact.verificationEmail) },
+      ].filter(Boolean),
+    },
+    { icon: Clock, label: "Office Hours", lines: [{ text: contact.hoursWeekday }, { text: contact.hoursOther }] },
+  ].filter(Boolean);
   return (
     <>
       <TopBar />
@@ -62,21 +81,26 @@ export default async function ContactPage() {
 
             <Panel icon={MapPin} title="Address" className="flex-1">
               <ul className="flex-1 divide-y divide-dashed divide-[#9db7e0] px-5">
-                {details.map(({ icon: Icon, label, value, href }) => (
+                {details.map(({ icon: Icon, label, lines }) => (
                   <li key={label} className="flex items-start gap-4 py-4">
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded border border-[#c9daf2] bg-[#e9f1fc] text-navy">
                       <Icon size={20} strokeWidth={1.7} />
                     </span>
-                    <div className="text-[14.5px] font-medium leading-snug text-ink">
+                    <div className="min-w-0 text-[14.5px] font-medium leading-snug text-ink">
                       <p className="mb-0.5 text-[13px] font-bold uppercase tracking-wider text-[#5b6b8c]">{label}</p>
-                      {value.map((line) =>
+                      {lines.map(({ text, href, external }) =>
                         href ? (
-                          <a key={line} href={href} className="block font-semibold hover:text-brand">
-                            {line}
+                          <a
+                            key={text}
+                            href={href}
+                            {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                            className="block break-words font-semibold hover:text-brand"
+                          >
+                            {text}
                           </a>
                         ) : (
-                          <span key={line} className="block">
-                            {line}
+                          <span key={text} className="block">
+                            {text}
                           </span>
                         ),
                       )}
@@ -86,13 +110,14 @@ export default async function ContactPage() {
               </ul>
               <div className="mt-auto border-t border-dashed border-[#9db7e0] px-5 py-4">
                 <a
-                  href="https://www.google.com/maps/search/?api=1&query=Panaji%2C+Goa+403001"
+                  href={contact.mapSearchUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex h-[38px] items-center gap-2 rounded bg-navy px-5 text-[14px] font-bold text-white hover:bg-brand"
                 >
                   <MapPin size={15} /> Get Directions <ExternalLink size={13} />
                 </a>
+                <SocialLinks tone="light" className="mt-5" />
               </div>
             </Panel>
           </div>
@@ -101,8 +126,8 @@ export default async function ContactPage() {
         <div className="mx-auto max-w-[1320px] px-4 pb-10 pt-6 sm:px-6 lg:pb-14">
           <Panel icon={MapPinned} title="Find Us on Map">
             <iframe
-              title="Goa Open School location map"
-              src="https://www.google.com/maps?q=Panaji%2C+Goa+403001&output=embed"
+              title="Goa State Open School location map"
+              src={contact.mapEmbedUrl}
               loading="lazy"
               referrerPolicy="no-referrer"
               sandbox="allow-scripts allow-same-origin allow-popups"

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Headphones, Volume2, VolumeX, CircleHelp } from "lucide-react";
+import { Volume2, VolumeX, CircleHelp } from "lucide-react";
 
 // Text-size control: scales the whole page (the site is built in px, so a
 // root font-size change would have no effect). Steps of 10%, 90% – 130%.
@@ -58,22 +58,6 @@ function toChunks(parts) {
     if (buf) chunks.push(buf.trim());
   }
   return chunks.filter(Boolean);
-}
-
-// "Skip to Main Content": scroll to the main content and move keyboard focus
-// there, so the next Tab press starts inside the page content (not the header).
-function skipToMain(e) {
-  const main = document.getElementById("main-content");
-  if (!main) return;
-  e.preventDefault();
-  if (!main.hasAttribute("tabindex")) main.setAttribute("tabindex", "-1");
-  main.focus({ preventScroll: true });
-  main.scrollIntoView({ behavior: "smooth", block: "start" });
-  try {
-    history.replaceState(null, "", "#main-content");
-  } catch {
-    /* ignore */
-  }
 }
 
 function applyScale(pct) {
@@ -182,9 +166,6 @@ export default function TopBar() {
           </button>
         </div>
         <div className="flex items-center gap-4 md:gap-6">
-          <a href="#main-content" onClick={skipToMain} aria-label="Skip to Main Content" className="flex items-center gap-1.5 hover:text-sky">
-            <Headphones size={17} /> <span className="hidden md:inline">Skip to Main Content</span>
-          </a>
           <button
             onClick={toggleReader}
             disabled={!speechSupported}

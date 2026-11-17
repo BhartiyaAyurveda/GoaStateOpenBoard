@@ -15,16 +15,18 @@ import {
   ExternalLink,
   RefreshCw,
 } from "lucide-react";
+import Modal from "@/components/ui/Modal";
+import Select from "@/components/ui/Select";
 
-const STATES = [
-  "All",
-  "Uttar Pradesh", "Karnataka", "Uttarakhand", "Maharashtra",
-  "Delhi", "Rajasthan", "Bihar", "Madhya Pradesh", "Gujarat",
-];
+const STATES = ["Goa", "Maharashtra", "Karnataka", "Kerala", "Tamil Nadu", "Gujarat", "Delhi", "Other"];
+
+const fieldCls =
+  "h-11 w-full min-w-0 rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] px-3.5 text-[15px] text-[#082a63] outline-none placeholder:text-[#8a97b3] focus:border-[#1b57d8] focus:bg-white focus:ring-2 focus:ring-[#1b57d8]/15";
+const labelCls = "mb-1.5 block text-[13.5px] font-bold text-[#082a63]";
 
 const EMPTY_FORM = {
-  code: "", name: "", name_hindi: "", address: "",
-  city: "", state: "Uttar Pradesh", type: "", phone: "", email: "", website: "",
+  code: "", name: "", address: "",
+  city: "", state: "Goa", type: "", phone: "", email: "", website: "",
   sort_order: 0,
 };
 
@@ -58,9 +60,11 @@ export default function InstituteManager({ onShowToast }) {
   useEffect(() => { loadInstitutes(); }, []);
 
   useEffect(() => {
-    document.body.style.overflow = (isModalOpen || deleteConfirmId) ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
-  }, [isModalOpen, deleteConfirmId]);
+    if (!deleteConfirmId) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, [deleteConfirmId]);
 
   const openModal = (item = null) => {
     if (item) {
@@ -68,10 +72,9 @@ export default function InstituteManager({ onShowToast }) {
       setFormData({
         code:       item.code       || "",
         name:       item.name       || "",
-        name_hindi: item.name_hindi || "",
         address:    item.address    || "",
         city:       item.city       || "",
-        state:      item.state      || "Uttar Pradesh",
+        state:      item.state      || "Goa",
         type:       item.type       || "",
         phone:      item.phone      || "",
         email:      item.email      || "",
@@ -81,7 +84,7 @@ export default function InstituteManager({ onShowToast }) {
     } else {
       setEditingItem(null);
       const nextNum = institutes.length + 1;
-      setFormData({ ...EMPTY_FORM, code: `BA-AFF-${String(nextNum).padStart(2, "0")}`, sort_order: nextNum });
+      setFormData({ ...EMPTY_FORM, code: `GSOS-${String(nextNum).padStart(2, "0")}`, sort_order: nextNum });
     }
     setIsModalOpen(true);
   };
@@ -150,6 +153,12 @@ export default function InstituteManager({ onShowToast }) {
     }
   };
 
+  const setField = (key) => (e) => setFormData((f) => ({ ...f, [key]: e.target.value }));
+  // the form's state list, plus whatever state the record being edited already has
+  const stateOptions = STATES.includes(formData.state) || !formData.state ? STATES : [formData.state, ...STATES];
+  // the list filter only offers states that actually exist in the data
+  const filterStates = ["All", ...Array.from(new Set(institutes.map((i) => i.state).filter(Boolean)))];
+
   const filteredInstitutes = institutes.filter((item) => {
     const matchesState  = selectedState === "All" || item.state === selectedState;
     const matchesStatus = selectedStatus === "All"
@@ -159,323 +168,287 @@ export default function InstituteManager({ onShowToast }) {
     const matchesSearch = !q
       || (item.name  || "").toLowerCase().includes(q)
       || (item.code  || "").toLowerCase().includes(q)
-      || (item.city  || "").toLowerCase().includes(q)
-      || (item.name_hindi || "").includes(searchQuery);
+      || (item.city  || "").toLowerCase().includes(q);
     return matchesState && matchesStatus && matchesSearch;
   });
 
+  const activeCount = institutes.filter((i) => i.is_active).length;
+  const hasFilters = searchQuery || selectedState !== "All" || selectedStatus !== "All";
+
+  const StatusBadge = ({ inst }) => (
+    <button
+      onClick={() => handleToggleActive(inst)}
+      title="Click to switch"
+      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-bold transition ${
+        inst.is_active ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200" : "bg-red-100 text-red-800 hover:bg-red-200"
+      }`}
+    >
+      <span className={`h-1.5 w-1.5 rounded-full ${inst.is_active ? "bg-emerald-500" : "bg-red-500"}`} />
+      {inst.is_active ? "Active" : "Inactive"}
+    </button>
+  );
+
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-5">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-[#d3e1f5] shadow-sm">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-bold font-serif text-[#082a63] flex items-center gap-2">
-            <Building2 className="w-5 h-5 text-[#1b57d8]" />
-            Study Centres Management
-          </h2>
-          <p className="text-[13px] text-[#3d5688] mt-0.5">
-            {institutes.length} institutes in DB — add, edit, or toggle active status
+          <h2 className="text-xl font-bold text-[#082a63]">Study Centres</h2>
+          <p className="text-[14px] text-[#3d5688] sm:text-[15px]">
+            {institutes.length} {institutes.length === 1 ? "centre" : "centres"} · {activeCount} active. Shown on the public site.
           </p>
         </div>
-        <div className="flex items-center gap-2.5">
+        <div className="grid grid-cols-[auto_1fr] gap-2 sm:flex sm:items-center">
           <button
             onClick={loadInstitutes}
             disabled={loading}
-            className="px-3 py-2 text-[13px] font-semibold text-[#1245b8] hover:text-[#082a63] hover:bg-[#f4f8fe] rounded-xl border border-[#d3e1f5] transition-all flex items-center gap-1.5"
+            aria-label="Refresh"
+            className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl border border-[#d3e1f5] bg-white px-4 text-[14px] font-bold text-[#082a63] transition hover:bg-[#f4f8fe] disabled:opacity-60"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             <span className="hidden sm:inline">Refresh</span>
           </button>
           <button
             onClick={() => openModal()}
-            className="px-4 py-2 text-[13px] font-bold text-white bg-[#082a63] hover:bg-[#0b3a85] rounded-xl shadow-sm transition-all flex items-center gap-1.5"
+            className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-[#1b57d8] px-5 text-[14.5px] font-bold text-white transition hover:bg-[#1245b8]"
           >
-            <Plus className="w-4 h-4 text-[#1b57d8]" />
-            Add New Study Centre
+            <Plus className="h-4 w-4" /> Add Study Centre
           </button>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-[#d3e1f5]">
-        <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#3d5688]" />
+      {/* Search + filters */}
+      <div className="flex flex-col gap-3 rounded-2xl border border-[#d3e1f5] bg-white p-3 sm:flex-row sm:items-center">
+        <div className="relative min-w-0 flex-1">
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#4a6090]" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by code, name, city..."
-            className="w-full pl-9 pr-4 py-2 text-[13px] rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] focus:outline-none focus:ring-2 focus:ring-[#1b57d8] text-[#082a63]"
+            placeholder="Search by code, name or city…"
+            className={`${fieldCls} pl-10 pr-10`}
           />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery("")} aria-label="Clear search" className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-[#4a6090] hover:bg-[#eaf2fd]">
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <select
-            value={selectedState}
-            onChange={(e) => setSelectedState(e.target.value)}
-            className="px-3 py-1.5 text-[13px] rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] text-[#082a63] focus:outline-none focus:ring-2 focus:ring-[#1b57d8]"
-          >
-            {STATES.map((st) => (
-              <option key={st} value={st}>{st === "All" ? "All States" : st}</option>
-            ))}
-          </select>
-          <select
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value)}
-            className="px-3 py-1.5 text-[13px] rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] text-[#082a63] focus:outline-none focus:ring-2 focus:ring-[#1b57d8]"
-          >
-            <option value="All">All Statuses</option>
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-          </select>
+        <div className="grid grid-cols-2 gap-3 sm:flex">
+          <Select size="lg" ariaLabel="Filter by state" className="sm:w-44" value={selectedState} onChange={setSelectedState}
+            options={filterStates.map((st) => ({ value: st, label: st === "All" ? "All states" : st }))} />
+          <Select size="lg" ariaLabel="Filter by status" className="sm:w-44" align="right" value={selectedStatus} onChange={setSelectedStatus}
+            options={[{ value: "All", label: "All statuses" }, { value: "Active", label: "Active" }, { value: "Inactive", label: "Inactive" }]} />
         </div>
       </div>
 
-      {/* Table */}
-      <div className="rounded-3xl bg-white border border-[#d3e1f5] shadow-sm overflow-hidden">
-        {loading ? (
-          <div className="py-12 text-center text-[#3d5688] text-[15px]">Loading institutes…</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-[13px]">
-              <thead className="bg-[#f4f8fe] text-[#082a63] uppercase font-bold tracking-wider border-b border-[#d3e1f5]">
-                <tr>
-                  <th className="py-3.5 px-6">Code</th>
-                  <th className="py-3.5 px-6">Study Centre Name</th>
-                  <th className="py-3.5 px-6">City / State</th>
-                  <th className="py-3.5 px-6">Program Focus</th>
-                  <th className="py-3.5 px-6">Status</th>
-                  <th className="py-3.5 px-6 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#d3e1f5]/60 text-[#082a63]">
-                {filteredInstitutes.length > 0 ? filteredInstitutes.map((inst) => (
-                  <tr key={inst.id} className="hover:bg-[#f4f8fe]/80 transition-colors">
-                    <td className="py-4 px-6 font-mono font-bold text-[#0b3a85]">{inst.code}</td>
-                    <td className="py-4 px-6">
-                      <div className="font-bold text-[#082a63]">{inst.name}</div>
-                      {inst.name_hindi && (
-                        <div className="text-[13px] text-[#1245b8]" style={{ fontFamily: "'Noto Sans Devanagari', sans-serif" }}>
-                          {inst.name_hindi}
-                        </div>
-                      )}
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="flex items-center gap-1 font-semibold text-[#082a63]">
-                        <MapPin className="w-3.5 h-3.5 text-[#1b57d8] shrink-0" />
-                        {inst.city}
-                      </div>
-                      <div className="text-[13px] text-[#3d5688]">{inst.state}</div>
-                    </td>
-                    <td className="py-4 px-6">
-                      {inst.type && (
-                        <span className="px-2.5 py-1 rounded-lg bg-[#e3edfa] text-[#0b3a85] text-[13px] font-semibold">
-                          {inst.type}
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-4 px-6">
-                      <button
-                        onClick={() => handleToggleActive(inst)}
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[13px] font-bold transition-all ${
-                          inst.is_active
-                            ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
-                            : "bg-red-100 text-red-800 hover:bg-red-200"
-                        }`}
-                        title="Click to toggle"
-                      >
-                        <ShieldCheck className="w-3.5 h-3.5" />
-                        {inst.is_active ? "Active" : "Inactive"}
-                      </button>
-                    </td>
-                    <td className="py-4 px-6 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          onClick={() => openModal(inst)}
-                          className="p-1.5 rounded-lg text-[#1245b8] hover:bg-[#e3edfa] transition-colors"
-                          title="Edit"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => setDeleteConfirmId(inst.id)}
-                          className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                )) : (
-                  <tr>
-                    <td colSpan={6} className="py-8 text-center text-neutral-500">
-                      No institutes found.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+      {/* List */}
+      <div className="overflow-hidden rounded-2xl border border-[#d3e1f5] bg-white shadow-sm">
+        {loading && institutes.length === 0 ? (
+          <div className="p-12 text-center text-[#3d5688]">
+            <RefreshCw className="mx-auto mb-3 h-8 w-8 animate-spin text-[#1b57d8]" />
+            <p className="text-[16px] font-semibold">Loading study centres…</p>
           </div>
+        ) : filteredInstitutes.length === 0 ? (
+          <div className="px-4 py-14 text-center">
+            <Building2 className="mx-auto mb-3 h-10 w-10 text-[#a9bde0]" />
+            <p className="text-[16px] font-bold text-[#082a63]">{hasFilters ? "No study centres match your filters" : "No study centres yet"}</p>
+            <p className="mt-1 text-[14px] text-[#4a6090]">{hasFilters ? "Try a different search or filter." : "Add your first study centre to show it on the website."}</p>
+            {hasFilters ? (
+              <button onClick={() => { setSearchQuery(""); setSelectedState("All"); setSelectedStatus("All"); }}
+                className="mt-4 h-10 rounded-xl border border-[#d3e1f5] px-5 text-[14px] font-bold text-[#082a63] hover:bg-[#f4f8fe]">
+                Clear filters
+              </button>
+            ) : (
+              <button onClick={() => openModal()} className="mt-5 inline-flex h-11 items-center gap-1.5 rounded-xl bg-[#1b57d8] px-6 text-[15px] font-bold text-white hover:bg-[#1245b8]">
+                <Plus className="h-4 w-4" /> Add Study Centre
+              </button>
+            )}
+          </div>
+        ) : (
+          <>
+            {/* table (laptops) */}
+            <div className="hidden overflow-x-auto lg:block">
+              <table className="w-full text-left text-[15px]">
+                <thead className="border-b border-[#d3e1f5] bg-[#f4f8fe]">
+                  <tr className="text-[12.5px] font-bold uppercase tracking-wider text-[#4a6090]">
+                    <th className="px-5 py-3.5">Code</th>
+                    <th className="px-5 py-3.5">Study Centre</th>
+                    <th className="px-5 py-3.5">Location</th>
+                    <th className="px-5 py-3.5">Program focus</th>
+                    <th className="px-5 py-3.5">Status</th>
+                    <th className="px-5 py-3.5 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#e4edf9]">
+                  {filteredInstitutes.map((inst) => (
+                    <tr key={inst.id} className="transition-colors hover:bg-[#f4f8fe]">
+                      <td className="px-5 py-3.5">
+                        <span className="rounded-md bg-[#eaf2fd] px-2 py-0.5 font-mono text-[13px] font-bold text-[#1245b8]">{inst.code}</span>
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <p className="font-bold text-[#082a63]">{inst.name}</p>
+                        {(inst.phone || inst.email) && <p className="text-[13.5px] text-[#4a6090]">{[inst.phone, inst.email].filter(Boolean).join(" · ")}</p>}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <p className="flex items-center gap-1 font-semibold text-[#082a63]"><MapPin className="h-3.5 w-3.5 shrink-0 text-[#1b57d8]" /> {inst.city}</p>
+                        <p className="text-[13.5px] text-[#3d5688]">{inst.state}</p>
+                      </td>
+                      <td className="px-5 py-3.5">
+                        {inst.type ? <span className="rounded-lg bg-[#eaf2fd] px-2.5 py-1 text-[13px] font-semibold text-[#0b3a85]">{inst.type}</span> : <span className="text-[#8a97b3]">—</span>}
+                      </td>
+                      <td className="px-5 py-3.5"><StatusBadge inst={inst} /></td>
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button onClick={() => openModal(inst)} title="Edit" aria-label="Edit study centre"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#d3e1f5] text-[#3d5688] transition hover:bg-[#eaf2fd]">
+                            <Edit2 className="h-4 w-4" />
+                          </button>
+                          <button onClick={() => setDeleteConfirmId(inst.id)} title="Delete" aria-label="Delete study centre"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#d3e1f5] text-[#3d5688] transition hover:border-red-200 hover:bg-red-50 hover:text-red-600">
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* cards (mobile / tablet) */}
+            <div className="grid grid-cols-1 gap-3 p-3 sm:p-4 md:grid-cols-2 lg:hidden">
+              {filteredInstitutes.map((inst) => (
+                <div key={inst.id} className="min-w-0 rounded-xl border border-[#d3e1f5] bg-white p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <span className="rounded-md bg-[#eaf2fd] px-2 py-0.5 font-mono text-[12.5px] font-bold text-[#1245b8]">{inst.code}</span>
+                      <p className="mt-1.5 break-words text-[16px] font-bold text-[#082a63]">{inst.name}</p>
+                    </div>
+                    <StatusBadge inst={inst} />
+                  </div>
+                  <div className="mt-2.5 space-y-1 text-[14px] text-[#3d5688]">
+                    <p className="flex items-center gap-1.5"><MapPin className="h-4 w-4 shrink-0 text-[#1b57d8]" /> {[inst.city, inst.state].filter(Boolean).join(", ")}</p>
+                    {inst.type && <p className="break-words">{inst.type}</p>}
+                    {inst.phone && <p>{inst.phone}</p>}
+                    {inst.email && <p className="break-all">{inst.email}</p>}
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <button onClick={() => openModal(inst)} className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#d3e1f5] bg-white py-2.5 text-[14px] font-bold text-[#082a63] hover:bg-[#f4f8fe]">
+                      <Edit2 className="h-4 w-4" /> Edit
+                    </button>
+                    <button onClick={() => setDeleteConfirmId(inst.id)} className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#d3e1f5] bg-white py-2.5 text-[14px] font-bold text-[#082a63] hover:border-red-200 hover:bg-red-50 hover:text-red-600">
+                      <Trash2 className="h-4 w-4" /> Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="border-t border-[#d3e1f5] bg-[#f4f8fe] px-5 py-3 text-[13.5px] text-[#3d5688]">
+              Showing {filteredInstitutes.length} of {institutes.length}
+            </div>
+          </>
         )}
-        <div className="p-4 bg-[#f4f8fe] border-t border-[#d3e1f5] flex items-center justify-between text-[13px] text-[#3d5688]">
-          <span>Showing {filteredInstitutes.length} of {institutes.length}</span>
-        </div>
       </div>
 
       {/* Add / Edit Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-[#f4f8fe] text-[#082a63] max-w-2xl w-full rounded-3xl shadow-2xl border border-[#d3e1f5] flex flex-col" style={{ maxHeight:"calc(100vh - 48px)" }}>
-
-            {/* Sticky header */}
-            <div className="flex items-center gap-3 px-6 pt-6 pb-4 border-b border-[#d3e1f5] shrink-0">
-              <div className="w-10 h-10 rounded-xl bg-[#082a63] text-[#1b57d8] flex items-center justify-center shrink-0">
-                <Building2 className="w-5 h-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-lg font-bold font-serif text-[#082a63]">
-                  {editingItem ? "Edit Study Centre" : "Add New Study Centre"}
-                </h3>
-                <p className="text-[13px] text-[#3d5688]">Saved to database — reflects on public site</p>
-              </div>
-              <button onClick={closeModal} className="shrink-0 text-neutral-400 hover:text-neutral-700 p-1.5 rounded-full hover:bg-neutral-100 transition-colors">
-                <X className="w-5 h-5" />
-              </button>
+      <Modal
+        open={isModalOpen}
+        onClose={closeModal}
+        busy={submitting}
+        icon={Building2}
+        title={editingItem ? "Edit Study Centre" : "Add New Study Centre"}
+        subtitle="Shown on the website under Study Centres"
+        onSubmit={handleSubmit}
+        footer={
+          <>
+            <button type="button" onClick={closeModal} disabled={submitting}
+              className="h-11 rounded-xl border border-[#d3e1f5] bg-white px-6 text-[15px] font-bold text-[#082a63] transition hover:bg-[#f4f8fe] disabled:opacity-60">
+              Cancel
+            </button>
+            <button type="submit" disabled={submitting}
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#1b57d8] px-7 text-[15px] font-bold text-white transition hover:bg-[#1245b8] disabled:opacity-60">
+              <CheckCircle2 className="h-4 w-4" />
+              {submitting ? "Saving…" : editingItem ? "Save Changes" : "Add Study Centre"}
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-6">
+          {/* Basics */}
+          <section>
+            <h4 className="mb-3 text-[12.5px] font-extrabold uppercase tracking-wider text-[#4a6090]">Study Centre</h4>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <label className="block min-w-0">
+                <span className={labelCls}>Code <span className="text-red-500">*</span></span>
+                <input type="text" value={formData.code} onChange={setField("code")} placeholder="GSOS-01" required
+                  className={`${fieldCls} font-mono font-bold`} />
+              </label>
+              <label className="block min-w-0 sm:col-span-2">
+                <span className={labelCls}>Name <span className="text-red-500">*</span></span>
+                <input type="text" value={formData.name} onChange={setField("name")} placeholder="e.g. Panaji Study Centre" required
+                  className={fieldCls} />
+              </label>
+              <label className="block min-w-0 sm:col-span-3">
+                <span className={labelCls}>Program focus</span>
+                <input type="text" value={formData.type} onChange={setField("type")} placeholder="e.g. Secondary & Senior Secondary"
+                  className={fieldCls} />
+              </label>
             </div>
+          </section>
 
-            {/* Scrollable body */}
-            <div className="overflow-y-auto flex-1 px-6 py-5">
-            <form id="institute-form" onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-[13px] font-bold uppercase tracking-wider text-[#082a63] mb-1">
-                    Code <span className="text-red-500">*</span>
-                  </label>
-                  <input type="text" value={formData.code}
-                    onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                    placeholder="BA-AFF-01" required
-                    className="w-full px-3 py-2 text-[13px] rounded-xl border border-[#d3e1f5] bg-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-[#1b57d8]"
-                  />
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="block text-[13px] font-bold uppercase tracking-wider text-[#082a63] mb-1">
-                    Name (English) <span className="text-red-500">*</span>
-                  </label>
-                  <input type="text" value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="e.g. S.P College of Paramedical Sciences" required
-                    className="w-full px-3 py-2 text-[13px] rounded-xl border border-[#d3e1f5] bg-white focus:outline-none focus:ring-2 focus:ring-[#1b57d8]"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[13px] font-bold uppercase tracking-wider text-[#082a63] mb-1">Name (Hindi)</label>
-                <input type="text" value={formData.name_hindi}
-                  onChange={(e) => setFormData({ ...formData, name_hindi: e.target.value })}
-                  placeholder="उदा. एस.पी. कॉलेज ऑफ पैरामेडिकल साइंसेज"
-                  className="w-full px-3 py-2 text-[13px] rounded-xl border border-[#d3e1f5] bg-white focus:outline-none focus:ring-2 focus:ring-[#1b57d8]"
-                  style={{ fontFamily: "'Noto Sans Devanagari', sans-serif" }}
-                />
-              </div>
-
-              <div>
-                <label className="block text-[13px] font-bold uppercase tracking-wider text-[#082a63] mb-1">Address</label>
-                <input type="text" value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  placeholder="Full street address, pin code…"
-                  className="w-full px-3 py-2 text-[13px] rounded-xl border border-[#d3e1f5] bg-white focus:outline-none focus:ring-2 focus:ring-[#1b57d8]"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[13px] font-bold uppercase tracking-wider text-[#082a63] mb-1">
-                    City <span className="text-red-500">*</span>
-                  </label>
-                  <input type="text" value={formData.city}
-                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                    placeholder="e.g. Jaunpur" required
-                    className="w-full px-3 py-2 text-[13px] rounded-xl border border-[#d3e1f5] bg-white focus:outline-none focus:ring-2 focus:ring-[#1b57d8]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[13px] font-bold uppercase tracking-wider text-[#082a63] mb-1">State</label>
-                  <select value={formData.state}
-                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                    className="w-full px-3 py-2 text-[13px] rounded-xl border border-[#d3e1f5] bg-white focus:outline-none focus:ring-2 focus:ring-[#1b57d8]"
-                  >
-                    {STATES.filter((s) => s !== "All").map((s) => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[13px] font-bold uppercase tracking-wider text-[#082a63] mb-1">Program Focus</label>
-                  <input type="text" value={formData.type}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                    placeholder="e.g. Paramedical & Yoga Sciences"
-                    className="w-full px-3 py-2 text-[13px] rounded-xl border border-[#d3e1f5] bg-white focus:outline-none focus:ring-2 focus:ring-[#1b57d8]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[13px] font-bold uppercase tracking-wider text-[#082a63] mb-1">Phone</label>
-                  <input type="text" value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="+91 98391 12345"
-                    className="w-full px-3 py-2 text-[13px] rounded-xl border border-[#d3e1f5] bg-white focus:outline-none focus:ring-2 focus:ring-[#1b57d8]"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[13px] font-bold uppercase tracking-wider text-[#082a63] mb-1">Email</label>
-                  <input type="email" value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="centre@example.com"
-                    className="w-full px-3 py-2 text-[13px] rounded-xl border border-[#d3e1f5] bg-white focus:outline-none focus:ring-2 focus:ring-[#1b57d8]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[13px] font-bold uppercase tracking-wider text-[#082a63] mb-1">Website</label>
-                  <input type="url" value={formData.website}
-                    onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                    placeholder="https://"
-                    className="w-full px-3 py-2 text-[13px] rounded-xl border border-[#d3e1f5] bg-white focus:outline-none focus:ring-2 focus:ring-[#1b57d8]"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[13px] font-bold uppercase tracking-wider text-[#082a63] mb-1">Sort Order</label>
-                <input type="number" value={formData.sort_order}
-                  onChange={(e) => setFormData({ ...formData, sort_order: Number(e.target.value) })}
-                  placeholder="1"
-                  className="w-32 px-3 py-2 text-[13px] rounded-xl border border-[#d3e1f5] bg-white focus:outline-none focus:ring-2 focus:ring-[#1b57d8]"
-                />
-              </div>
-
-            </form>
+          {/* Location */}
+          <section>
+            <h4 className="mb-3 text-[12.5px] font-extrabold uppercase tracking-wider text-[#4a6090]">Location</h4>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <label className="block min-w-0 sm:col-span-2">
+                <span className={labelCls}>Address</span>
+                <input type="text" value={formData.address} onChange={setField("address")} placeholder="Street, locality, pin code"
+                  className={fieldCls} />
+              </label>
+              <label className="block min-w-0">
+                <span className={labelCls}>City <span className="text-red-500">*</span></span>
+                <input type="text" value={formData.city} onChange={setField("city")} placeholder="e.g. Panaji" required
+                  className={fieldCls} />
+              </label>
+              <label className="block min-w-0">
+                <span className={labelCls}>State</span>
+                <Select size="lg" ariaLabel="State" value={formData.state}
+                  onChange={(v) => setFormData((f) => ({ ...f, state: v }))}
+                  options={stateOptions.map((st) => ({ value: st, label: st }))} />
+              </label>
             </div>
+          </section>
 
-            <div className="px-6 py-4 border-t border-[#d3e1f5] flex items-center justify-end gap-2.5 shrink-0 bg-[#f4f8fe] rounded-b-3xl">
-              <button type="button" onClick={closeModal}
-                className="px-4 py-2 rounded-xl bg-[#e3edfa] hover:bg-[#d3e1f5] text-[#082a63] text-[13px] font-semibold transition-all">
-                Cancel
-              </button>
-              <button type="submit" form="institute-form" disabled={submitting}
-                className="px-5 py-2 rounded-xl bg-[#082a63] hover:bg-[#0b3a85] text-white text-[13px] font-bold transition-all shadow-md flex items-center gap-1.5 disabled:opacity-60">
-                <CheckCircle2 className="w-3.5 h-3.5 text-[#1b57d8]" />
-                {submitting ? "Saving…" : editingItem ? "Save Changes" : "Add Study Centre"}
-              </button>
+          {/* Contact */}
+          <section>
+            <h4 className="mb-3 text-[12.5px] font-extrabold uppercase tracking-wider text-[#4a6090]">Contact</h4>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <label className="block min-w-0">
+                <span className={labelCls}>Phone</span>
+                <input type="tel" inputMode="tel" value={formData.phone} onChange={setField("phone")} placeholder="+91 98765 43210"
+                  className={fieldCls} />
+              </label>
+              <label className="block min-w-0">
+                <span className={labelCls}>Email</span>
+                <input type="email" value={formData.email} onChange={setField("email")} placeholder="centre@example.com"
+                  className={fieldCls} />
+              </label>
+              <label className="block min-w-0">
+                <span className={labelCls}>Website</span>
+                <input type="url" value={formData.website} onChange={setField("website")} placeholder="https://"
+                  className={fieldCls} />
+              </label>
+              <label className="block min-w-0">
+                <span className={labelCls}>Display order</span>
+                <input type="number" min={0} value={formData.sort_order} onChange={(e) => setFormData({ ...formData, sort_order: Number(e.target.value) || 0 })}
+                  className={fieldCls} />
+              </label>
             </div>
-          </div>
+          </section>
         </div>
-      )}
+      </Modal>
 
       {/* Delete Confirm */}
       {deleteConfirmId && (
@@ -484,15 +457,15 @@ export default function InstituteManager({ onShowToast }) {
             <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-3">
               <Trash2 className="w-6 h-6" />
             </div>
-            <h4 className="text-base font-bold font-serif text-[#082a63]">Delete Study Centre?</h4>
-            <p className="text-[13px] text-[#3d5688] mt-1 mb-5">This will permanently remove the study centre from the database.</p>
-            <div className="flex items-center justify-center gap-2.5">
+            <h4 className="text-[18px] font-extrabold text-[#082a63]">Delete Study Centre?</h4>
+            <p className="mb-5 mt-1 text-[14.5px] text-[#3d5688]">This will permanently remove the study centre from the database. It cannot be undone.</p>
+            <div className="grid grid-cols-2 gap-2.5">
               <button onClick={() => setDeleteConfirmId(null)}
-                className="px-4 py-2 rounded-xl bg-[#e3edfa] hover:bg-[#d3e1f5] text-[#082a63] text-[13px] font-semibold transition-all">
+                className="h-11 rounded-xl border border-[#d3e1f5] bg-white text-[15px] font-bold text-[#082a63] transition hover:bg-[#f4f8fe]">
                 Cancel
               </button>
               <button onClick={() => handleDelete(deleteConfirmId)}
-                className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-[13px] font-bold transition-all">
+                className="h-11 rounded-xl bg-red-600 text-[15px] font-bold text-white transition hover:bg-red-700">
                 Yes, Delete
               </button>
             </div>

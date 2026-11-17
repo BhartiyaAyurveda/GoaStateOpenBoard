@@ -21,10 +21,6 @@ export default function Header() {
             priority
             className="h-[66px] w-auto mix-blend-multiply sm:h-[92px]"
           />
-          <div className="leading-tight">
-            <p className="font-serif text-[16px] font-bold tracking-[-0.02em] text-ink sm:text-[19px]">Government of Goa</p>
-            <p className="mt-0.5 text-[14px] text-ink sm:text-[14.5px]">Directorate of Education</p>
-          </div>
         </div>
 
         <span className="mx-5 hidden h-[62px] w-px bg-[#8f9bb0] md:block lg:mx-8" />
@@ -33,15 +29,20 @@ export default function Header() {
           <div className="flex items-center gap-3">
             <Image
               src="/images/logo.png"
-              alt="Goa Open School logo"
+              alt="Goa State Open School logo"
               width={480}
               height={266}
               priority
               className="h-[40px] w-auto sm:h-[54px]"
             />
-            <h1 className="font-serif text-[24px] font-bold leading-none tracking-[-0.02em] text-navy-deep sm:text-[28px] md:text-[31px]">
-              GOA OPEN SCHOOL
-            </h1>
+            <div>
+              <h1 className="font-serif text-[24px] font-bold leading-none tracking-[-0.02em] text-navy-deep sm:text-[28px] md:text-[31px]">
+                GOA STATE OPEN SCHOOL
+              </h1>
+              <p lang="kok" className="mt-1.5 font-devanagari text-[15px] font-semibold leading-tight text-navy sm:text-[18px]">
+                गोंय राज्य मुक्त शाळा
+              </p>
+            </div>
           </div>
           <div className="mt-1.5 hidden border-t border-[#b5bdca] pt-2 text-[11px] font-semibold tracking-[-0.02em] text-navy sm:block">
             OPEN SCHOOLING <span className="mx-1.5 font-normal">|</span> FLEXIBLE LEARNING{" "}

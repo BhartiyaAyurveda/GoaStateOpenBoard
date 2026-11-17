@@ -74,10 +74,10 @@ export async function POST(request) {
     }
 
     // validate (never trust client values)
-    const acknowledgement = typeof body.acknowledgement === "string" ? body.acknowledgement.trim().toUpperCase() : "";
+    const enrollment = typeof body.enrollment === "string" ? body.enrollment.trim().toUpperCase() : "";
     const dob = typeof body.dob === "string" ? body.dob.trim() : "";
     const errors = {};
-    if (!ENROLLMENT_PATTERN.test(acknowledgement)) errors.acknowledgement = "Enter a valid acknowledgement number.";
+    if (!ENROLLMENT_PATTERN.test(enrollment)) errors.enrollment = "Enter a valid enrollment number.";
     if (!isValidDob(dob)) errors.dob = "Enter a valid date of birth.";
     if (Object.keys(errors).length) return json({ ok: false, errors }, 400);
 
@@ -89,7 +89,7 @@ export async function POST(request) {
       return json({ ok: false, error: "Online enrollment cards will be available soon. Please check back later." }, 503);
     }
 
-    const card = await findEnrollmentCard({ acknowledgement, dob });
+    const card = await findEnrollmentCard({ enrollment, dob });
     if (!card) {
       // one generic message for every mismatch, so details cannot be probed
       return json({ ok: false, error: "No enrollment card found for the details entered. Please check them and try again." }, 404);

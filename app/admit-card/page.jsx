@@ -1,3 +1,4 @@
+import { getContactInfo } from "@/lib/site-settings";
 import Link from "next/link";
 import { CheckCircle2, Headphones, IdCard, ListChecks } from "lucide-react";
 import TopBar from "@/components/TopBar";
@@ -6,9 +7,11 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AdmitCardLookup from "@/components/AdmitCardLookup";
 
+export const revalidate = 60; // contact details (header menu, footer, help boxes) come from the dashboard
+
 export const metadata = {
-  title: "Admit Card | Goa Open School",
-  description: "Download your Goa Open School examination admit card (hall ticket) using your enrollment number and date of birth.",
+  title: "Admit Card | Goa State Open School",
+  description: "Download your Goa State Open School examination admit card (hall ticket) using your enrollment number and date of birth.",
 };
 
 const instructions = [
@@ -30,7 +33,8 @@ function Panel({ icon: Icon, title, className = "", children }) {
   );
 }
 
-export default function AdmitCardPage() {
+export default async function AdmitCardPage() {
+  const contact = await getContactInfo();
   return (
     <>
       <TopBar />
@@ -62,9 +66,9 @@ export default function AdmitCardPage() {
               </span>
               <div className="text-[14px] font-medium leading-snug">
                 <p className="text-[13px] font-bold uppercase tracking-wider text-sky">Any queries?</p>
-                <p className="text-white/90">Call your Study Centre or Goa Open School on</p>
-                <a href="tel:+918322743300" className="text-[22px] font-extrabold leading-tight hover:text-sky">
-                  0832–2743300
+                <p className="text-white/90">Call your Study Centre or Goa State Open School on</p>
+                <a href={contact.tel} className="text-[22px] font-extrabold leading-tight hover:text-sky">
+                  {contact.phone}
                 </a>
                 <p className="text-white/80">
                   or{" "}

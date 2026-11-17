@@ -8,9 +8,12 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const singleKey = searchParams.get("key");
 
-    const keys = singleKey
-      ? [singleKey]
-      : ["contact_info", "social_links", "homepage_content", "hero_images"];
+    // only these settings are public; never let a caller read an arbitrary system_settings key
+    const PUBLIC_KEYS = ["contact_info", "social_links", "homepage_content", "hero_images"];
+    if (singleKey && !PUBLIC_KEYS.includes(singleKey)) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+    const keys = singleKey ? [singleKey] : PUBLIC_KEYS;
 
     const { data, error } = await supabaseAdmin
       .from("system_settings")

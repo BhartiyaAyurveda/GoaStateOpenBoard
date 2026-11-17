@@ -11,15 +11,10 @@ import Calendar from "./Calendar";
 import NoticeTicker from "./NoticeTicker";
 import { formatNoticeDate } from "@/lib/notices";
 import { getNotices } from "@/lib/notices-server";
+import { getHomeContent } from "@/lib/home-content";
+import { homeLinkProps } from "@/lib/home-defaults";
 
 // latest 7 notices for the auto-scrolling board (full list is on /notices)
-
-// href: a PDF in /public/forms opens in a new tab; "#" = page not available yet
-const quickLinks = [
-  { text: "Admission Form Class X", href: "/forms/Admission-Form-Class-X.pdf" },
-  { text: "Admission Form Class XII", href: "/forms/Admission-Form-Class-XII.pdf" },
-  { text: "Affiliation Form", href: "/forms/Affiliation-Form.pdf" },
-];
 
 function Panel({ icon: Icon, title, action, children }) {
   return (
@@ -37,7 +32,8 @@ function Panel({ icon: Icon, title, action, children }) {
 }
 
 export default async function InfoPanels() {
-  const notices = (await getNotices()).slice(0, 7).map((n) => ({ text: n.text, date: formatNoticeDate(n.date), isNew: n.isNew }));
+  const { quickLinks } = await getHomeContent();
+  const notices = (await getNotices()).slice(0, 7).map((n) => ({ text: n.text, date: formatNoticeDate(n.date), isNew: n.isNew, href: n.href }));
   return (
     <section className="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-[256fr_400fr_240fr]">
       <Panel icon={CalendarDays} title="Academic Calendar">
@@ -58,14 +54,14 @@ export default async function InfoPanels() {
 
       <Panel icon={Link2} title="Quick Links">
         <ul className="px-4 py-1">
-          {quickLinks.map(({ text, href }) => (
+          {quickLinks.items.map(({ text, href }, i) => (
             <li
-              key={text}
+              key={`${i}-${text}`}
               className="group flex min-h-[84px] items-center border-b border-dashed border-[#9db7e0] last:border-0 hover:bg-[#f2f7fe]"
             >
               <a
                 href={href}
-                {...(href.endsWith(".pdf") ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                {...homeLinkProps(href)}
                 className="flex w-full items-center gap-3 py-3 text-ink group-hover:text-brand"
               >
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded border border-[#c9daf2] bg-[#e9f1fc] text-navy">
@@ -80,10 +76,12 @@ export default async function InfoPanels() {
           ))}
         </ul>
 
-        <p className="mx-4 mb-4 mt-auto flex items-start gap-2.5 rounded border border-[#c9daf2] bg-[#eef4fc] px-3.5 py-3 text-[13.5px] font-medium leading-relaxed text-[#44557a]">
-          <Info size={17} strokeWidth={2} className="mt-px shrink-0 text-brand" />
-          Forms open as PDF. Print, fill in block letters and submit as per the instructions in the Prospectus.
-        </p>
+        {quickLinks.note && (
+          <p className="mx-4 mb-4 mt-auto flex items-start gap-2.5 rounded border border-[#c9daf2] bg-[#eef4fc] px-3.5 py-3 text-[13.5px] font-medium leading-relaxed text-[#44557a]">
+            <Info size={17} strokeWidth={2} className="mt-px shrink-0 text-brand" />
+            {quickLinks.note}
+          </p>
+        )}
       </Panel>
     </section>
   );

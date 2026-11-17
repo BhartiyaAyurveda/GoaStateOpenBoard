@@ -45,20 +45,20 @@ export default function AdminAdmitCardPage() {
       {/* Toolbar — hidden on print */}
       <div className="no-print flex items-center gap-3 flex-wrap">
         <button onClick={() => router.back()}
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#5b78a8] hover:text-[#082a63]">
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#5b78a8] hover:text-[#082a63]">
           Back
         </button>
         <div className="flex-1" />
         {!error && (
           <button onClick={() => window.print()}
-            className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-[#082a63] hover:bg-[#0b3a85] text-white text-sm font-bold">
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-[#082a63] hover:bg-[#0b3a85] text-white text-base font-bold">
             <Printer className="w-4 h-4" /> Print / Save PDF
           </button>
         )}
       </div>
 
       {error ? (
-        <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+        <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-base">
           <AlertTriangle className="w-4 h-4 shrink-0" />{error}
         </div>
       ) : (

@@ -14,6 +14,14 @@ export async function PATCH(request, { params }) {
     if (key in body) updates[key] = body[key];
   }
 
+  if ("phone" in updates) {
+    const phone = String(updates.phone ?? "").trim();
+    if (phone && !/^\d{10}$/.test(phone)) {
+      return NextResponse.json({ error: "Phone number must be exactly 10 digits." }, { status: 400 });
+    }
+    updates.phone = phone || null;
+  }
+
   if ("password" in body && body.password) {
     updates.password_hash = await bcrypt.hash(body.password, 10);
   }

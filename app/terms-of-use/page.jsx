@@ -1,9 +1,11 @@
 import Link from "next/link";
 import LegalPage, { Bullets, PolicySection, ReviewNote } from "@/components/LegalPage";
 
+export const revalidate = 60; // contact details (header menu, footer, help boxes) come from the dashboard
+
 export const metadata = {
-  title: "Terms of Use | Goa Open School",
-  description: "Terms of use for the Goa Open School website.",
+  title: "Terms of Use | Goa State Open School",
+  description: "Terms of use for the Goa State Open School website.",
 };
 
 export default function TermsOfUsePage() {
@@ -15,7 +17,7 @@ export default function TermsOfUsePage() {
     >
       <PolicySection n="1" heading="Acceptance of terms">
         <p>
-          By accessing or using the Goa Open School website you agree to these Terms of Use, the{" "}
+          By accessing or using the Goa State Open School website you agree to these Terms of Use, the{" "}
           <Link href="/privacy-policy" className="font-bold text-brand underline underline-offset-2">
             Privacy Policy
           </Link>{" "}
@@ -53,7 +55,7 @@ export default function TermsOfUsePage() {
 
       <PolicySection n="5" heading="Content and ownership">
         <p>
-          The content of this website belongs to Goa Open School / Government of Goa unless stated otherwise. State Emblem and other
+          The content of this website belongs to Goa State Open School / Government of Goa unless stated otherwise. State Emblem and other
           national symbols are protected and may be used only as permitted by law. You may print or download forms and documents for
           personal, non-commercial use; you may not alter them or present them as your own.
         </p>

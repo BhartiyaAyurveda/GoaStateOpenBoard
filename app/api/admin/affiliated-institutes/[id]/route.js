@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase";
 
@@ -19,6 +20,7 @@ export async function PATCH(request, { params }) {
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  revalidatePath("/study-centres");
   return NextResponse.json({ ok: true, data });
 }
 
@@ -32,5 +34,6 @@ export async function DELETE(request, { params }) {
     .eq("id", (await params).id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  revalidatePath("/study-centres");
   return NextResponse.json({ ok: true });
 }

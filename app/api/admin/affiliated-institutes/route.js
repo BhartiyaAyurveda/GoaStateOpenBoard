@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase";
 
@@ -33,5 +34,6 @@ export async function POST(request) {
     if (error.code === "23505") return NextResponse.json({ error: "Code already exists" }, { status: 409 });
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+  revalidatePath("/study-centres");
   return NextResponse.json({ ok: true, data }, { status: 201 });
 }

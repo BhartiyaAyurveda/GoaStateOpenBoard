@@ -26,7 +26,7 @@ export default function DraftsPage() {
   useEffect(() => { fetchDrafts(); }, []);
 
   const handleDiscard = async (id, name) => {
-    if (!confirm(`Discard draft for "${name}"?\nयह ड्राफ्ट हमेशा के लिए हटा दिया जाएगा।`)) return;
+    if (!confirm(`Discard draft for "${name}"?\nहो मसुदो कायमचो काडून उडयतले.`)) return;
     setDeletingId(id);
     try {
       const res = await fetch(`/api/college/drafts/${id}`, { method: "DELETE" });
@@ -65,7 +65,7 @@ export default function DraftsPage() {
             <p className="text-[13px] text-[#3d5688]">
               Students who completed OTP verification. Resume form to continue without repeating OTP.
               <br className="hidden sm:block" />
-              जिन छात्रों का OTP सत्यापन हो चुका है — "Resume Form" से जारी रखें।
+              ज्या विद्यार्थ्यांचें OTP पडताळणी जाल्लें आसा तांकां "Resume Form" वरवीं चालू दवरात.
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -85,15 +85,15 @@ export default function DraftsPage() {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3 pt-5">
           <div className="bg-[#f4f8fe] border border-[#d3e1f5] rounded-xl p-3 text-center">
-            <span className="text-[12px] font-semibold text-[#3d5688] block mb-0.5 uppercase tracking-wide">Total / कुल</span>
+            <span className="text-[12px] font-semibold text-[#3d5688] block mb-0.5 uppercase tracking-wide">Total / एकूण</span>
             <span className="text-2xl font-black text-[#082a63]">{stats.total}</span>
           </div>
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-center">
-            <span className="text-[12px] font-semibold text-amber-700 block mb-0.5 uppercase tracking-wide">Verified Only / सत्यापित</span>
+            <span className="text-[12px] font-semibold text-amber-700 block mb-0.5 uppercase tracking-wide">Verified Only / पडताळणी जाल्लें</span>
             <span className="text-2xl font-black text-amber-700">{stats.verified}</span>
           </div>
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-center">
-            <span className="text-[12px] font-semibold text-blue-700 block mb-0.5 uppercase tracking-wide">Draft / अपूर्ण</span>
+            <span className="text-[12px] font-semibold text-blue-700 block mb-0.5 uppercase tracking-wide">Draft / अपुरें</span>
             <span className="text-2xl font-black text-[#082a63]">{stats.inProgress}</span>
           </div>
         </div>
@@ -153,11 +153,11 @@ export default function DraftsPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gradient-to-r from-[#082a63] to-[#1245b8] text-white text-[13px] font-bold uppercase tracking-wider">
-                  <th className="py-3 px-4 sm:px-5">Candidate / अभ्यर्थी</th>
+                  <th className="py-3 px-4 sm:px-5">Candidate / उमेदवार</th>
                   <th className="py-3 px-4">Contact / संपर्क</th>
-                  <th className="py-3 px-4">Status / स्थिति</th>
-                  <th className="py-3 px-4">Updated / संशोधित</th>
-                  <th className="py-3 px-4 sm:px-5 text-right">Actions / कार्रवाई</th>
+                  <th className="py-3 px-4">Status / स्थिती</th>
+                  <th className="py-3 px-4">Updated / अद्ययावत</th>
+                  <th className="py-3 px-4 sm:px-5 text-right">Actions / कृती</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#eaf2fd] text-[13px] sm:text-[15px]">
@@ -176,7 +176,7 @@ export default function DraftsPage() {
                       {d.status === "draft" ? (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[13px] font-bold bg-blue-100 text-blue-800 border border-blue-200">
                           <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
-                          Draft / अपूर्ण
+                          Draft / अपुरें
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[13px] font-bold bg-amber-100 text-amber-900 border border-amber-200">

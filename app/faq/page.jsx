@@ -1,3 +1,4 @@
+import { getContactInfo } from "@/lib/site-settings";
 import Link from "next/link";
 import { CircleHelp, Headphones, IdCard, FileText, ChartColumn, ArrowRight } from "lucide-react";
 import TopBar from "@/components/TopBar";
@@ -6,9 +7,11 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import FaqList from "@/components/FaqList";
 
+export const revalidate = 60; // contact details (header menu, footer, help boxes) come from the dashboard
+
 export const metadata = {
-  title: "FAQs | Goa Open School",
-  description: "Frequently asked questions about admission, examination, study material, results and certificates at Goa Open School.",
+  title: "FAQs | Goa State Open School",
+  description: "Frequently asked questions about admission, examination, study material, results and certificates at Goa State Open School.",
 };
 
 const quick = [
@@ -18,7 +21,8 @@ const quick = [
   { text: "Admission Form Class XII", href: "/forms/Admission-Form-Class-XII.pdf", icon: FileText, pdf: true },
 ];
 
-export default function FaqPage() {
+export default async function FaqPage() {
+  const contact = await getContactInfo();
   return (
     <>
       <TopBar />
@@ -68,9 +72,9 @@ export default function FaqPage() {
               </span>
               <div className="text-[14px] font-medium leading-snug">
                 <p className="text-[13px] font-bold uppercase tracking-wider text-sky">Still have a question?</p>
-                <p className="text-white/90">Call Goa Open School on</p>
-                <a href="tel:+918322743300" className="text-[22px] font-extrabold leading-tight hover:text-sky">
-                  0832–2743300
+                <p className="text-white/90">Call Goa State Open School on</p>
+                <a href={contact.tel} className="text-[22px] font-extrabold leading-tight hover:text-sky">
+                  {contact.phone}
                 </a>
                 <p className="text-white/80">
                   or{" "}

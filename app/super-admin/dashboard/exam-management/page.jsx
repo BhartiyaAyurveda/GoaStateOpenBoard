@@ -8,6 +8,8 @@ import {
   FileText, UserCheck, XCircle, Eye, ChevronDown, Printer, MapPin,
   Clock, Users, Sparkles, CheckSquare, Square, Search, GraduationCap,
 } from "lucide-react";
+import AdminPageShell from "@/components/admin/AdminPageShell";
+import Select from "@/components/ui/Select";
 import { getNextSession, getPrevSession, get6DigitSession } from "@/lib/enrollment-roll-utils";
 
 const TABS = [
@@ -21,18 +23,12 @@ const TABS = [
 // ── Shared filter bar ──────────────────────────────────────
 function FilterBar({ courses, sessions, selectedCourse, selectedSession, onCourseChange, onSessionChange, showSession = true }) {
   return (
-    <div className="flex flex-wrap gap-3">
-      <select value={selectedCourse} onChange={e => onCourseChange(e.target.value)}
-        className="px-3 py-2 rounded-xl border border-[#d3e1f5] bg-white text-[15px] text-[#082a63] focus:outline-none focus:ring-2 focus:ring-[#1b57d8] min-w-[200px]">
-        <option value="">— All Courses —</option>
-        {courses.map(c => <option key={c.id} value={c.course_name}>{c.course_name}</option>)}
-      </select>
+    <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3">
+      <Select size="lg" ariaLabel="Course" className="w-full sm:w-72" value={selectedCourse} onChange={onCourseChange}
+        options={[{ value: "", label: "All courses" }, ...courses.map(c => ({ value: c.course_name, label: c.course_name }))]} />
       {showSession && (
-        <select value={selectedSession} onChange={e => onSessionChange(e.target.value)}
-          className="px-3 py-2 rounded-xl border border-[#d3e1f5] bg-white text-[15px] text-[#082a63] focus:outline-none focus:ring-2 focus:ring-[#1b57d8] min-w-[200px]">
-          <option value="">— Select Session —</option>
-          {sessions.map(s => <option key={s.id} value={s.id}>{s.session_label || s.session_name || s.id}</option>)}
-        </select>
+        <Select size="lg" ariaLabel="Session" placeholder="Select session" className="w-full sm:w-64" value={selectedSession} onChange={onSessionChange}
+          options={sessions.map(s => ({ value: s.id, label: s.session_label || s.session_name || s.id }))} />
       )}
     </div>
   );
@@ -42,7 +38,7 @@ function FilterBar({ courses, sessions, selectedCourse, selectedSession, onCours
 function Toast({ toast }) {
   if (!toast.show) return null;
   return (
-    <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg text-[15px] font-semibold ${toast.type === "success" ? "bg-emerald-600 text-white" : "bg-red-600 text-white"}`}>
+    <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg text-[17px] font-semibold ${toast.type === "success" ? "bg-emerald-600 text-white" : "bg-red-600 text-white"}`}>
       {toast.type === "success" ? <CheckCircle2 className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
       {toast.message}
     </div>
@@ -231,34 +227,42 @@ function SubjectsTab({
     else { showToast("Subject deleted!"); load(selectedCourse, selectedYear); }
   };
 
-  const inputCls = "px-2 py-1.5 rounded-lg border border-[#d3e1f5] bg-[#f4f8fe] text-[13px] text-[#082a63] focus:outline-none focus:ring-1 focus:ring-[#1b57d8] w-full";
+  const yearLabel = selectedYear === "1" ? "1st Year" : selectedYear === "2" ? "2nd Year" : "3rd Year";
+  const fieldCls = "h-11 w-full min-w-0 rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] px-3.5 text-[15px] text-[#082a63] outline-none placeholder:text-[#8a97b3] focus:border-[#1b57d8] focus:bg-white focus:ring-2 focus:ring-[#1b57d8]/15";
+  const cellCls = "h-10 w-full min-w-0 rounded-lg border border-[#b9cbe6] bg-white px-2.5 text-[14.5px] text-[#082a63] outline-none focus:border-[#1b57d8] focus:ring-2 focus:ring-[#1b57d8]/15";
+  const labelCls = "mb-1.5 block text-[13.5px] font-bold text-[#082a63]";
+  const num = (v) => (v === "" || v === null || v === undefined ? "" : v);
+  const total = (s) => (Number(s.theory_max) || 0) + (Number(s.practical_max) || 0) + (Number(s.ca_max) || 0);
+  const startEdit = (s) => {
+    setEditingId(s.id);
+    setEditForm({ subject_name: s.subject_name, subject_code: s.subject_code, theory_max: s.theory_max, practical_max: s.practical_max, ca_max: s.ca_max });
+  };
+  const patchEdit = (key, isNum) => (e) => setEditForm((f) => ({ ...f, [key]: isNum ? (e.target.value === "" ? "" : +e.target.value) : e.target.value }));
+  const patchAdd = (key, isNum) => (e) => setAddForm((f) => ({ ...f, [key]: isNum ? (e.target.value === "" ? "" : +e.target.value) : e.target.value }));
+  const Marks = ({ v }) => <span className="inline-flex min-w-[2.5rem] justify-center rounded-md bg-[#eaf2fd] px-2 py-0.5 text-[14px] font-bold text-[#082a63]">{v ?? 0}</span>;
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <FilterBar courses={courses} sessions={[]} selectedCourse={selectedCourse} selectedSession="" onCourseChange={setSelectedCourse} onSessionChange={() => {}} showSession={false} />
+    <div className="min-w-0 space-y-5">
+      {/* Course + year */}
+      <div className="flex flex-col gap-4 rounded-2xl border border-[#d3e1f5] bg-white p-4 shadow-sm lg:flex-row lg:items-end lg:justify-between">
+        <label className="block min-w-0 lg:w-[26rem]">
+          <span className={labelCls}>Programme</span>
+          <Select size="lg" ariaLabel="Programme" placeholder="Select programme" value={selectedCourse} onChange={setSelectedCourse}
+            options={courses.map((c) => ({ value: c.course_name, label: c.course_name }))} />
+        </label>
 
         {selectedCourse && (
-          <div className="flex items-center gap-2">
-            <span className="text-[13px] font-bold uppercase tracking-wider text-[#3d5688]">Year:</span>
-            <div className="inline-flex rounded-xl bg-[#f4f8fe] p-1 border border-[#d3e1f5]">
+          <div className="min-w-0">
+            <span className={labelCls}>Year</span>
+            <div className="grid grid-cols-3 gap-1 rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] p-1">
               {[
                 { yr: "1", label: "1st Year", icon: GraduationCap },
                 { yr: "2", label: "2nd Year", icon: Sparkles },
                 { yr: "3", label: "3rd Year", icon: Sparkles },
               ].map(({ yr, label, icon: Icon }) => (
-                <button
-                  key={yr}
-                  type="button"
-                  onClick={() => handleYearChange(yr)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-bold transition-all ${
-                    selectedYear === yr
-                      ? "bg-[#082a63] text-white shadow-sm"
-                      : "text-[#3d5688] hover:text-[#082a63] hover:bg-white/60"
-                  }`}
-                >
-                  <Icon className="w-3.5 h-3.5" />
-                  {label}
+                <button key={yr} type="button" onClick={() => handleYearChange(yr)}
+                  className={`flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-[14.5px] font-bold transition ${selectedYear === yr ? "bg-[#082a63] text-white shadow-sm" : "text-[#3d5688] hover:bg-white"}`}>
+                  <Icon className="hidden h-3.5 w-3.5 sm:block" /> {label}
                 </button>
               ))}
             </div>
@@ -269,76 +273,156 @@ function SubjectsTab({
       {selectedCourse && (
         <>
           {/* Add subject */}
-          <div className="bg-white rounded-xl border border-[#d3e1f5] p-4">
-            <p className="text-[13px] font-bold text-[#082a63] uppercase mb-3">Add New Subject ({selectedYear === "1" ? "1st Year" : selectedYear === "2" ? "2nd Year" : "3rd Year"})</p>
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-              <div className="sm:col-span-2"><label className="text-[12px] font-bold text-[#3d5688] uppercase">Subject Name *</label><input value={addForm.subject_name} onChange={e => setAddForm(f => ({ ...f, subject_name: e.target.value }))} className={inputCls} placeholder="e.g. Anatomy" /></div>
-              <div><label className="text-[12px] font-bold text-[#3d5688] uppercase">Code</label><input value={addForm.subject_code} onChange={e => setAddForm(f => ({ ...f, subject_code: e.target.value }))} className={inputCls} placeholder="e.g. ANAT101" /></div>
-              <div><label className="text-[12px] font-bold text-[#3d5688] uppercase">Theory Max</label><input type="number" value={addForm.theory_max} onChange={e => setAddForm(f => ({ ...f, theory_max: +e.target.value }))} className={inputCls} /></div>
-              <div><label className="text-[12px] font-bold text-[#3d5688] uppercase">Practical Max</label><input type="number" value={addForm.practical_max} onChange={e => setAddForm(f => ({ ...f, practical_max: +e.target.value }))} className={inputCls} /></div>
-            </div>
-            <div className="mt-3 flex justify-end">
-              <button onClick={handleAdd} disabled={saving} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#082a63] text-white text-[13px] font-bold hover:bg-[#0b3a85] disabled:opacity-60"><Plus className="w-3.5 h-3.5" />{saving ? "Saving..." : "Add Subject"}</button>
-            </div>
+          <div className="rounded-2xl border border-[#d3e1f5] bg-white p-4 shadow-sm sm:p-5">
+            <h3 className="mb-4 flex items-center gap-2 text-[17px] font-bold text-[#082a63]">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#eaf2fd] text-[#1b57d8]"><Plus className="h-4 w-4" /></span>
+              Add New Subject <span className="rounded-full bg-[#eaf2fd] px-2.5 py-0.5 text-[12.5px] font-bold text-[#1245b8]">{yearLabel}</span>
+            </h3>
+            <form onSubmit={(e) => { e.preventDefault(); handleAdd(); }}
+              className="grid grid-cols-2 gap-4 lg:grid-cols-[2fr_1.2fr_1fr_1fr_1fr_auto] lg:items-end">
+              <label className="col-span-2 block min-w-0 lg:col-span-1">
+                <span className={labelCls}>Subject name <span className="text-red-500">*</span></span>
+                <input value={addForm.subject_name} onChange={patchAdd("subject_name")} className={fieldCls} placeholder="e.g. Mathematics" />
+              </label>
+              <label className="col-span-2 block min-w-0 sm:col-span-1">
+                <span className={labelCls}>Code</span>
+                <input value={addForm.subject_code} onChange={patchAdd("subject_code")} className={fieldCls} placeholder="e.g. 211" />
+              </label>
+              <label className="block min-w-0">
+                <span className={labelCls}>Theory max</span>
+                <input type="number" min={0} value={num(addForm.theory_max)} onChange={patchAdd("theory_max", true)} className={fieldCls} />
+              </label>
+              <label className="block min-w-0">
+                <span className={labelCls}>Practical max</span>
+                <input type="number" min={0} value={num(addForm.practical_max)} onChange={patchAdd("practical_max", true)} className={fieldCls} />
+              </label>
+              <label className="block min-w-0">
+                <span className={labelCls}>CA max</span>
+                <input type="number" min={0} value={num(addForm.ca_max)} onChange={patchAdd("ca_max", true)} className={fieldCls} />
+              </label>
+              <button type="submit" disabled={saving}
+                className="col-span-2 inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-[#1b57d8] px-6 text-[15px] font-bold text-white transition hover:bg-[#1245b8] disabled:opacity-60 lg:col-span-1">
+                <Plus className="h-4 w-4" /> {saving ? "Saving..." : "Add Subject"}
+              </button>
+            </form>
           </div>
 
           {/* Subjects list */}
-          <div className="bg-white rounded-xl border border-[#d3e1f5] overflow-hidden">
-            <div className="bg-[#eaf2fd] px-4 py-2.5 border-b border-[#d3e1f5]">
-              <p className="text-[13px] font-bold text-[#082a63] uppercase">Subjects for {selectedCourse} • {selectedYear === "1" ? "1st Year" : selectedYear === "2" ? "2nd Year" : "3rd Year"} ({subjects.length})</p>
+          <div className="overflow-hidden rounded-2xl border border-[#d3e1f5] bg-white shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#d3e1f5] bg-[#f4f8fe] px-4 py-3.5 sm:px-5">
+              <div className="min-w-0">
+                <p className="truncate text-[16px] font-bold text-[#082a63]">{selectedCourse}</p>
+                <p className="text-[13.5px] text-[#3d5688]">{yearLabel} subjects</p>
+              </div>
+              <span className="rounded-full bg-[#082a63] px-3 py-1 text-[13px] font-bold text-white">{subjects.length} {subjects.length === 1 ? "subject" : "subjects"}</span>
             </div>
+
             {loading ? (
-              <div className="flex items-center justify-center py-10"><RefreshCw className="w-5 h-5 animate-spin text-[#1b57d8]" /></div>
+              <div className="flex items-center justify-center py-12"><RefreshCw className="h-6 w-6 animate-spin text-[#1b57d8]" /></div>
             ) : subjects.length === 0 ? (
-              <div className="text-center py-10 text-[#3d5688] text-[15px]">No subjects defined yet for {selectedYear === "1" ? "1st Year" : selectedYear === "2" ? "2nd Year" : "3rd Year"}.</div>
+              <div className="px-4 py-12 text-center">
+                <BookOpen className="mx-auto mb-3 h-10 w-10 text-[#a9bde0]" />
+                <p className="text-[16px] font-bold text-[#082a63]">No subjects yet for {yearLabel}</p>
+                <p className="mt-1 text-[14px] text-[#4a6090]">Add the first subject using the form above.</p>
+              </div>
             ) : (
-              <table className="w-full text-[13px]">
-                <thead className="border-b border-[#d3e1f5] bg-[#f4f8fe]">
-                  <tr>
-                    <th className="px-4 py-2.5 text-left font-bold text-[#082a63] uppercase">Subject</th>
-                    <th className="px-4 py-2.5 text-left font-bold text-[#082a63] uppercase">Code</th>
-                    <th className="px-4 py-2.5 text-center font-bold text-[#082a63] uppercase">Theory</th>
-                    <th className="px-4 py-2.5 text-center font-bold text-[#082a63] uppercase">Practical</th>
-                    <th className="px-4 py-2.5 text-center font-bold text-[#082a63] uppercase">CA</th>
-                    <th className="px-4 py-2.5 text-right font-bold text-[#082a63] uppercase">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#eaf2fd]">
-                  {subjects.map(s => (
-                    <tr key={s.id} className="hover:bg-[#f4f8fe]">
+              <>
+                {/* table (laptops) */}
+                <div className="hidden overflow-x-auto lg:block">
+                  <table className="w-full text-left text-[15px]">
+                    <thead className="border-b border-[#d3e1f5]">
+                      <tr className="text-[12.5px] font-bold uppercase tracking-wider text-[#4a6090]">
+                        <th className="px-5 py-3">Subject</th>
+                        <th className="px-3 py-3">Code</th>
+                        <th className="px-3 py-3 text-center">Theory</th>
+                        <th className="px-3 py-3 text-center">Practical</th>
+                        <th className="px-3 py-3 text-center">CA</th>
+                        <th className="px-3 py-3 text-center">Total</th>
+                        <th className="px-5 py-3 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#e4edf9]">
+                      {subjects.map((s) => (
+                        <tr key={s.id} className={editingId === s.id ? "bg-[#f4f8fe]" : "transition-colors hover:bg-[#f4f8fe]"}>
+                          {editingId === s.id ? (
+                            <>
+                              <td className="px-5 py-2.5"><input value={editForm.subject_name || ""} onChange={patchEdit("subject_name")} className={cellCls} /></td>
+                              <td className="w-32 px-3 py-2.5"><input value={editForm.subject_code || ""} onChange={patchEdit("subject_code")} className={cellCls} /></td>
+                              <td className="w-24 px-3 py-2.5"><input type="number" min={0} value={num(editForm.theory_max)} onChange={patchEdit("theory_max", true)} className={`${cellCls} text-center`} /></td>
+                              <td className="w-24 px-3 py-2.5"><input type="number" min={0} value={num(editForm.practical_max)} onChange={patchEdit("practical_max", true)} className={`${cellCls} text-center`} /></td>
+                              <td className="w-24 px-3 py-2.5"><input type="number" min={0} value={num(editForm.ca_max)} onChange={patchEdit("ca_max", true)} className={`${cellCls} text-center`} /></td>
+                              <td className="px-3 py-2.5 text-center text-[#8a97b3]">—</td>
+                              <td className="px-5 py-2.5">
+                                <div className="flex items-center justify-end gap-1.5">
+                                  <button onClick={() => handleEdit(s.id)} disabled={saving} className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#1b57d8] px-3 text-[14px] font-bold text-white hover:bg-[#1245b8] disabled:opacity-60"><Save className="h-4 w-4" /> Save</button>
+                                  <button onClick={() => setEditingId(null)} className="inline-flex h-9 items-center rounded-lg border border-[#d3e1f5] bg-white px-3 text-[14px] font-bold text-[#082a63] hover:bg-[#f4f8fe]">Cancel</button>
+                                </div>
+                              </td>
+                            </>
+                          ) : (
+                            <>
+                              <td className="px-5 py-3 font-bold text-[#082a63]">{s.subject_name}</td>
+                              <td className="px-3 py-3">{s.subject_code ? <span className="rounded-md bg-[#eaf2fd] px-2 py-0.5 font-mono text-[13px] font-bold text-[#1245b8]">{s.subject_code}</span> : <span className="text-[#8a97b3]">—</span>}</td>
+                              <td className="px-3 py-3 text-center"><Marks v={s.theory_max} /></td>
+                              <td className="px-3 py-3 text-center"><Marks v={s.practical_max} /></td>
+                              <td className="px-3 py-3 text-center"><Marks v={s.ca_max} /></td>
+                              <td className="px-3 py-3 text-center font-extrabold text-[#082a63]">{total(s)}</td>
+                              <td className="px-5 py-3">
+                                <div className="flex items-center justify-end gap-1.5">
+                                  <button onClick={() => startEdit(s)} title="Edit" aria-label="Edit subject" className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#d3e1f5] text-[#3d5688] transition hover:bg-[#eaf2fd]"><Pencil className="h-4 w-4" /></button>
+                                  <button onClick={() => handleDelete(s.id)} title="Delete" aria-label="Delete subject" className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#d3e1f5] text-[#3d5688] transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"><Trash2 className="h-4 w-4" /></button>
+                                </div>
+                              </td>
+                            </>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* cards (mobile / tablet) */}
+                <div className="grid grid-cols-1 gap-3 p-3 sm:p-4 md:grid-cols-2 lg:hidden">
+                  {subjects.map((s) => (
+                    <div key={s.id} className="min-w-0 rounded-xl border border-[#d3e1f5] bg-white p-4">
                       {editingId === s.id ? (
-                        <>
-                          <td className="px-4 py-2"><input value={editForm.subject_name || ""} onChange={e => setEditForm(f => ({ ...f, subject_name: e.target.value }))} className={inputCls} /></td>
-                          <td className="px-4 py-2"><input value={editForm.subject_code || ""} onChange={e => setEditForm(f => ({ ...f, subject_code: e.target.value }))} className={inputCls} /></td>
-                          <td className="px-4 py-2"><input type="number" value={editForm.theory_max ?? ""} onChange={e => setEditForm(f => ({ ...f, theory_max: +e.target.value }))} className={inputCls} /></td>
-                          <td className="px-4 py-2"><input type="number" value={editForm.practical_max ?? ""} onChange={e => setEditForm(f => ({ ...f, practical_max: +e.target.value }))} className={inputCls} /></td>
-                          <td className="px-4 py-2"><input type="number" value={editForm.ca_max ?? ""} onChange={e => setEditForm(f => ({ ...f, ca_max: +e.target.value }))} className={inputCls} /></td>
-                          <td className="px-4 py-2 text-right">
-                            <div className="flex items-center justify-end gap-1">
-                              <button onClick={() => handleEdit(s.id)} disabled={saving} className="px-2 py-1 rounded-lg bg-[#082a63] text-white text-[12px] font-bold"><Save className="w-3 h-3" /></button>
-                              <button onClick={() => setEditingId(null)} className="px-2 py-1 rounded-lg bg-[#eaf2fd] text-[#082a63] text-[12px] font-bold">Cancel</button>
-                            </div>
-                          </td>
-                        </>
+                        <div className="space-y-3">
+                          <label className="block"><span className={labelCls}>Subject name</span><input value={editForm.subject_name || ""} onChange={patchEdit("subject_name")} className={fieldCls} /></label>
+                          <label className="block"><span className={labelCls}>Code</span><input value={editForm.subject_code || ""} onChange={patchEdit("subject_code")} className={fieldCls} /></label>
+                          <div className="grid grid-cols-3 gap-2">
+                            <label className="block"><span className={labelCls}>Theory</span><input type="number" min={0} value={num(editForm.theory_max)} onChange={patchEdit("theory_max", true)} className={fieldCls} /></label>
+                            <label className="block"><span className={labelCls}>Practical</span><input type="number" min={0} value={num(editForm.practical_max)} onChange={patchEdit("practical_max", true)} className={fieldCls} /></label>
+                            <label className="block"><span className={labelCls}>CA</span><input type="number" min={0} value={num(editForm.ca_max)} onChange={patchEdit("ca_max", true)} className={fieldCls} /></label>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <button onClick={() => handleEdit(s.id)} disabled={saving} className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-[#1b57d8] text-[14.5px] font-bold text-white hover:bg-[#1245b8] disabled:opacity-60"><Save className="h-4 w-4" /> Save</button>
+                            <button onClick={() => setEditingId(null)} className="h-11 rounded-xl border border-[#d3e1f5] text-[14.5px] font-bold text-[#082a63] hover:bg-[#f4f8fe]">Cancel</button>
+                          </div>
+                        </div>
                       ) : (
                         <>
-                          <td className="px-4 py-2.5 font-semibold text-[#082a63]">{s.subject_name}</td>
-                          <td className="px-4 py-2.5 text-[#3d5688]">{s.subject_code || "—"}</td>
-                          <td className="px-4 py-2.5 text-center text-[#082a63]">{s.theory_max}</td>
-                          <td className="px-4 py-2.5 text-center text-[#082a63]">{s.practical_max}</td>
-                          <td className="px-4 py-2.5 text-center text-[#082a63]">{s.ca_max}</td>
-                          <td className="px-4 py-2.5 text-right">
-                            <div className="flex items-center justify-end gap-1">
-                              <button onClick={() => { setEditingId(s.id); setEditForm({ subject_name: s.subject_name, subject_code: s.subject_code, theory_max: s.theory_max, practical_max: s.practical_max, ca_max: s.ca_max }); }} className="p-1.5 rounded-lg hover:bg-[#eaf2fd] text-[#3d5688] hover:text-[#082a63]"><Pencil className="w-3.5 h-3.5" /></button>
-                              <button onClick={() => handleDelete(s.id)} className="p-1.5 rounded-lg hover:bg-red-50 text-[#3d5688] hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>
-                            </div>
-                          </td>
+                          <div className="flex items-start justify-between gap-3">
+                            <p className="min-w-0 break-words text-[16px] font-bold text-[#082a63]">{s.subject_name}</p>
+                            {s.subject_code && <span className="shrink-0 rounded-md bg-[#eaf2fd] px-2 py-0.5 font-mono text-[13px] font-bold text-[#1245b8]">{s.subject_code}</span>}
+                          </div>
+                          <div className="mt-3 grid grid-cols-4 gap-2 text-center">
+                            {[["Theory", s.theory_max], ["Practical", s.practical_max], ["CA", s.ca_max], ["Total", total(s)]].map(([k, v]) => (
+                              <div key={k} className={`rounded-lg px-1 py-2 ${k === "Total" ? "bg-[#082a63] text-white" : "bg-[#f4f8fe] text-[#082a63]"}`}>
+                                <p className={`text-[11.5px] font-bold uppercase tracking-wide ${k === "Total" ? "text-blue-100" : "text-[#4a6090]"}`}>{k}</p>
+                                <p className="text-[16px] font-extrabold">{v ?? 0}</p>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="mt-3 grid grid-cols-2 gap-2">
+                            <button onClick={() => startEdit(s)} className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#d3e1f5] bg-white py-2.5 text-[14px] font-bold text-[#082a63] hover:bg-[#f4f8fe]"><Pencil className="h-4 w-4" /> Edit</button>
+                            <button onClick={() => handleDelete(s.id)} className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#d3e1f5] bg-white py-2.5 text-[14px] font-bold text-[#082a63] hover:border-red-200 hover:bg-red-50 hover:text-red-600"><Trash2 className="h-4 w-4" /> Delete</button>
+                          </div>
                         </>
                       )}
-                    </tr>
+                    </div>
                   ))}
-                </tbody>
-              </table>
+                </div>
+              </>
             )}
           </div>
         </>
@@ -424,7 +508,7 @@ function DatesheetTab({
     setSaving(false);
   };
 
-  const inputCls = "px-2 py-1 rounded-lg border border-[#d3e1f5] bg-[#f4f8fe] text-[13px] text-[#082a63] focus:outline-none focus:ring-1 focus:ring-[#1b57d8]";
+  const inputCls = "px-2 py-1 rounded-lg border border-[#d3e1f5] bg-[#f4f8fe] text-[15px] text-[#082a63] focus:outline-none focus:ring-1 focus:ring-[#1b57d8]";
 
   return (
     <div className="space-y-5">
@@ -433,7 +517,7 @@ function DatesheetTab({
 
         {selectedCourse && selectedSession && (
           <div className="flex items-center gap-2">
-            <span className="text-[13px] font-bold uppercase tracking-wider text-[#3d5688]">Year:</span>
+            <span className="text-[15px] font-bold uppercase tracking-wider text-[#3d5688]">Year:</span>
             <div className="inline-flex rounded-xl bg-[#f4f8fe] p-1 border border-[#d3e1f5]">
               {[
                 { yr: "1", label: "1st Year", icon: GraduationCap },
@@ -444,7 +528,7 @@ function DatesheetTab({
                   key={yr}
                   type="button"
                   onClick={() => handleYearChange(yr)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-bold transition-all ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[15px] font-bold transition-all ${
                     selectedYear === yr
                       ? "bg-[#082a63] text-white shadow-sm"
                       : "text-[#3d5688] hover:text-[#082a63] hover:bg-white/60"
@@ -464,11 +548,11 @@ function DatesheetTab({
           {loading ? (
             <div className="flex items-center justify-center py-10"><RefreshCw className="w-5 h-5 animate-spin text-[#1b57d8]" /></div>
           ) : rows.length === 0 ? (
-            <div className="text-center py-10 text-[#3d5688] text-[15px]">No subjects found for {selectedYear === "1" ? "1st Year" : selectedYear === "2" ? "2nd Year" : "3rd Year"}. Add subjects in Subjects tab first.</div>
+            <div className="text-center py-10 text-[#3d5688] text-[17px]">No subjects found for {selectedYear === "1" ? "1st Year" : selectedYear === "2" ? "2nd Year" : "3rd Year"}. Add subjects in Subjects tab first.</div>
           ) : (
             <div className="bg-white rounded-xl border border-[#d3e1f5] overflow-hidden">
               <div className="bg-[#eaf2fd] px-4 py-2.5 border-b border-[#d3e1f5] flex items-center justify-between gap-3 flex-wrap">
-                <p className="text-[13px] font-bold text-[#082a63] uppercase">Exam Schedule • {selectedYear === "1" ? "1st Year" : selectedYear === "2" ? "2nd Year" : "3rd Year"}</p>
+                <p className="text-[15px] font-bold text-[#082a63] uppercase">Exam Schedule • {selectedYear === "1" ? "1st Year" : selectedYear === "2" ? "2nd Year" : "3rd Year"}</p>
                 <div className="flex items-center gap-2">
                   <select
                     defaultValue=""
@@ -478,16 +562,16 @@ function DatesheetTab({
                         e.target.value = "";
                       }
                     }}
-                    className="px-2.5 py-1.5 rounded-lg border border-[#d3e1f5] bg-white text-[13px] font-semibold text-[#082a63] focus:outline-none focus:ring-1 focus:ring-[#1b57d8]"
+                    className="px-2.5 py-1.5 rounded-lg border border-[#d3e1f5] bg-white text-[15px] font-semibold text-[#082a63] focus:outline-none focus:ring-1 focus:ring-[#1b57d8]"
                   >
                     <option value="" disabled>Set time for all...</option>
                     <option value="Morning (10:00 AM - 1:00 PM)">All Morning (10:00 AM - 1:00 PM)</option>
                     <option value="Evening (2:00 PM - 5:00 PM)">All Evening (2:00 PM - 5:00 PM)</option>
                   </select>
-                  <button onClick={handleSave} disabled={saving} className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-[#082a63] text-white text-[13px] font-bold hover:bg-[#0b3a85] disabled:opacity-60"><Save className="w-3.5 h-3.5" />{saving ? "Saving..." : "Save Datesheet"}</button>
+                  <button onClick={handleSave} disabled={saving} className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-[#082a63] text-white text-[15px] font-bold hover:bg-[#0b3a85] disabled:opacity-60"><Save className="w-3.5 h-3.5" />{saving ? "Saving..." : "Save Datesheet"}</button>
                 </div>
               </div>
-              <table className="w-full text-[13px]">
+              <table className="w-full text-[15px]">
                 <thead className="border-b border-[#d3e1f5] bg-[#f4f8fe]">
                   <tr>
                     <th className="px-4 py-2.5 text-left font-bold text-[#082a63] uppercase">Subject</th>
@@ -772,7 +856,7 @@ function RollNumbersTab({
         <div className="space-y-5">
           {/* Mismatch Course Hint Banner */}
           {selectedCourse && currentTotalApproved === 0 && (pendingStudents.length > 0 || allottedStudents.length > 0) && (
-            <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl bg-amber-50 border border-amber-300 text-amber-900 text-[13px] shadow-xs">
+            <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl bg-amber-50 border border-amber-300 text-amber-900 text-[15px] shadow-xs">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600" />
                 <span>
@@ -783,7 +867,7 @@ function RollNumbersTab({
               <button
                 type="button"
                 onClick={() => setSelectedCourse("")}
-                className="px-3 py-1.5 rounded-xl bg-amber-200/90 hover:bg-amber-300 font-bold text-amber-950 text-[13px] transition-colors shrink-0"
+                className="px-3 py-1.5 rounded-xl bg-amber-200/90 hover:bg-amber-300 font-bold text-amber-950 text-[15px] transition-colors shrink-0"
               >
                 Clear Course Filter (Show All)
               </button>
@@ -793,12 +877,12 @@ function RollNumbersTab({
           {/* ── 2. Target Year Toggle & Top Actions ── */}
           <div className="bg-white rounded-2xl border border-[#d3e1f5] p-4 flex flex-wrap items-center justify-between gap-4 shadow-sm">
             <div className="flex items-center gap-3">
-              <span className="text-[13px] font-bold uppercase tracking-wider text-[#3d5688]">Target Year:</span>
+              <span className="text-[15px] font-bold uppercase tracking-wider text-[#3d5688]">Target Year:</span>
               <div className="inline-flex rounded-xl bg-[#f4f8fe] p-1 border border-[#d3e1f5]">
                 <button
                   type="button"
                   onClick={() => handleTargetYearChange("1")}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-bold transition-all ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[15px] font-bold transition-all ${
                     targetYear === "1"
                       ? "bg-[#082a63] text-white shadow-sm"
                       : "text-[#3d5688] hover:text-[#082a63] hover:bg-white/60"
@@ -810,7 +894,7 @@ function RollNumbersTab({
                 <button
                   type="button"
                   onClick={() => handleTargetYearChange("2")}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-bold transition-all ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[15px] font-bold transition-all ${
                     targetYear === "2"
                       ? "bg-[#082a63] text-white shadow-sm"
                       : "text-[#3d5688] hover:text-[#082a63] hover:bg-white/60"
@@ -822,7 +906,7 @@ function RollNumbersTab({
                 <button
                   type="button"
                   onClick={() => handleTargetYearChange("3")}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-bold transition-all ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[15px] font-bold transition-all ${
                     targetYear === "3"
                       ? "bg-[#082a63] text-white shadow-sm"
                       : "text-[#3d5688] hover:text-[#082a63] hover:bg-white/60"
@@ -839,7 +923,7 @@ function RollNumbersTab({
                 href={`/super-admin/dashboard/admit-cards/bulk?exam_session_id=${selectedSession}`}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#082a63] hover:bg-[#0b3a85] text-white text-[13px] font-bold transition-colors"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#082a63] hover:bg-[#0b3a85] text-white text-[15px] font-bold transition-colors"
               >
                 <Printer className="w-3.5 h-3.5" /> Generate Admit Cards
               </a>
@@ -847,7 +931,7 @@ function RollNumbersTab({
                 href="/super-admin/dashboard/roll-numbers/audit"
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-[13px] font-bold transition-colors"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-[15px] font-bold transition-colors"
               >
                 <AlertTriangle className="w-3.5 h-3.5" /> Audit Mismatches
               </a>
@@ -870,9 +954,9 @@ function RollNumbersTab({
                 <Users className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-[13px] font-bold text-[#3d5688] uppercase tracking-wide">Total Approved</p>
-                <p className="text-2xl font-black text-[#082a63]">{currentTotalApproved}</p>
-                <p className="text-[13px] text-[#4a6090]">Eligible students in session</p>
+                <p className="text-[15px] font-bold text-[#3d5688] uppercase tracking-wide">Total Approved</p>
+                <p className="text-3xl font-black text-[#082a63]">{currentTotalApproved}</p>
+                <p className="text-[15px] text-[#4a6090]">Eligible students in session</p>
               </div>
             </div>
 
@@ -889,9 +973,9 @@ function RollNumbersTab({
                 <Clock className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-[13px] font-bold text-amber-700 uppercase tracking-wide">Pending Allotment</p>
-                <p className="text-2xl font-black text-amber-900">{currentPendingCount}</p>
-                <p className="text-[13px] text-amber-700">Needs roll number assigned</p>
+                <p className="text-[15px] font-bold text-amber-700 uppercase tracking-wide">Pending Allotment</p>
+                <p className="text-3xl font-black text-amber-900">{currentPendingCount}</p>
+                <p className="text-[15px] text-amber-700">Needs roll number assigned</p>
               </div>
             </div>
 
@@ -908,9 +992,9 @@ function RollNumbersTab({
                 <CheckCircle2 className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-[13px] font-bold text-emerald-700 uppercase tracking-wide">Allotted Students</p>
-                <p className="text-2xl font-black text-emerald-900">{currentAllottedCount}</p>
-                <p className="text-[13px] text-emerald-700">Active roll numbers allotted</p>
+                <p className="text-[15px] font-bold text-emerald-700 uppercase tracking-wide">Allotted Students</p>
+                <p className="text-3xl font-black text-emerald-900">{currentAllottedCount}</p>
+                <p className="text-[15px] text-emerald-700">Active roll numbers allotted</p>
               </div>
             </div>
           </div>
@@ -926,7 +1010,7 @@ function RollNumbersTab({
                     setActiveSubTab("pending");
                     setSearchQuery("");
                   }}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-bold transition-all ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[15px] font-bold transition-all ${
                     activeSubTab === "pending"
                       ? "bg-amber-600 text-white shadow-sm"
                       : "bg-white border border-[#d3e1f5] text-[#3d5688] hover:text-[#082a63]"
@@ -941,7 +1025,7 @@ function RollNumbersTab({
                     setActiveSubTab("allotted");
                     setSearchQuery("");
                   }}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-bold transition-all ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[15px] font-bold transition-all ${
                     activeSubTab === "allotted"
                       ? "bg-[#082a63] text-white shadow-sm"
                       : "bg-white border border-[#d3e1f5] text-[#3d5688] hover:text-[#082a63]"
@@ -960,7 +1044,7 @@ function RollNumbersTab({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={`Search ${activeSubTab === "pending" ? "pending..." : "allotted..."}`}
-                  className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-[#d3e1f5] bg-white text-[13px] text-[#082a63] focus:outline-none focus:ring-2 focus:ring-[#1b57d8]"
+                  className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-[#d3e1f5] bg-white text-[15px] text-[#082a63] focus:outline-none focus:ring-2 focus:ring-[#1b57d8]"
                 />
               </div>
             </div>
@@ -974,19 +1058,19 @@ function RollNumbersTab({
                       <div>
                         <div className="flex items-center gap-2">
                           <Sparkles className="w-4 h-4 text-amber-600" />
-                          <h4 className="text-[13px] font-bold text-[#082a63] uppercase tracking-wide">
+                          <h4 className="text-[15px] font-bold text-[#082a63] uppercase tracking-wide">
                             Live Roll Number Formation Pattern
                           </h4>
                         </div>
-                        <p className="text-[13px] text-[#3d5688] mt-0.5">
+                        <p className="text-[15px] text-[#3d5688] mt-0.5">
                           Formula: [College Initials] + [6-digit Session] + [Sequence 01..]
                         </p>
                       </div>
 
                       {/* Live preview badge */}
                       <div className="inline-flex items-center gap-2 bg-white px-3.5 py-1.5 rounded-xl border border-amber-200 shadow-xs">
-                        <span className="text-[13px] font-medium text-[#3d5688]">Next Allotted Preview:</span>
-                        <span className="font-mono font-bold text-[15px] text-[#082a63] bg-amber-100/70 px-2 py-0.5 rounded-md">
+                        <span className="text-[15px] font-medium text-[#3d5688]">Next Allotted Preview:</span>
+                        <span className="font-mono font-bold text-[17px] text-[#082a63] bg-amber-100/70 px-2 py-0.5 rounded-md">
                           {previewRollNo}
                         </span>
                       </div>
@@ -994,7 +1078,7 @@ function RollNumbersTab({
 
                     {/* Breakdown chips & override input */}
                     <div className="flex flex-wrap items-center gap-3 pt-1 border-t border-amber-100">
-                      <div className="flex items-center gap-1.5 text-[13px]">
+                      <div className="flex items-center gap-1.5 text-[15px]">
                         <span className="px-2 py-1 bg-white rounded-lg border border-amber-200 font-mono font-semibold text-[#082a63]">
                           🏛️ Initials: {sampleInitials}
                         </span>
@@ -1009,14 +1093,14 @@ function RollNumbersTab({
                       </div>
 
                       <div className="ml-auto flex items-center gap-2">
-                        <label className="text-[13px] font-bold text-[#3d5688] whitespace-nowrap">
+                        <label className="text-[15px] font-bold text-[#3d5688] whitespace-nowrap">
                           Custom Prefix Override:
                         </label>
                         <input
                           value={prefix}
                           onChange={(e) => setPrefix(e.target.value)}
                           placeholder={`Auto (${sampleInitials}${sessionDigits})`}
-                          className="px-2.5 py-1 rounded-lg border border-[#d3e1f5] bg-white text-[13px] font-mono text-[#082a63] focus:outline-none focus:ring-2 focus:ring-[#1b57d8] w-48"
+                          className="px-2.5 py-1 rounded-lg border border-[#d3e1f5] bg-white text-[15px] font-mono text-[#082a63] focus:outline-none focus:ring-2 focus:ring-[#1b57d8] w-48"
                         />
                       </div>
                     </div>
@@ -1029,7 +1113,7 @@ function RollNumbersTab({
                     <button
                       type="button"
                       onClick={() => toggleSelectAll(filteredPending)}
-                      className="inline-flex items-center gap-1.5 text-[13px] font-bold text-[#082a63] hover:text-[#1b57d8]"
+                      className="inline-flex items-center gap-1.5 text-[15px] font-bold text-[#082a63] hover:text-[#1b57d8]"
                     >
                       {selectedStudentIds.size > 0 && selectedStudentIds.size === filteredPending.length ? (
                         <CheckSquare className="w-4 h-4 text-[#1b57d8]" />
@@ -1050,7 +1134,7 @@ function RollNumbersTab({
                         type="button"
                         onClick={() => handleAllot("selected")}
                         disabled={allotting}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-[13px] font-bold disabled:opacity-60 transition-colors shadow-xs"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-[15px] font-bold disabled:opacity-60 transition-colors shadow-xs"
                       >
                         <Hash className="w-3.5 h-3.5" />
                         {allotting ? "Allotting..." : `Allot Selected (${selectedStudentIds.size})`}
@@ -1061,7 +1145,7 @@ function RollNumbersTab({
                       type="button"
                       onClick={() => handleAllot(null)}
                       disabled={allotting || stats.pendingCount === 0}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#1b57d8] hover:bg-[#1245b8] text-white text-[13px] font-bold disabled:opacity-50 transition-colors shadow-xs"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#1b57d8] hover:bg-[#1245b8] text-white text-[15px] font-bold disabled:opacity-50 transition-colors shadow-xs"
                     >
                       <Sparkles className="w-3.5 h-3.5" />
                       {allotting
@@ -1081,10 +1165,10 @@ function RollNumbersTab({
                     <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto mb-2">
                       <CheckCircle2 className="w-6 h-6" />
                     </div>
-                    <p className="text-[15px] font-bold text-[#082a63]">
+                    <p className="text-[17px] font-bold text-[#082a63]">
                       {searchQuery ? "No matching pending students found" : "All Approved Students Have Roll Numbers!"}
                     </p>
-                    <p className="text-[13px] text-[#3d5688] mt-1 max-w-md mx-auto">
+                    <p className="text-[15px] text-[#3d5688] mt-1 max-w-md mx-auto">
                       {searchQuery
                         ? "Try adjusting your search query."
                         : `All eligible students in this session have already been allotted ${
@@ -1095,7 +1179,7 @@ function RollNumbersTab({
                       <button
                         type="button"
                         onClick={() => setActiveSubTab("allotted")}
-                        className="mt-3.5 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#082a63] text-white text-[13px] font-bold hover:bg-[#0b3a85]"
+                        className="mt-3.5 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#082a63] text-white text-[15px] font-bold hover:bg-[#0b3a85]"
                       >
                         View Allotted Students ({stats.allottedCount})
                       </button>
@@ -1103,7 +1187,7 @@ function RollNumbersTab({
                   </div>
                 ) : (
                   <div className="overflow-x-auto border border-[#d3e1f5] rounded-xl">
-                    <table className="w-full text-[13px]">
+                    <table className="w-full text-[15px]">
                       <thead className="bg-[#f4f8fe] border-b border-[#d3e1f5]">
                         <tr>
                           <th className="w-10 px-3 py-2.5 text-center">
@@ -1134,15 +1218,15 @@ function RollNumbersTab({
                               <td className="px-4 py-2.5">
                                 <p className="font-bold text-[#082a63]">{s.candidate_name}</p>
                                 {s.courses?.course_name && (
-                                  <p className="text-[12px] font-semibold text-[#1245b8]">{s.courses.course_name}</p>
+                                  <p className="text-[14px] font-semibold text-[#1245b8]">{s.courses.course_name}</p>
                                 )}
                                 {s.father_name && (
-                                  <p className="text-[12px] text-[#4a6090]">S/D/W of {s.father_name}</p>
+                                  <p className="text-[14px] text-[#4a6090]">S/D/W of {s.father_name}</p>
                                 )}
                               </td>
                               <td className="px-4 py-2.5">
                                 <div className="flex items-center gap-1.5">
-                                  <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-mono text-[12px] font-bold">
+                                  <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-mono text-[14px] font-bold">
                                     {s.college_initials || "COL"}
                                   </span>
                                   <span className="text-[#3d5688] truncate max-w-[220px]">
@@ -1161,7 +1245,7 @@ function RollNumbersTab({
                                   type="button"
                                   onClick={() => handleAllot([s.id])}
                                   disabled={allotting}
-                                  className="px-2.5 py-1 rounded-lg bg-white hover:bg-amber-100/70 border border-amber-300 text-amber-800 text-[13px] font-bold transition-colors"
+                                  className="px-2.5 py-1 rounded-lg bg-white hover:bg-amber-100/70 border border-amber-300 text-amber-800 text-[15px] font-bold transition-colors"
                                 >
                                   Allot Now
                                 </button>
@@ -1185,10 +1269,10 @@ function RollNumbersTab({
                   </div>
                 ) : filteredAllotted.length === 0 ? (
                   <div className="text-center py-12 bg-[#f4f8fe] rounded-xl border border-dashed border-[#d3e1f5]">
-                    <p className="text-[15px] font-bold text-[#082a63]">
+                    <p className="text-[17px] font-bold text-[#082a63]">
                       {searchQuery ? "No matching students found" : "No Roll Numbers Allotted Yet"}
                     </p>
-                    <p className="text-[13px] text-[#3d5688] mt-1">
+                    <p className="text-[15px] text-[#3d5688] mt-1">
                       {searchQuery
                         ? "Try searching with a different keyword."
                         : `There are currently no students with ${
@@ -1199,7 +1283,7 @@ function RollNumbersTab({
                       <button
                         type="button"
                         onClick={() => setActiveSubTab("pending")}
-                        className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#1b57d8] text-white text-[13px] font-bold hover:bg-[#1245b8]"
+                        className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#1b57d8] text-white text-[15px] font-bold hover:bg-[#1245b8]"
                       >
                         Go to Pending Allotment ({stats.pendingCount})
                       </button>
@@ -1207,7 +1291,7 @@ function RollNumbersTab({
                   </div>
                 ) : (
                   <div className="overflow-x-auto border border-[#d3e1f5] rounded-xl">
-                    <table className="w-full text-[13px]">
+                    <table className="w-full text-[15px]">
                       <thead className="bg-[#f4f8fe] border-b border-[#d3e1f5]">
                         <tr>
                           <th className="px-4 py-2.5 text-left font-bold text-[#082a63] uppercase">
@@ -1233,18 +1317,18 @@ function RollNumbersTab({
                               <td className="px-4 py-2.5">
                                 <p className="font-semibold text-[#082a63]">{s.candidate_name}</p>
                                 {s.courses?.course_name && (
-                                  <p className="text-[12px] font-semibold text-[#1245b8]">{s.courses.course_name}</p>
+                                  <p className="text-[14px] font-semibold text-[#1245b8]">{s.courses.course_name}</p>
                                 )}
                               </td>
                               <td className="px-4 py-2.5 font-mono text-[#3d5688]">{s.enrollment_no || "—"}</td>
                               <td className="px-4 py-2.5 text-[#3d5688]">{s.colleges?.college_name || "—"}</td>
                               <td className="px-4 py-2.5 text-center">
                                 {s.admit_card_generated_at ? (
-                                  <span className="text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded text-[12px] font-bold inline-flex items-center gap-1">
+                                  <span className="text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded text-[14px] font-bold inline-flex items-center gap-1">
                                     <CheckCircle2 className="w-3 h-3" /> Generated
                                   </span>
                                 ) : (
-                                  <span className="text-[#4a6090] bg-[#f4f8fe] px-2 py-0.5 rounded text-[12px]">
+                                  <span className="text-[#4a6090] bg-[#f4f8fe] px-2 py-0.5 rounded text-[14px]">
                                     Pending
                                   </span>
                                 )}
@@ -1273,7 +1357,7 @@ function RollNumbersTab({
       ) : (
         <div className="bg-white rounded-2xl border border-[#d3e1f5] p-10 text-center text-[#3d5688]">
           <Hash className="w-8 h-8 text-[#d3e1f5] mx-auto mb-2" />
-          <p className="text-[15px] font-semibold">Please select a Course and Exam Session to manage roll numbers.</p>
+          <p className="text-[17px] font-semibold">Please select a Course and Exam Session to manage roll numbers.</p>
         </div>
       )}
     </div>
@@ -1335,8 +1419,8 @@ function ResultsTab({
   };
 
   const statusBadge = (s) => {
-    if (s.result_published_at) return <span className="inline-flex items-center gap-1 text-[12px] font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full"><CheckCircle2 className="w-3 h-3" />Published</span>;
-    return <span className="text-[12px] font-bold bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">Draft</span>;
+    if (s.result_published_at) return <span className="inline-flex items-center gap-1 text-[14px] font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full"><CheckCircle2 className="w-3 h-3" />Published</span>;
+    return <span className="text-[14px] font-bold bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">Draft</span>;
   };
 
   const filteredStudents = selectedCourse
@@ -1350,15 +1434,15 @@ function ResultsTab({
       {selectedSession && (
         <div className="bg-white rounded-xl border border-[#d3e1f5] overflow-hidden">
           <div className="bg-[#eaf2fd] px-4 py-2.5 border-b border-[#d3e1f5] flex items-center justify-between">
-            <p className="text-[13px] font-bold text-[#082a63] uppercase">Students with Admit Cards ({filteredStudents.length})</p>
+            <p className="text-[15px] font-bold text-[#082a63] uppercase">Students with Admit Cards ({filteredStudents.length})</p>
             <button onClick={load} className="p-1.5 rounded-lg hover:bg-[#d3e1f5]"><RefreshCw className={`w-3.5 h-3.5 text-[#3d5688] ${loading ? "animate-spin" : ""}`} /></button>
           </div>
           {loading ? (
             <div className="flex items-center justify-center py-10"><RefreshCw className="w-5 h-5 animate-spin text-[#1b57d8]" /></div>
           ) : filteredStudents.length === 0 ? (
-            <div className="text-center py-10 text-[#3d5688] text-[15px]">No students found.</div>
+            <div className="text-center py-10 text-[#3d5688] text-[17px]">No students found.</div>
           ) : (
-            <table className="w-full text-[13px]">
+            <table className="w-full text-[15px]">
               <thead className="border-b border-[#d3e1f5] bg-[#f4f8fe]">
                 <tr>
                   <th className="px-4 py-2.5 text-left font-bold text-[#082a63] uppercase">Roll No.</th>
@@ -1374,7 +1458,7 @@ function ResultsTab({
                     <td className="px-4 py-2.5 font-bold text-[#1b57d8]">
                       {s.roll_no}
                       {s.year_label && (
-                        <span className="ml-1.5 px-1.5 py-0.5 rounded text-[11px] font-semibold bg-[#eaf2fd] text-[#3d5688]">
+                        <span className="ml-1.5 px-1.5 py-0.5 rounded text-[13px] font-semibold bg-[#eaf2fd] text-[#3d5688]">
                           {s.year_label}
                         </span>
                       )}
@@ -1385,15 +1469,15 @@ function ResultsTab({
                     <td className="px-4 py-2.5 text-right">
                       <div className="flex items-center justify-end gap-1">
                         <button onClick={() => router.push(`/super-admin/dashboard/exam-management/results/${s.id}${s.target_year ? `?year=${s.target_year}` : ""}`)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#082a63] text-white text-[12px] font-bold hover:bg-[#0b3a85]">
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#082a63] text-white text-[14px] font-bold hover:bg-[#0b3a85]">
                           <Pencil className="w-3 h-3" />Enter Marks
                         </button>
                         {s.result_published_at ? (
-                          <button onClick={() => handlePublish(s, false)} disabled={publishing === s.id} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-50 text-red-700 text-[12px] font-bold hover:bg-red-100 disabled:opacity-60">
+                          <button onClick={() => handlePublish(s, false)} disabled={publishing === s.id} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-50 text-red-700 text-[14px] font-bold hover:bg-red-100 disabled:opacity-60">
                             Unpublish
                           </button>
                         ) : (
-                          <button onClick={() => handlePublish(s, true)} disabled={publishing === s.id} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-[12px] font-bold hover:bg-emerald-100 disabled:opacity-60">
+                          <button onClick={() => handlePublish(s, true)} disabled={publishing === s.id} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-[14px] font-bold hover:bg-emerald-100 disabled:opacity-60">
                             <CheckCircle2 className="w-3 h-3" />Publish
                           </button>
                         )}
@@ -1469,7 +1553,7 @@ function CentersTab({ showToast }) {
     <div className="space-y-6">
       {/* Add Form */}
       <div className="bg-white rounded-2xl border border-[#d3e1f5] p-5">
-        <h3 className="text-[15px] font-bold text-[#082a63] mb-4 flex items-center gap-2"><Plus className="w-4 h-4" /> Add Exam Center</h3>
+        <h3 className="text-[17px] font-bold text-[#082a63] mb-4 flex items-center gap-2"><Plus className="w-4 h-4" /> Add Exam Center</h3>
         <form onSubmit={addCenter} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {[
             { key: "center_name", label: "Center Name *", placeholder: "e.g. Delhi Centre" },
@@ -1478,14 +1562,14 @@ function CentersTab({ showToast }) {
             { key: "address", label: "Address", placeholder: "Full address" },
           ].map(f => (
             <div key={f.key}>
-              <label className="block text-[12px] font-bold text-[#3d5688] uppercase mb-1">{f.label}</label>
+              <label className="block text-[14px] font-bold text-[#3d5688] uppercase mb-1">{f.label}</label>
               <input value={newForm[f.key]} onChange={e => setNewForm(p => ({ ...p, [f.key]: e.target.value }))}
                 placeholder={f.placeholder}
-                className="w-full px-3 py-2 rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] text-[15px] text-[#082a63] focus:outline-none focus:ring-2 focus:ring-[#1b57d8]" />
+                className="w-full px-3 py-2 rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] text-[17px] text-[#082a63] focus:outline-none focus:ring-2 focus:ring-[#1b57d8]" />
             </div>
           ))}
           <div className="sm:col-span-2 lg:col-span-4 flex justify-end">
-            <button type="submit" disabled={adding} className="px-5 py-2 rounded-xl bg-[#082a63] text-white text-[13px] font-bold hover:bg-[#0b3a85] transition-all disabled:opacity-60 flex items-center gap-1.5">
+            <button type="submit" disabled={adding} className="px-5 py-2 rounded-xl bg-[#082a63] text-white text-[15px] font-bold hover:bg-[#0b3a85] transition-all disabled:opacity-60 flex items-center gap-1.5">
               <Plus className="w-3.5 h-3.5" /> {adding ? "Adding..." : "Add Center"}
             </button>
           </div>
@@ -1495,10 +1579,10 @@ function CentersTab({ showToast }) {
       {/* Centers list */}
       <div className="bg-white rounded-2xl border border-[#d3e1f5] overflow-hidden">
         <div className="px-5 py-4 border-b border-[#d3e1f5]">
-          <p className="text-[15px] font-bold text-[#082a63]">Exam Centers ({centers.length})</p>
+          <p className="text-[17px] font-bold text-[#082a63]">Exam Centers ({centers.length})</p>
         </div>
         {centers.length === 0 && (
-          <div className="p-10 text-center text-[15px] text-[#3d5688]">No exam centers added yet.</div>
+          <div className="p-10 text-center text-[17px] text-[#3d5688]">No exam centers added yet.</div>
         )}
         <div className="divide-y divide-[#d3e1f5]">
           {centers.map(c => (
@@ -1512,14 +1596,14 @@ function CentersTab({ showToast }) {
                     { key: "address", label: "Address" },
                   ].map(f => (
                     <div key={f.key}>
-                      <label className="block text-[12px] font-bold text-[#3d5688] uppercase mb-1">{f.label}</label>
+                      <label className="block text-[14px] font-bold text-[#3d5688] uppercase mb-1">{f.label}</label>
                       <input value={editForm[f.key]} onChange={e => setEditForm(p => ({ ...p, [f.key]: e.target.value }))}
-                        className="w-full px-3 py-2 rounded-xl border border-[#1b57d8] bg-white text-[15px] text-[#082a63] focus:outline-none focus:ring-2 focus:ring-[#1b57d8]" />
+                        className="w-full px-3 py-2 rounded-xl border border-[#1b57d8] bg-white text-[17px] text-[#082a63] focus:outline-none focus:ring-2 focus:ring-[#1b57d8]" />
                     </div>
                   ))}
                   <div className="sm:col-span-2 lg:col-span-4 flex gap-2 justify-end">
-                    <button onClick={() => setEditingId(null)} className="px-4 py-1.5 rounded-xl border border-[#d3e1f5] text-[13px] font-bold text-[#3d5688] hover:bg-[#eaf2fd]">Cancel</button>
-                    <button onClick={saveEdit} disabled={saving} className="px-4 py-1.5 rounded-xl bg-[#1b57d8] text-white text-[13px] font-bold hover:bg-[#1245b8] disabled:opacity-60 flex items-center gap-1.5">
+                    <button onClick={() => setEditingId(null)} className="px-4 py-1.5 rounded-xl border border-[#d3e1f5] text-[15px] font-bold text-[#3d5688] hover:bg-[#eaf2fd]">Cancel</button>
+                    <button onClick={saveEdit} disabled={saving} className="px-4 py-1.5 rounded-xl bg-[#1b57d8] text-white text-[15px] font-bold hover:bg-[#1245b8] disabled:opacity-60 flex items-center gap-1.5">
                       <Save className="w-3.5 h-3.5" /> {saving ? "Saving..." : "Save"}
                     </button>
                   </div>
@@ -1527,8 +1611,8 @@ function CentersTab({ showToast }) {
               ) : (
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-[15px] font-bold text-[#082a63]">{c.center_name}</p>
-                    <p className="text-[13px] text-[#3d5688] mt-0.5">Code: <span className="font-mono font-semibold text-[#082a63]">{c.center_code}</span>{c.city ? ` • ${c.city}` : ""}{c.address ? ` • ${c.address}` : ""}</p>
+                    <p className="text-[17px] font-bold text-[#082a63]">{c.center_name}</p>
+                    <p className="text-[15px] text-[#3d5688] mt-0.5">Code: <span className="font-mono font-semibold text-[#082a63]">{c.center_code}</span>{c.city ? ` • ${c.city}` : ""}{c.address ? ` • ${c.address}` : ""}</p>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
                     <button onClick={() => startEdit(c)} className="p-1.5 rounded-lg hover:bg-[#eaf2fd] text-[#3d5688] hover:text-[#082a63] transition-colors"><Pencil className="w-4 h-4" /></button>
@@ -1583,19 +1667,20 @@ export default function ExamManagementPage() {
   }, []);
 
   return (
+    <AdminPageShell
+      title="Exam Hub"
+      subtitle="Subjects, datesheet, roll numbers, results and centers"
+      backHref="/super-admin/dashboard?tab=exam"
+      backLabel="Exam Management"
+    >
     <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-bold text-[#082a63]">Exam Management</h2>
-        <p className="text-[13px] text-[#3d5688] mt-0.5">Manage subjects, datesheet, roll numbers, and results</p>
-      </div>
-
       {/* Tab bar */}
-      <div className="flex gap-1 bg-[#eaf2fd] rounded-xl p-1">
+      <div className="flex gap-1 overflow-x-auto bg-[#eaf2fd] rounded-xl p-1">
         {TABS.map((t) => (
           <button
             key={t.id}
             onClick={() => setActiveTab(t.id)}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[13px] font-bold transition-all ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[15px] font-bold transition-all ${
               activeTab === t.id ? "bg-white text-[#082a63] shadow-sm" : "text-[#3d5688] hover:text-[#082a63]"
             }`}
           >
@@ -1662,5 +1747,6 @@ export default function ExamManagementPage() {
 
       <Toast toast={toast} />
     </div>
+    </AdminPageShell>
   );
 }

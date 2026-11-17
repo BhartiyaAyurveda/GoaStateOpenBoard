@@ -13,14 +13,14 @@ export default function About() {
     <section id="about" className="mt-16 grid grid-cols-1 items-center gap-10 lg:grid-cols-[1fr_1.05fr] lg:gap-14">
       <div className="order-2 lg:order-1">
         <p className="text-[13.5px] font-bold uppercase tracking-[0.2em] text-brand">About Us</p>
-        <h2 className="mt-2 text-[28px] font-extrabold leading-tight tracking-tight text-ink sm:text-[36px]">About Goa Open School</h2>
+        <h2 className="mt-2 text-[28px] font-extrabold leading-tight tracking-tight text-ink sm:text-[36px]">About Goa State Open School</h2>
         <div className="mt-3 flex items-center gap-1.5" aria-hidden="true">
           <span className="h-[3px] w-14 bg-brand" />
           <span className="h-[3px] w-3 bg-[#9db7e0]" />
         </div>
 
         <p className="mt-5 max-w-[560px] text-[16px] font-medium leading-[1.75] text-ink">
-          Goa Open School is a Government recognized open schooling institution under the Directorate of Education, Government of
+          Goa State Open School is a Government recognized open schooling institution under the Directorate of Education, Government of
           Goa. It provides an alternative and flexible mode of education for learners who are unable to pursue regular schooling.
         </p>
 

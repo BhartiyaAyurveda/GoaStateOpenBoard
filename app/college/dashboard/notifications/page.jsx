@@ -84,7 +84,7 @@ export default function NotificationsPage() {
             Notifications &amp; Admin Queries
           </h1>
           <p className="text-[13px] sm:text-[15px] text-[#3d5688]">
-            Official clarifications and document revision requests dispatched by the Goa Open School Examination Section.
+            Official clarifications and document revision requests dispatched by the Goa State Open School Examination Section.
           </p>
         </div>
 

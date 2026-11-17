@@ -73,6 +73,11 @@ function DashboardLayoutContent({ children }) {
     return () => clearInterval(id);
   }, []);
 
+  // the public site's text-size zoom must not carry over into the dashboard
+  useEffect(() => {
+    try { document.documentElement.style.zoom = ""; } catch {}
+  }, []);
+
   const navItems = [
     {
       href: "/college/dashboard",
@@ -308,7 +313,7 @@ function DashboardLayoutContent({ children }) {
       )}
 
       {/* Main Dashboard Shell */}
-      <div className="flex h-screen overflow-hidden">
+      <div className="fixed inset-0 flex overflow-hidden">
 
         {/* ── SIDEBAR ── */}
         <aside
@@ -323,7 +328,7 @@ function DashboardLayoutContent({ children }) {
             </div>
             <div className="min-w-0">
               <p className="text-[15px] font-bold text-white leading-tight tracking-tight">
-                Goa Open School
+                Goa State Open School
               </p>
               <p className="text-[13px] text-[#5db0f4] font-semibold tracking-wider uppercase mt-0.5">
                 Study Centre Portal

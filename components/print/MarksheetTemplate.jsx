@@ -32,7 +32,7 @@ export default function MarksheetTemplate({ data, showPageBreak = false }) {
 
       {/* Watermark */}
       <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%) rotate(-30deg)", opacity: 0.04, fontSize: "72px", fontWeight: "bold", whiteSpace: "nowrap", userSelect: "none", pointerEvents: "none", zIndex: 0 }}>
-        GOA OPEN SCHOOL
+        GOA STATE OPEN SCHOOL
       </div>
 
       {/* Single Solid Academic Border */}
@@ -46,11 +46,11 @@ export default function MarksheetTemplate({ data, showPageBreak = false }) {
           </div>
           <div className="flex-1 text-center">
             <p className="text-[9px] font-bold tracking-[0.2em] uppercase text-[#1245b8]">Government Recognized Body</p>
-            <h1 className="text-lg font-bold text-[#0B1E36] leading-tight mt-0.5">
-              भारतीय आयुर्वेद योग एवं प्राकृतिक चिकित्सा परिषद
+            <h1 lang="kok" className="font-devanagari text-lg font-bold text-[#0B1E36] leading-tight mt-0.5">
+              गोंय राज्य मुक्त शाळा
             </h1>
             <p className="text-[11px] text-[#1245b8] font-semibold tracking-wider uppercase mt-0.5">
-              Goa Open School
+              Goa State Open School
             </p>
           </div>
           <div className="w-16 shrink-0 text-right">
@@ -65,22 +65,22 @@ export default function MarksheetTemplate({ data, showPageBreak = false }) {
           <div className="inline-block bg-[#0B1E36] text-[#5db0f4] px-8 py-1.5 rounded shadow-sm">
             <h2 className="text-sm font-bold tracking-widest uppercase">Statement of Marks</h2>
           </div>
-          <p className="text-[11px] text-[#1245b8] mt-1 font-medium">अंकतालिका</p>
+          <p className="text-[11px] text-[#1245b8] mt-1 font-medium">गूणपत्रिका</p>
         </div>
 
         {/* Student Info Grid */}
         <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 mb-4 text-[11px]">
           {[
-            ["Student Name / नाम", student?.candidate_name],
-            ["Roll Number / रोल नंबर", student?.roll_no],
-            ["Father's Name / पिता का नाम", student?.father_name],
-            ["Enrollment No. / नामांकन सं.", student?.enrollment_no],
-            ["Mother's Name / माता का नाम", student?.mother_name],
-            ["Date of Birth / जन्म तिथि", student?.dob],
-            ["Course / पाठ्यक्रम", student?.course],
+            ["Student Name / नांव", student?.candidate_name],
+            ["Roll Number / रोल क्रमांक", student?.roll_no],
+            ["Father's Name / बापायचें नांव", student?.father_name],
+            ["Enrollment No. / नोंदणी क्रमांक", student?.enrollment_no],
+            ["Mother's Name / आवयचें नांव", student?.mother_name],
+            ["Date of Birth / जल्मतारीख", student?.dob],
+            ["Course / अभ्यासक्रम", student?.course],
             ["Session / सत्र", student?.session_label],
             ["College / महाविद्यालय", student?.college],
-            ["Category / श्रेणी", student?.category],
+            ["Category / वर्ग", student?.category],
           ].map(([label, val]) => (
             <div key={label} className="flex gap-1.5">
               <span className="text-[#64748b] shrink-0 w-[42%]">{label}:</span>
@@ -94,7 +94,7 @@ export default function MarksheetTemplate({ data, showPageBreak = false }) {
           <thead>
             <tr className="bg-[#0B1E36] text-white">
               <Cell className="text-white border-white/20 font-bold">S.No.</Cell>
-              <Cell className="text-white border-white/20 font-bold w-1/3">Subject / विषय</Cell>
+              <Cell className="text-white border-white/20 font-bold w-1/3">Subject / विशय</Cell>
               <Cell className="text-white border-white/20 font-bold text-center">Max<br />(Theory)</Cell>
               <Cell className="text-white border-white/20 font-bold text-center">Obt.<br />(Theory)</Cell>
               <Cell className="text-white border-white/20 font-bold text-center">Max<br />(Pract.)</Cell>
@@ -129,7 +129,7 @@ export default function MarksheetTemplate({ data, showPageBreak = false }) {
           </tbody>
           <tfoot>
             <tr className="bg-[#F0F4F8] font-bold border-t-2 border-[#1b57d8]">
-              <Cell colSpan={6} className="text-right font-bold text-[#1245b8]">Grand Total / कुल अंक</Cell>
+              <Cell colSpan={6} className="text-right font-bold text-[#1245b8]">Grand Total / एकूण गूण</Cell>
               <Cell className="text-center font-bold text-[#0B1E36] text-sm">{summary?.grand_total} / {summary?.grand_max}</Cell>
               <Cell className="text-center font-bold text-[#1245b8]">{grade(pct)}</Cell>
               <Cell className={`text-center font-bold ${summary?.result === "PASS" ? "text-emerald-700" : "text-red-700"}`}>
@@ -142,7 +142,7 @@ export default function MarksheetTemplate({ data, showPageBreak = false }) {
         {/* Summary Row */}
         <div className="flex justify-between items-center text-[11px] mb-6 px-1">
           <div className="space-y-0.5">
-            <p><span className="text-[#64748b]">Percentage / प्रतिशत:</span> <strong className="text-[#0B1E36]">{summary?.percentage}%</strong></p>
+            <p><span className="text-[#64748b]">Percentage / टक्केवारी:</span> <strong className="text-[#0B1E36]">{summary?.percentage}%</strong></p>
             <p><span className="text-[#64748b]">Grade / श्रेणी:</span> <strong className="text-[#1245b8]">{grade(pct)}</strong></p>
           </div>
           <div className={`px-6 py-2 rounded border-2 font-bold text-base ${summary?.result === "PASS" ? "border-[#1b57d8] text-[#0B1E36] bg-[#F0F4F8]" : "border-red-600 text-red-700 bg-red-50"}`}>
@@ -160,12 +160,12 @@ export default function MarksheetTemplate({ data, showPageBreak = false }) {
             <div className="text-center text-[10px] text-[#64748b]">
               <div className="h-12 flex items-end justify-center mb-1">
               </div>
-              <div className="w-28 border-t border-[#0B1E36] pt-1 mx-auto text-[#0B1E36] font-medium">Prepared By / तैयारकर्ता</div>
+              <div className="w-28 border-t border-[#0B1E36] pt-1 mx-auto text-[#0B1E36] font-medium">Prepared By / तयार करपी</div>
             </div>
             <div className="text-center text-[10px] text-[#64748b]">
               <div className="h-12 flex items-end justify-center mb-1">
               </div>
-              <div className="w-28 border-t border-[#0B1E36] pt-1 mx-auto text-[#0B1E36] font-medium">Checked By / जांचकर्ता</div>
+              <div className="w-28 border-t border-[#0B1E36] pt-1 mx-auto text-[#0B1E36] font-medium">Checked By / तपासपी</div>
             </div>
             <div className="text-center text-[10px] text-[#64748b]">
               <div className="h-12 flex items-end justify-center mb-1">

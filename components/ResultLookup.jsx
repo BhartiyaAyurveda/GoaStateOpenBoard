@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import { ChevronDown, Loader2, Printer, Search, RotateCcw, Hash, CalendarDays, ClipboardList, ShieldCheck } from "lucide-react";
 import { ENROLLMENT_PATTERN, RESULT_CLASSES, RESULT_SESSIONS } from "@/lib/result-options";
+import ResultMarksheet from "@/components/ResultMarksheet";
 
 const EMPTY = { cls: "", session: "", enrollment: "", dob: "" };
 
@@ -87,7 +88,8 @@ function ResultSheet({ data, onReset }) {
         <header className="flex items-center gap-4 border-b-[3px] border-navy bg-[#f4f8fe] px-5 py-4">
           <Image src="/images/logo.png" alt="" width={480} height={266} className="h-[54px] w-auto" />
           <div className="flex-1 text-center">
-            <p className="text-[22px] font-extrabold tracking-wide text-navy sm:text-[26px]">GOA OPEN SCHOOL</p>
+            <p className="text-[22px] font-extrabold tracking-wide text-navy sm:text-[26px]">GOA STATE OPEN SCHOOL</p>
+            <p lang="kok" className="font-devanagari text-[15px] font-semibold text-navy">गोंय राज्य मुक्त शाळा</p>
             <p className="text-[13.5px] font-semibold text-[#44557a]">Directorate of Education, Government of Goa</p>
           </div>
           <span className="hidden w-[54px] sm:block" />
@@ -177,7 +179,7 @@ function ResultSheet({ data, onReset }) {
 
         <p className="border-t border-dashed border-[#9db7e0] bg-[#fff8e6] px-5 py-3 text-[12.5px] font-medium leading-relaxed text-[#5a4300]">
           <b>Note:</b> This is a provisional online result for information only and is not a valid document. Errors, if any, must be
-          reported to the Study Centre / Goa Open School within the notified period. The original marksheet issued by Goa Open School
+          reported to the Study Centre / Goa State Open School within the notified period. The original marksheet issued by Goa State Open School
           shall be treated as final.
         </p>
       </article>
@@ -264,8 +266,22 @@ export default function ResultLookup() {
 
   if (status === "done" && result) {
     return (
-      <div className="p-5 sm:p-7 print:p-0">
-        <ResultSheet data={result} onReset={reset} />
+      <div className="p-4 sm:p-7 print:p-0">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 print:hidden">
+        <button
+          onClick={reset}
+          className="inline-flex h-[40px] items-center gap-2 rounded-md border border-[#9db7e0] bg-white px-5 text-[14px] font-bold text-ink hover:bg-[#f2f7fe]"
+        >
+          <RotateCcw size={16} /> Check another result
+        </button>
+        <button
+          onClick={() => window.print()}
+          className="inline-flex h-[40px] items-center gap-2 rounded-md bg-navy px-5 text-[14px] font-bold text-white hover:bg-brand"
+        >
+          <Printer size={16} /> Print / Download Marksheet
+        </button>
+      </div>
+        {result.marksheet ? <ResultMarksheet data={result.marksheet} /> : <ResultSheet data={result} onReset={reset} />}
       </div>
     );
   }
@@ -434,7 +450,7 @@ export default function ResultLookup() {
       <p className="rounded-md border border-[#f3d28a] bg-[#fff8e6] px-4 py-3 text-[13px] font-medium leading-relaxed text-[#5a4300]">
         <b>Note:</b> The results published on the net are for immediate information to the examinees. Although every effort is made to
         maintain the accuracy of the results, errors may creep in inadvertently. Students are advised to verify their marks with the
-        official marksheet issued through the Study Centre. For discrepancies, contact your Study Centre or Goa Open School.
+        official marksheet issued through the Study Centre. For discrepancies, contact your Study Centre or Goa State Open School.
       </p>
     </form>
   );

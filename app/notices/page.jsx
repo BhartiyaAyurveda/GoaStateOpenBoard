@@ -1,3 +1,4 @@
+import { getContactInfo } from "@/lib/site-settings";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -24,8 +25,8 @@ import { getNotices } from "@/lib/notices-server";
 export const revalidate = 60;
 
 export const metadata = {
-  title: "Notices | Goa Open School",
-  description: "All notices and circulars of Goa Open School – admission, examination, study centres and general notices.",
+  title: "Notices | Goa State Open School",
+  description: "All notices and circulars of Goa State Open School – admission, examination, study centres and general notices.",
 };
 
 const quick = [
@@ -49,6 +50,7 @@ function Panel({ icon: Icon, title, children }) {
 }
 
 export default async function NoticesPage() {
+  const contact = await getContactInfo();
   const NOTICES = await getNotices();
   const total = NOTICES.length;
   const fresh = NOTICES.filter((n) => n.isNew).length;
@@ -81,7 +83,7 @@ export default async function NoticesPage() {
           {/* heading band with summary */}
           <div className="mt-4 flex flex-col gap-5 border-l-[6px] border-navy bg-gradient-to-r from-[#e3edfa] to-white px-5 py-5 sm:px-7 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-[13px] font-bold uppercase tracking-[0.18em] text-[#44557a]">Goa Open School</p>
+              <p className="text-[13px] font-bold uppercase tracking-[0.18em] text-[#44557a]">Goa State Open School</p>
               <h1 className="mt-1 flex items-center gap-3 text-[26px] font-extrabold leading-tight tracking-tight text-ink sm:text-[34px]">
                 <Megaphone size={30} strokeWidth={1.8} className="text-navy" aria-hidden="true" />
                 Notices &amp; Circulars
@@ -136,9 +138,9 @@ export default async function NoticesPage() {
               </span>
               <div className="text-[14px] font-medium leading-snug">
                 <p className="text-[13px] font-bold uppercase tracking-wider text-sky">Any queries?</p>
-                <p className="text-white/90">Call Goa Open School on</p>
-                <a href="tel:+918322743300" className="text-[22px] font-extrabold leading-tight hover:text-sky">
-                  0832–2743300
+                <p className="text-white/90">Call Goa State Open School on</p>
+                <a href={contact.tel} className="text-[22px] font-extrabold leading-tight hover:text-sky">
+                  {contact.phone}
                 </a>
                 <p className="text-white/80">
                   or{" "}

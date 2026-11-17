@@ -1,3 +1,4 @@
+import { getContactInfo } from "@/lib/site-settings";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -17,7 +18,8 @@ import TopBar from "@/components/TopBar";
 import Header from "@/components/Header";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { PROGRAMMES, PROGRAMME_LIST, SYLLABUS_PDF } from "@/lib/programmes";
+import { PROGRAMMES, PROGRAMME_LIST } from "@/lib/programmes";
+import { getHomeContent } from "@/lib/home-content";
 
 export function generateStaticParams() {
   return PROGRAMME_LIST.map((p) => ({ slug: p.slug }));
@@ -26,8 +28,8 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const p = PROGRAMMES[slug];
-  if (!p) return { title: "Programme not found | Goa Open School" };
-  return { title: `${p.title} | Goa Open School`, description: p.tagline };
+  if (!p) return { title: "Programme not found | Goa State Open School" };
+  return { title: `${p.title} | Goa State Open School`, description: p.tagline };
 }
 
 function Panel({ icon: Icon, title, children }) {
@@ -44,7 +46,11 @@ function Panel({ icon: Icon, title, children }) {
 
 const tick = <span className="mt-[7px] h-2 w-2 shrink-0 bg-navy" aria-hidden="true" />;
 
+export const revalidate = 60; // contact details (header menu, footer, help boxes) come from the dashboard
+
 export default async function ProgrammePage({ params }) {
+  const contact = await getContactInfo();
+  const { syllabus } = await getHomeContent();
   const { slug } = await params;
   const p = PROGRAMMES[slug];
   if (!p) notFound();
@@ -72,7 +78,7 @@ export default async function ProgrammePage({ params }) {
 
           {/* heading band */}
           <div className="mt-4 border-l-[6px] border-navy bg-gradient-to-r from-[#e3edfa] to-white px-5 py-5 sm:px-7">
-            <p className="text-[13px] font-bold uppercase tracking-[0.18em] text-[#44557a]">Goa Open School</p>
+            <p className="text-[13px] font-bold uppercase tracking-[0.18em] text-[#44557a]">Goa State Open School</p>
             <h1 className="mt-1 text-[26px] font-extrabold leading-tight tracking-tight text-ink sm:text-[34px]">{p.title}</h1>
             <p className="mt-1.5 max-w-[760px] text-[15px] font-medium leading-relaxed text-[#44557a]">{p.tagline}</p>
           </div>
@@ -121,7 +127,7 @@ export default async function ProgrammePage({ params }) {
               </table>
               <p className="border-t border-[#c9daf2] bg-[#fff8e6] px-5 py-3 text-[13.5px] font-medium text-[#5a4300] sm:px-7">
                 The full subject scheme with codes and marks is given in the{" "}
-                <a href={SYLLABUS_PDF} target="_blank" rel="noopener noreferrer" className="font-bold underline underline-offset-2">
+                <a href={syllabus.url} target="_blank" rel="noopener noreferrer" className="font-bold underline underline-offset-2">
                   Syllabus (PDF)
                 </a>
                 .
@@ -159,7 +165,7 @@ export default async function ProgrammePage({ params }) {
                 <Download size={17} /> Admission Form ({p.short})
               </a>
               <a
-                href={SYLLABUS_PDF}
+                href={syllabus.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-2.5 inline-flex h-[44px] w-full items-center justify-center gap-2 rounded-md border border-white/60 text-[14.5px] font-bold text-white transition hover:bg-white/10"
@@ -189,8 +195,8 @@ export default async function ProgrammePage({ params }) {
               </span>
               <div className="text-[14px] font-medium leading-snug">
                 <p className="text-[13px] font-bold uppercase tracking-wider text-[#44557a]">Any queries?</p>
-                <a href="tel:+918322743300" className="text-[20px] font-extrabold leading-tight text-navy hover:text-brand">
-                  0832–2743300
+                <a href={contact.tel} className="text-[20px] font-extrabold leading-tight text-navy hover:text-brand">
+                  {contact.phone}
                 </a>
                 <p>
                   or{" "}

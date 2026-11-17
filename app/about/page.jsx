@@ -35,20 +35,22 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Stats from "@/components/Stats";
 
+export const revalidate = 60; // homepage content (stats) comes from the dashboard
+
 export const metadata = {
-  title: "About Us | Goa Open School",
+  title: "About Us | Goa State Open School",
   description:
-    "About Goa Open School – overview, mission, vision, values and examination scheme of the open schooling institution under the Directorate of Education, Government of Goa.",
+    "About Goa State Open School – overview, mission, vision, values and examination scheme of the open schooling institution under the Directorate of Education, Government of Goa.",
 };
 
 // NOTE: the sections below (benefits, who can join, aims, learner journey) are
 // general open-schooling content written as placeholders. Verify and replace
-// them with Goa Open School's official text before publishing.
+// them with Goa State Open School's official text before publishing.
 const benefits = [
   { icon: Clock, title: "Flexible Learning", text: "No fixed classroom timetable. Study when it suits you, around work and family." },
   { icon: RotateCcw, title: "Your Own Pace", text: "Move through each subject at a speed you are comfortable with." },
   { icon: MapPin, title: "Study Centre Support", text: "Personal contact classes and guidance at accredited centres close to you." },
-  { icon: BadgeCheck, title: "Recognised Certificate", text: "A certificate issued by Goa Open School on successful completion." },
+  { icon: BadgeCheck, title: "Recognised Certificate", text: "A certificate issued by Goa State Open School on successful completion." },
   { icon: IndianRupee, title: "Affordable Education", text: "A low-cost route to complete Class X or Class XII." },
   { icon: Laptop, title: "Online Services", text: "Download your Enrollment Card and Admit Card and check results online." },
 ];
@@ -90,7 +92,7 @@ const values = [
 // NOTE: the scheme figures and examination rules below are adapted from the
 // general open-schooling scheme published by another State Open School
 // (jsos-ac.in). They are placeholders – verify every number and rule against
-// Goa Open School's own regulations before publishing.
+// Goa State Open School's own regulations before publishing.
 const scheme = [
   { value: "6", label: "Subjects", sub: "for Secondary (Class X)", icon: BookOpen },
   { value: "5", label: "Subjects", sub: "for Senior Secondary (Class XII)", icon: BookOpen },
@@ -105,12 +107,12 @@ const examPoints = [
   "One additional subject may be taken by the learner for convenience, over and above the required subjects.",
   "Credit transfer: a learner who has passed certain subjects from another recognised board may be allowed to transfer credits for up to two subjects.",
   "Study material and personal contact sessions are provided through accredited study centres, and Tutor Marked Assignments (TMA) are submitted as per the guidelines for each session.",
-  "Certificates are issued by Goa Open School on successful completion of the programme.",
+  "Certificates are issued by Goa State Open School on successful completion of the programme.",
   "Eligibility, subject combinations and other rules are given in the admission prospectus and latest notices.",
 ];
 
 // NOTE: adapted from the general scheme of another State Open School –
-// verify against Goa Open School's actual structure (talukas / study centres)
+// verify against Goa State Open School's actual structure (talukas / study centres)
 // before publishing.
 const centrePoints = [
   "Study centres are set up across the State so that learners can attend personal contact classes close to where they live.",
@@ -145,7 +147,7 @@ export default function AboutPage() {
             <div className="grid grid-cols-1 gap-8 p-6 sm:p-9 lg:min-h-[420px] lg:grid-cols-[1fr_1.25fr] lg:items-center lg:gap-10 lg:p-10">
               <div className="space-y-5 text-[16.5px] font-medium leading-[1.8] text-ink">
                 <p>
-                  Goa Open School is a Government recognized open schooling institution functioning under the Directorate
+                  Goa State Open School is a Government recognized open schooling institution functioning under the Directorate
                   of Education, Government of Goa. It offers an alternative and flexible mode of education to learners who
                   are unable to pursue regular schooling, enabling them to complete their Secondary (Class X) and Senior
                   Secondary (Class XII) education.
@@ -163,7 +165,7 @@ export default function AboutPage() {
               <div className="self-start overflow-hidden rounded-lg bg-[#dbe9f9] shadow-md ring-1 ring-black/5">
                 <Image
                   src="/images/about-main.webp"
-                  alt="Goa Open School: recognised open schooling for Secondary (Class X) and Senior Secondary (Class XII), for working youth, homemakers, learners in remote areas and persons with disabilities. Study at your own pace with study material and contact sessions, public examinations and a recognised certificate."
+                  alt="Goa State Open School: recognised open schooling for Secondary (Class X) and Senior Secondary (Class XII), for working youth, homemakers, learners in remote areas and persons with disabilities. Study at your own pace with study material and contact sessions, public examinations and a recognised certificate."
                   width={1672}
                   height={941}
                   priority
@@ -214,7 +216,7 @@ export default function AboutPage() {
           <section>
             <div className="mb-7 flex items-center justify-center gap-3">
               <span className="h-[2px] w-12 bg-brand sm:w-14" />
-              <h2 className="text-[26px] font-bold leading-none tracking-tight text-ink sm:text-[30px]">Why Goa Open School</h2>
+              <h2 className="text-[26px] font-bold leading-none tracking-tight text-ink sm:text-[30px]">Why Goa State Open School</h2>
               <span className="h-[2px] w-12 bg-brand sm:w-14" />
             </div>
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -236,7 +238,7 @@ export default function AboutPage() {
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
             <Panel icon={Users} title="Who Can Join?">
               <p className="px-6 pt-6 text-[15.5px] font-medium leading-[1.8] text-ink sm:px-9">
-                Goa Open School is for every learner who wants to complete Class X or Class XII but cannot attend a regular school.
+                Goa State Open School is for every learner who wants to complete Class X or Class XII but cannot attend a regular school.
               </p>
               <ul className="grid grid-cols-1 gap-3 p-6 sm:grid-cols-2 sm:p-9 sm:pt-6">
                 {whoCanJoin.map(({ icon: Icon, label }) => (

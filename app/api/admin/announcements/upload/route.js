@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
 import { getImageKit } from "@/lib/imagekit";
+import { optimizePdf } from "@/lib/pdf-optimize";
 
 export const dynamic = "force-dynamic";
 
@@ -41,15 +42,19 @@ export async function POST(request) {
     return NextResponse.json({ error: "File is not a valid PDF" }, { status: 400 });
   }
 
+  // PDFs are compressed before they are stored (falls back to the original if that fails)
+  let toStore = buffer;
+  if (file.type === "application/pdf") toStore = (await optimizePdf(buffer)).buffer;
+
   try {
     const ik = getImageKit();
     const res = await ik.upload({
-      file: buffer,
+      file: toStore,
       fileName: safeFileName(file.name),
       folder: "/announcements",
       useUniqueFileName: true,
     });
-    return NextResponse.json({ ok: true, url: res.url, fileId: res.fileId, originalName: file.name }, { status: 201 });
+    return NextResponse.json({ ok: true, url: res.url, fileId: res.fileId, originalName: file.name, originalSize: buffer.length, size: toStore.length }, { status: 201 });
   } catch (err) {
     console.error("Announcement upload error:", err);
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });
