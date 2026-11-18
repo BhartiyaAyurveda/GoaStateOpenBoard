@@ -340,6 +340,15 @@ export default function SuperAdminDashboardPage() {
   const [sessionSubmitting, setSessionSubmitting] = useState(false);
   const [newCenter, setNewCenter] = useState({ center_name: "", center_code: "", city: "", state: "", address: "" });
   const [centerSubmitting, setCenterSubmitting] = useState(false);
+  const [showCenterForm, setShowCenterForm] = useState(false);
+  const [showSessionForm, setShowSessionForm] = useState(false);
+  // the "Add Exam Center" popup: Esc closes it, and the page behind does not scroll while it is open
+  useEffect(() => {
+    if (!showCenterForm && !showSessionForm) return;
+    const onKey = (e) => { if (e.key === "Escape") { setShowCenterForm(false); setShowSessionForm(false); } };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [showCenterForm, showSessionForm]);
   const [examSubTab, setExamSubTab] = useState("sessions");
 
   // Inquiries state
@@ -383,7 +392,7 @@ export default function SuperAdminDashboardPage() {
       const [sr, cr] = await Promise.all([fetch("/api/admin/exam-sessions"), fetch("/api/admin/exam-centers")]);
       const [sd, cd] = await Promise.all([sr.json(), cr.json()]);
       if (sd.ok) setExamSessions(sd.data || []);
-      if (cd.ok) setExamCenters(cd.data || []);
+      if (cd.ok) setExamCenters(cd.centers || cd.data || []);
     } catch {}
     setExamLoading(false);
   };
@@ -397,7 +406,7 @@ export default function SuperAdminDashboardPage() {
     try {
       const res = await fetch("/api/admin/exam-sessions", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(newSession) });
       const data = await res.json();
-      if (data.ok) { setExamSessions(p => [data.data, ...p]); setNewSession({ session_name: "", start_date: "", end_date: "" }); showToast("Session added!"); }
+      if (data.ok) { setExamSessions(p => [data.data, ...p]); setNewSession({ session_name: "", start_date: "", end_date: "" }); setShowSessionForm(false); showToast("Session added!"); }
       else showToast(data.error || "Failed", "error");
     } catch { showToast("Network error", "error"); }
     setSessionSubmitting(false);
@@ -422,7 +431,7 @@ export default function SuperAdminDashboardPage() {
     try {
       const res = await fetch("/api/admin/exam-centers", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(newCenter) });
       const data = await res.json();
-      if (data.ok) { setExamCenters(p => [...p, data.data]); setNewCenter({ center_name: "", center_code: "", city: "", state: "", address: "" }); showToast("Center added!"); }
+      if (data.ok) { setExamCenters(p => [...p, data.center || data.data]); setNewCenter({ center_name: "", center_code: "", city: "", state: "", address: "" }); setShowCenterForm(false); showToast("Center added!"); }
       else showToast(data.error || "Failed", "error");
     } catch { showToast("Network error", "error"); }
     setCenterSubmitting(false);
@@ -790,7 +799,7 @@ export default function SuperAdminDashboardPage() {
     { id: "applications",   label: "Student Applications",  icon: ClipboardList,  badge: (appCounts ? (appCounts.submitted || 0) + (appCounts.pending || 0) : applications.filter(a => a.status === "submitted" || a.status === "pending").length) || null },
     { id: "colleges",       label: "College Management",    icon: Building2,      badge: colleges.length || null },
     { id: "courses",        label: "Courses & Subjects",    icon: GraduationCap,  badge: courses.length || null },
-    { id: "exam",           label: "Exam Management",       icon: BookOpen,       badge: examSessions.filter(s => s.is_active).length > 0 ? "Active" : null, badgeColor: "green" },
+    { id: "exam",           label: "Exam Management",       icon: BookOpen },
     { id: "announcements",  label: "Announcements",         icon: Bell,           badge: announcements.filter(a => a.is_published).length || null },
     { id: "inquiries",      label: "Contact Inquiries",     icon: MessageSquarePlus, badge: inquiries.filter(i => !i.is_read).length || null, badgeColor: "red" },
     { id: "home",           label: "Home Customization",    icon: Sparkles },
@@ -1073,7 +1082,7 @@ export default function SuperAdminDashboardPage() {
           </header>
 
           {/* Scrollable content */}
-          <main className="flex-1 overflow-y-auto p-5 sm:p-7">
+          <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-7">
           
           {/* TAB 1: OVERVIEW */}
           {activeTab === "overview" && (() => {
@@ -1131,11 +1140,11 @@ export default function SuperAdminDashboardPage() {
                     <p className="max-w-lg text-[15.5px] leading-relaxed text-white/75">Goa State Open School · Board administration panel</p>
                   </div>
                   <div className="grid grid-cols-2 gap-2.5 md:flex md:shrink-0">
-                    <button onClick={() => setActiveTab("applications")} className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-white px-5 text-[15px] font-bold text-[#082a63] shadow-md transition hover:bg-[#e3edfa]">
-                      <ClipboardList className="h-4 w-4" /> Applications
+                    <button onClick={() => setActiveTab("applications")} className="inline-flex h-11 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl bg-white px-4 text-[15px] font-bold text-[#082a63] shadow-md transition hover:bg-[#e3edfa] sm:px-5">
+                      <ClipboardList className="h-5 w-5 shrink-0" strokeWidth={2} /> Applications
                     </button>
-                    <button onClick={() => setActiveTab("colleges")} className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl border border-white/20 bg-white/10 px-5 text-[15px] font-semibold text-white transition hover:bg-white/15">
-                      <Building2 className="h-4 w-4 text-[#bcd8fb]" /> Colleges
+                    <button onClick={() => setActiveTab("colleges")} className="inline-flex h-11 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-white/20 bg-white/10 px-4 text-[15px] font-semibold text-white transition hover:bg-white/15 sm:px-5">
+                      <Building2 className="h-5 w-5 shrink-0 text-[#bcd8fb]" strokeWidth={2} /> Colleges
                     </button>
                   </div>
                 </div>
@@ -1163,9 +1172,9 @@ export default function SuperAdminDashboardPage() {
                       <span className={`flex h-9 w-9 items-center justify-center rounded-xl ${bg} ${ic} transition-transform group-hover:scale-110`}><Icon className="h-4 w-4" /></span>
                       <ChevronRight className="h-4 w-4 text-[#1b57d8]/40 transition group-hover:translate-x-0.5 group-hover:text-[#1b57d8]" />
                     </div>
-                    <p className="mb-1 truncate text-[12.5px] font-bold uppercase tracking-wider text-[#4a6090]">{label}</p>
+                    <p className="mb-1 text-[12px] font-bold uppercase leading-tight tracking-wide text-[#4a6090] sm:text-[12.5px] sm:tracking-wider">{label}</p>
                     <p className="text-[30px] font-extrabold leading-none text-[#082a63]">{value}</p>
-                    <p className={`mt-1.5 truncate text-[14px] font-medium ${accent}`}>{sub}</p>
+                    <p className={`mt-1.5 text-[14px] font-medium leading-snug ${accent}`}>{sub}</p>
                   </button>
                 ))}
               </div>
@@ -1175,12 +1184,12 @@ export default function SuperAdminDashboardPage() {
                 <h2 className="mb-3 text-[16px] font-bold text-[#082a63]">Quick access</h2>
                 <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                   {modules.map(({ tab, href, icon: Icon, title, sub }) => {
-                    const cls = "group flex items-start gap-3 rounded-2xl border border-[#d3e1f5] bg-white p-3.5 text-left shadow-sm transition hover:border-[#1b57d8]/60 hover:shadow-md";
+                    const cls = "group flex min-w-0 flex-col items-start gap-2.5 rounded-2xl border border-[#d3e1f5] bg-white p-3.5 text-left shadow-sm transition hover:border-[#1b57d8]/60 hover:shadow-md sm:flex-row sm:gap-3";
                     const body = (
                       <>
                         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e3edfa] text-[#1245b8] transition-colors group-hover:bg-[#082a63] group-hover:text-white"><Icon className="h-5 w-5" /></span>
-                        <span className="min-w-0">
-                          <span className="block truncate text-[15px] font-bold text-[#082a63]">{title}</span>
+                        <span className="min-w-0 break-words">
+                          <span className="block text-[15px] font-bold leading-tight text-[#082a63]">{title}</span>
                           <span className="block text-[13.5px] leading-snug text-[#3d5688]">{sub}</span>
                         </span>
                       </>
@@ -1196,7 +1205,7 @@ export default function SuperAdminDashboardPage() {
 
               {/* Recent applications */}
               <div className="overflow-hidden rounded-2xl border border-[#d3e1f5] bg-white shadow-sm">
-                <div className="flex items-center justify-between gap-4 border-b border-[#d3e1f5] px-4 py-4 sm:px-5">
+                <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-[#d3e1f5] px-4 py-4 sm:px-5">
                   <div className="min-w-0">
                     <h2 className="text-[17px] font-bold text-[#082a63]">Recent student applications</h2>
                     <p className="text-[14px] text-[#3d5688]">Latest registrations submitted by colleges</p>
@@ -2101,13 +2110,13 @@ export default function SuperAdminDashboardPage() {
           {/* ── TAB: EXAM MANAGEMENT ── */}
           {activeTab === "exam" && (
             <div className="min-w-0 space-y-5">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <h2 className="text-xl font-bold text-[#082a63]">Exam Management</h2>
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <h2 className="text-xl font-bold text-[#082a63] max-sm:sr-only">Exam Management</h2>
                   <p className="text-[14px] sm:text-[15px] text-[#3d5688]">Exam sessions, centers and exam tools.</p>
                 </div>
-                <button onClick={loadExamSessions} disabled={examLoading}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#082a63] px-4 py-3 text-[14px] font-bold text-white transition hover:bg-[#0b3a85] disabled:opacity-60 sm:py-2.5">
+                <button onClick={loadExamSessions} disabled={examLoading} aria-label="Refresh"
+                  className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-[#082a63] px-3.5 py-2.5 text-[14px] font-bold text-white transition hover:bg-[#0b3a85] disabled:opacity-60 sm:px-4">
                   <RefreshCw className={`h-4 w-4 ${examLoading ? "animate-spin" : ""}`} /> Refresh
                 </button>
               </div>
@@ -2115,8 +2124,8 @@ export default function SuperAdminDashboardPage() {
               {/* Quick links */}
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <Link href="/super-admin/dashboard/exam-management"
-                  className="group flex items-center gap-4 rounded-2xl bg-gradient-to-br from-[#082a63] to-[#0f4aa8] p-4 text-white shadow-sm transition hover:shadow-md">
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/15"><BookOpen className="h-6 w-6" /></span>
+                  className="group flex items-center gap-3 rounded-2xl bg-gradient-to-br from-[#082a63] to-[#0f4aa8] p-3.5 text-white shadow-sm transition hover:shadow-md sm:gap-4 sm:p-4">
+                  <span className="flex h-11 w-11 shrink-0 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-white/15"><BookOpen className="h-6 w-6" /></span>
                   <span className="min-w-0 flex-1">
                     <span className="block text-[16.5px] font-bold">Exam Hub</span>
                     <span className="block text-[13.5px] leading-snug text-blue-100">Subjects, datesheet, roll numbers, marks &amp; results</span>
@@ -2125,8 +2134,8 @@ export default function SuperAdminDashboardPage() {
                 </Link>
 
                 <Link href="/super-admin/dashboard/exam-config"
-                  className="group flex items-center gap-4 rounded-2xl border border-[#d3e1f5] bg-white p-4 shadow-sm transition hover:border-[#9db7e0] hover:shadow-md">
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#eaf2fd] text-[#1b57d8]"><Clock className="h-6 w-6" /></span>
+                  className="group flex items-center gap-3 rounded-2xl border border-[#d3e1f5] bg-white p-3.5 shadow-sm transition hover:border-[#9db7e0] hover:shadow-md sm:gap-4 sm:p-4">
+                  <span className="flex h-11 w-11 shrink-0 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-[#eaf2fd] text-[#1b57d8]"><Clock className="h-6 w-6" /></span>
                   <span className="min-w-0 flex-1">
                     <span className="block text-[16.5px] font-bold text-[#082a63]">Exam Configuration</span>
                     <span className="block text-[13.5px] leading-snug text-[#3d5688]">Center, date &amp; time per course, for admit cards</span>
@@ -2142,7 +2151,7 @@ export default function SuperAdminDashboardPage() {
                   { key: "centers", label: "Exam Centers", count: examCenters.length },
                 ].map((t) => (
                   <button key={t.key} onClick={() => setExamSubTab(t.key)}
-                    className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-[14.5px] font-bold transition sm:flex-none ${examSubTab === t.key ? "bg-[#082a63] text-white shadow-sm" : "text-[#3d5688] hover:bg-[#f4f8fe]"}`}>
+                    className={`flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-2.5 py-2.5 text-[13.5px] font-bold transition sm:flex-none sm:gap-2 sm:px-4 sm:text-[14.5px] ${examSubTab === t.key ? "bg-[#082a63] text-white shadow-sm" : "text-[#3d5688] hover:bg-[#f4f8fe]"}`}>
                     {t.label}
                     <span className={`rounded-full px-2 py-0.5 text-[12px] font-extrabold ${examSubTab === t.key ? "bg-white/20 text-white" : "bg-[#eaf2fd] text-[#1b57d8]"}`}>{t.count}</span>
                   </button>
@@ -2156,14 +2165,31 @@ export default function SuperAdminDashboardPage() {
                     <span>A session is one exam cycle (e.g. 2025-26 Annual). The <b>Active</b> session is the one used for roll numbers, admit cards and results.</span>
                   </p>
 
-                  {/* Add session form */}
-                  <form onSubmit={addSession} className="rounded-2xl border border-[#d3e1f5] bg-white p-4 shadow-sm sm:p-5">
-                    <h3 className="mb-4 flex items-center gap-2 text-[17px] font-bold text-[#082a63]">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#eaf2fd] text-[#1b57d8]"><Plus className="h-4 w-4" /></span>
-                      Add New Session
-                    </h3>
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_auto] lg:items-end">
-                      <label className="block min-w-0 sm:col-span-2 lg:col-span-1">
+                  {/* Add session: a button; the form opens as a popup */}
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <p className="text-[14.5px] font-medium text-[#3d5688]">{examSessions.length} exam session{examSessions.length === 1 ? "" : "s"}</p>
+                    <button type="button" onClick={() => setShowSessionForm(true)}
+                      className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-[#1b57d8] px-5 text-[15px] font-bold text-white shadow-sm transition hover:bg-[#1245b8]">
+                      <Plus className="h-4 w-4" /> Add New Session
+                    </button>
+                  </div>
+                  {showSessionForm && (
+                  <div className="fixed inset-0 z-[200] flex items-start justify-center overflow-y-auto bg-[#06204f]/70 p-3 backdrop-blur-sm sm:items-center sm:p-6"
+                    onMouseDown={(e) => { if (e.target === e.currentTarget && !sessionSubmitting) setShowSessionForm(false); }}>
+                  <form onSubmit={addSession} role="dialog" aria-modal="true" aria-labelledby="add-session-title"
+                    className="my-auto w-full max-w-[560px] rounded-2xl border border-[#d3e1f5] bg-white p-5 shadow-2xl sm:p-6">
+                    <div className="mb-4 flex items-start justify-between gap-3">
+                      <h3 id="add-session-title" className="flex items-center gap-2 text-[18px] font-bold text-[#082a63]">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#eaf2fd] text-[#1b57d8]"><Plus className="h-4 w-4" /></span>
+                        Add New Session
+                      </h3>
+                      <button type="button" onClick={() => setShowSessionForm(false)} disabled={sessionSubmitting} aria-label="Close"
+                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#3d5688] transition hover:bg-[#eaf2fd]">
+                        <X className="h-5 w-5" />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <label className="block min-w-0 sm:col-span-2">
                         <span className="mb-1.5 block text-[13.5px] font-bold text-[#082a63]">Session name <span className="text-red-500">*</span></span>
                         <input value={newSession.session_name} onChange={e => setNewSession(p => ({ ...p, session_name: e.target.value }))}
                           placeholder="e.g. 2024-25 Annual" required
@@ -2179,12 +2205,20 @@ export default function SuperAdminDashboardPage() {
                         <input type="date" value={newSession.end_date} min={newSession.start_date || undefined} onChange={e => setNewSession(p => ({ ...p, end_date: e.target.value }))}
                           className="h-11 w-full min-w-0 rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] px-3.5 text-[15px] text-[#082a63] outline-none focus:border-[#1b57d8] focus:bg-white focus:ring-2 focus:ring-[#1b57d8]/15" />
                       </label>
+                    </div>
+                    <div className="mt-5 flex flex-col gap-2.5 sm:flex-row">
                       <button type="submit" disabled={sessionSubmitting}
-                        className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-[#1b57d8] px-6 text-[15px] font-bold text-white transition hover:bg-[#1245b8] disabled:opacity-60 sm:col-span-2 lg:col-span-1">
+                        className="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-[#1b57d8] px-6 text-[15px] font-bold text-white transition hover:bg-[#1245b8] disabled:opacity-60 sm:w-auto">
                         <Plus className="h-4 w-4" /> {sessionSubmitting ? "Adding..." : "Add Session"}
+                      </button>
+                      <button type="button" onClick={() => setShowSessionForm(false)} disabled={sessionSubmitting}
+                        className="inline-flex h-11 w-full items-center justify-center rounded-xl border border-[#d3e1f5] bg-white px-6 text-[15px] font-bold text-[#082a63] transition hover:bg-[#f4f8fe] disabled:opacity-60 sm:w-auto">
+                        Cancel
                       </button>
                     </div>
                   </form>
+                  </div>
+                  )}
 
                   {/* Sessions list */}
                   <div className="space-y-3">
@@ -2224,7 +2258,7 @@ export default function SuperAdminDashboardPage() {
                       <div className="rounded-2xl border border-dashed border-[#b9cbe6] bg-white p-10 text-center">
                         <GraduationCap className="mx-auto mb-3 h-10 w-10 text-[#a9bde0]" />
                         <p className="text-[16px] font-bold text-[#082a63]">No exam sessions yet</p>
-                        <p className="mt-1 text-[14px] text-[#4a6090]">Add your first session using the form above.</p>
+                        <p className="mt-1 text-[14px] text-[#4a6090]">Click "Add New Session" to add your first session.</p>
                       </div>
                     )}
                   </div>
@@ -2233,12 +2267,31 @@ export default function SuperAdminDashboardPage() {
 
               {examSubTab === "centers" && (
                 <div className="space-y-4">
-                  {/* Add center form */}
-                  <form onSubmit={addCenter} className="rounded-2xl border border-[#d3e1f5] bg-white p-4 shadow-sm sm:p-5">
-                    <h3 className="mb-4 flex items-center gap-2 text-[17px] font-bold text-[#082a63]">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#eaf2fd] text-[#1b57d8]"><Plus className="h-4 w-4" /></span>
-                      Add Exam Center
-                    </h3>
+                  {/* Add center: a button; the form opens as a popup */}
+                  {(
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <p className="text-[14.5px] font-medium text-[#3d5688]">{examCenters.length} exam center{examCenters.length === 1 ? "" : "s"}</p>
+                      <button type="button" onClick={() => setShowCenterForm(true)}
+                        className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-[#1b57d8] px-5 text-[15px] font-bold text-white shadow-sm transition hover:bg-[#1245b8]">
+                        <Plus className="h-4 w-4" /> Add Exam Center
+                      </button>
+                    </div>
+                  )}
+                  {showCenterForm && (
+                  <div className="fixed inset-0 z-[200] flex items-start justify-center overflow-y-auto bg-[#06204f]/70 p-3 backdrop-blur-sm sm:items-center sm:p-6"
+                    onMouseDown={(e) => { if (e.target === e.currentTarget && !centerSubmitting) setShowCenterForm(false); }}>
+                  <form onSubmit={addCenter} role="dialog" aria-modal="true" aria-labelledby="add-center-title"
+                    className="my-auto w-full max-w-[640px] rounded-2xl border border-[#d3e1f5] bg-white p-5 shadow-2xl sm:p-6">
+                    <div className="mb-4 flex items-start justify-between gap-3">
+                      <h3 id="add-center-title" className="flex items-center gap-2 text-[18px] font-bold text-[#082a63]">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#eaf2fd] text-[#1b57d8]"><Plus className="h-4 w-4" /></span>
+                        Add Exam Center
+                      </h3>
+                      <button type="button" onClick={() => setShowCenterForm(false)} disabled={centerSubmitting} aria-label="Close"
+                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#3d5688] transition hover:bg-[#eaf2fd]">
+                        <X className="h-5 w-5" />
+                      </button>
+                    </div>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       {[
                         { key: "center_name", label: "Center name", placeholder: "e.g. Government High School", required: true },
@@ -2260,11 +2313,19 @@ export default function SuperAdminDashboardPage() {
                           className="h-11 w-full rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] px-3.5 text-[15px] text-[#082a63] outline-none placeholder:text-[#8a97b3] focus:border-[#1b57d8] focus:bg-white focus:ring-2 focus:ring-[#1b57d8]/15" />
                       </label>
                     </div>
-                    <button type="submit" disabled={centerSubmitting}
-                      className="mt-4 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-[#1b57d8] px-6 text-[15px] font-bold text-white transition hover:bg-[#1245b8] disabled:opacity-60 sm:w-auto">
-                      <Plus className="h-4 w-4" /> {centerSubmitting ? "Adding..." : "Add Center"}
-                    </button>
+                    <div className="mt-4 flex flex-col gap-2.5 sm:flex-row">
+                      <button type="submit" disabled={centerSubmitting}
+                        className="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-[#1b57d8] px-6 text-[15px] font-bold text-white transition hover:bg-[#1245b8] disabled:opacity-60 sm:w-auto">
+                        <Plus className="h-4 w-4" /> {centerSubmitting ? "Adding..." : "Add Center"}
+                      </button>
+                      <button type="button" onClick={() => setShowCenterForm(false)} disabled={centerSubmitting}
+                        className="inline-flex h-11 w-full items-center justify-center rounded-xl border border-[#d3e1f5] bg-white px-6 text-[15px] font-bold text-[#082a63] transition hover:bg-[#f4f8fe] disabled:opacity-60 sm:w-auto">
+                        Cancel
+                      </button>
+                    </div>
                   </form>
+                  </div>
+                  )}
 
                   {/* Centers list */}
                   {examCenters.length > 0 && (
@@ -2292,7 +2353,7 @@ export default function SuperAdminDashboardPage() {
                     <div className="rounded-2xl border border-dashed border-[#b9cbe6] bg-white p-10 text-center">
                       <MapPin className="mx-auto mb-3 h-10 w-10 text-[#a9bde0]" />
                       <p className="text-[16px] font-bold text-[#082a63]">No exam centers yet</p>
-                      <p className="mt-1 text-[14px] text-[#4a6090]">Add your first center using the form above.</p>
+                      <p className="mt-1 text-[14px] text-[#4a6090]">Click "Add Exam Center" to add your first center.</p>
                     </div>
                   )}
                 </div>

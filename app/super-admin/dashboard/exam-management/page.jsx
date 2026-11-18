@@ -39,7 +39,7 @@ function FilterBar({ courses, sessions, selectedCourse, selectedSession, onCours
 function Toast({ toast }) {
   if (!toast.show) return null;
   return (
-    <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg text-[17px] font-semibold ${toast.type === "success" ? "bg-emerald-600 text-white" : "bg-red-600 text-white"}`}>
+    <div className={`fixed bottom-4 left-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg text-[15px] font-semibold sm:bottom-6 sm:left-auto sm:right-6 sm:text-[17px] ${toast.type === "success" ? "bg-emerald-600 text-white" : "bg-red-600 text-white"}`}>
       {toast.type === "success" ? <CheckCircle2 className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
       {toast.message}
     </div>
@@ -993,7 +993,7 @@ function RollNumbersTab({
           {/* ── 4. Main Two-Tab Workspace ── */}
           <div className="bg-white rounded-2xl border border-[#d3e1f5] overflow-hidden shadow-sm">
             {/* Sub-Tabs Header */}
-            <div className="bg-[#f4f8fe] px-5 py-3 border-b border-[#d3e1f5] flex flex-wrap items-center justify-between gap-3">
+            <div className="bg-[#f4f8fe] px-3 sm:px-5 py-3 border-b border-[#d3e1f5] flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
@@ -1042,7 +1042,7 @@ function RollNumbersTab({
 
             {/* Sub-Tab 1: PENDING ALLOTMENT */}
             {activeSubTab === "pending" && (
-              <div className="p-5 space-y-5">
+              <div className="p-3 sm:p-5 space-y-5">
                 {stats.pendingCount > 0 && (
                   <div className="rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50/70 to-[#f4f8fe] p-4 space-y-3">
                     <div className="flex flex-wrap items-center justify-between gap-3">
@@ -1083,7 +1083,7 @@ function RollNumbersTab({
                         </span>
                       </div>
 
-                      <div className="ml-auto flex items-center gap-2">
+                      <div className="flex w-full flex-wrap items-center gap-2 sm:ml-auto sm:w-auto">
                         <label className="text-[15px] font-bold text-[#3d5688] whitespace-nowrap">
                           Custom Prefix Override:
                         </label>
@@ -1091,7 +1091,7 @@ function RollNumbersTab({
                           value={prefix}
                           onChange={(e) => setPrefix(e.target.value)}
                           placeholder={`Auto (${sampleInitials}${sessionDigits})`}
-                          className="px-2.5 py-1 rounded-lg border border-[#d3e1f5] bg-white text-[15px] font-mono text-[#082a63] focus:outline-none focus:ring-2 focus:ring-[#1b57d8] w-48"
+                          className="px-2.5 py-1 rounded-lg border border-[#d3e1f5] bg-white text-[15px] font-mono text-[#082a63] focus:outline-none focus:ring-2 focus:ring-[#1b57d8] w-full sm:w-48"
                         />
                       </div>
                     </div>
@@ -1119,13 +1119,13 @@ function RollNumbersTab({
                     </button>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
                     {selectedStudentIds.size > 0 && (
                       <button
                         type="button"
                         onClick={() => handleAllot("selected")}
                         disabled={allotting}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-[15px] font-bold disabled:opacity-60 transition-colors shadow-xs"
+                        className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-[15px] font-bold disabled:opacity-60 transition-colors shadow-xs"
                       >
                         <Hash className="w-3.5 h-3.5" />
                         {allotting ? "Allotting..." : `Allot Selected (${selectedStudentIds.size})`}
@@ -1136,7 +1136,7 @@ function RollNumbersTab({
                       type="button"
                       onClick={() => handleAllot(null)}
                       disabled={allotting || stats.pendingCount === 0}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#1b57d8] hover:bg-[#1245b8] text-white text-[15px] font-bold disabled:opacity-50 transition-colors shadow-xs"
+                      className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#1b57d8] hover:bg-[#1245b8] text-white text-[15px] font-bold disabled:opacity-50 transition-colors shadow-xs"
                     >
                       <Sparkles className="w-3.5 h-3.5" />
                       {allotting
@@ -1177,7 +1177,8 @@ function RollNumbersTab({
                     )}
                   </div>
                 ) : (
-                  <div className="overflow-x-auto border border-[#d3e1f5] rounded-xl">
+                  <>
+                  <div className="hidden overflow-x-auto border border-[#d3e1f5] rounded-xl md:block">
                     <table className="w-full text-[15px]">
                       <thead className="bg-[#f4f8fe] border-b border-[#d3e1f5]">
                         <tr>
@@ -1247,13 +1248,57 @@ function RollNumbersTab({
                       </tbody>
                     </table>
                   </div>
+                  <div className="space-y-2.5 md:hidden">
+                    {filteredPending.map((s) => {
+                      const isSelected = selectedStudentIds.has(s.id);
+                      return (
+                        <div key={s.id} className={`rounded-xl border p-3.5 ${isSelected ? "border-amber-300 bg-amber-50/60" : "border-[#d3e1f5] bg-white"}`}>
+                          <div className="flex items-start gap-3">
+                            <input type="checkbox" checked={isSelected} onChange={() => toggleSelectStudent(s.id)} aria-label={`Select ${s.candidate_name}`}
+                              className="mt-1 h-5 w-5 shrink-0 rounded text-[#1b57d8] focus:ring-[#1b57d8] border-[#d3e1f5]" />
+                            <div className="min-w-0 flex-1">
+                              <p className="break-words font-bold text-[#082a63]">{s.candidate_name}</p>
+                              {s.courses?.course_name && <p className="text-[14px] font-semibold text-[#1245b8]">{s.courses.course_name}</p>}
+                              {s.father_name && <p className="text-[14px] text-[#4a6090]">S/D/W of {s.father_name}</p>}
+                            </div>
+                          </div>
+                          <dl className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-2 text-[14px]">
+                            <div className="min-w-0">
+                              <dt className="text-[12.5px] font-bold uppercase tracking-wide text-[#4a6090]">College</dt>
+                              <dd className="break-words text-[#3d5688]">
+                                <span className="mr-1 rounded bg-amber-100 px-1.5 py-0.5 font-mono text-[13px] font-bold text-amber-800">{s.college_initials || "COL"}</span>
+                                {s.colleges?.college_name || "—"}
+                              </dd>
+                            </div>
+                            <div className="min-w-0">
+                              <dt className="text-[12.5px] font-bold uppercase tracking-wide text-[#4a6090]">Enrollment No.</dt>
+                              <dd className="break-all font-mono text-[#3d5688]">{s.enrollment_no || "—"}</dd>
+                            </div>
+                            <div className="col-span-2 min-w-0">
+                              <dt className="text-[12.5px] font-bold uppercase tracking-wide text-[#4a6090]">Projected Roll No.</dt>
+                              <dd>
+                                <span className="inline-block break-all rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 font-mono font-bold text-[#1b57d8]">
+                                  {prefix.trim() ? `${prefix.trim()}..` : s.projected_roll_no}
+                                </span>
+                              </dd>
+                            </div>
+                          </dl>
+                          <button type="button" onClick={() => handleAllot([s.id])} disabled={allotting}
+                            className="mt-3 w-full rounded-lg border border-amber-300 bg-white py-2.5 text-[15px] font-bold text-amber-800 transition-colors hover:bg-amber-100/70 disabled:opacity-60">
+                            Allot Now
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  </>
                 )}
               </div>
             )}
 
             {/* Sub-Tab 2: ALLOTTED STUDENTS */}
             {activeSubTab === "allotted" && (
-              <div className="p-5 space-y-4">
+              <div className="p-3 sm:p-5 space-y-4">
                 {loading ? (
                   <div className="flex items-center justify-center py-12">
                     <RefreshCw className="w-6 h-6 animate-spin text-[#1b57d8]" />
@@ -1281,7 +1326,8 @@ function RollNumbersTab({
                     )}
                   </div>
                 ) : (
-                  <div className="overflow-x-auto border border-[#d3e1f5] rounded-xl">
+                  <>
+                  <div className="hidden overflow-x-auto border border-[#d3e1f5] rounded-xl md:block">
                     <table className="w-full text-[15px]">
                       <thead className="bg-[#f4f8fe] border-b border-[#d3e1f5]">
                         <tr>
@@ -1340,6 +1386,47 @@ function RollNumbersTab({
                       </tbody>
                     </table>
                   </div>
+                  <div className="space-y-2.5 md:hidden">
+                    {filteredAllotted.map((s) => {
+                      const displayRollNo = targetYear === "3" ? (s.roll_no_3rd_year || s.roll_no_2nd_year || s.roll_no) : targetYear === "2" ? (s.roll_no_2nd_year || s.roll_no) : s.roll_no;
+                      return (
+                        <div key={s.id} className="rounded-xl border border-[#d3e1f5] bg-white p-3.5">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <span className="inline-block break-all rounded bg-[#eaf2fd] px-2 py-0.5 font-mono font-bold text-[#082a63]">{displayRollNo}</span>
+                              <p className="mt-1.5 break-words font-semibold text-[#082a63]">{s.candidate_name}</p>
+                              {s.courses?.course_name && <p className="text-[14px] font-semibold text-[#1245b8]">{s.courses.course_name}</p>}
+                            </div>
+                            <button type="button" onClick={() => handleUnallot(s.id)} aria-label="Remove roll number" title="Remove Roll Number"
+                              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#d3e1f5] text-[#4a6090] transition-colors hover:bg-red-50 hover:text-red-600">
+                              <XCircle className="h-4 w-4" />
+                            </button>
+                          </div>
+                          <dl className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-2 text-[14px]">
+                            <div className="min-w-0">
+                              <dt className="text-[12.5px] font-bold uppercase tracking-wide text-[#4a6090]">Enrollment No.</dt>
+                              <dd className="break-all font-mono text-[#3d5688]">{s.enrollment_no || "—"}</dd>
+                            </div>
+                            <div className="min-w-0">
+                              <dt className="text-[12.5px] font-bold uppercase tracking-wide text-[#4a6090]">Admit Card</dt>
+                              <dd>
+                                {s.admit_card_generated_at ? (
+                                  <span className="inline-flex items-center gap-1 rounded border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[13.5px] font-bold text-emerald-700"><CheckCircle2 className="h-3 w-3" /> Generated</span>
+                                ) : (
+                                  <span className="rounded bg-[#f4f8fe] px-2 py-0.5 text-[13.5px] text-[#4a6090]">Pending</span>
+                                )}
+                              </dd>
+                            </div>
+                            <div className="col-span-2 min-w-0">
+                              <dt className="text-[12.5px] font-bold uppercase tracking-wide text-[#4a6090]">College</dt>
+                              <dd className="break-words text-[#3d5688]">{s.colleges?.college_name || "—"}</dd>
+                            </div>
+                          </dl>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  </>
                 )}
               </div>
             )}
@@ -1709,12 +1796,12 @@ export default function ExamManagementPage() {
     >
     <div className="space-y-6">
       {/* Tab bar */}
-      <div className="flex gap-1 overflow-x-auto bg-[#eaf2fd] rounded-xl p-1">
+      <div className="flex gap-1 overflow-x-auto bg-[#eaf2fd] rounded-xl p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {TABS.map((t) => (
           <button
             key={t.id}
             onClick={() => setActiveTab(t.id)}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[15px] font-bold transition-all ${
+            className={`flex flex-1 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap px-3.5 py-2.5 rounded-lg text-[14px] font-bold transition-all sm:px-3 sm:text-[15px] ${
               activeTab === t.id ? "bg-white text-[#082a63] shadow-sm" : "text-[#3d5688] hover:text-[#082a63]"
             }`}
           >

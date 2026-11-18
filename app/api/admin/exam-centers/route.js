@@ -19,14 +19,14 @@ export async function POST(request) {
   const session = await requireAdmin(request);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { center_name, center_code, address, city } = await request.json();
+  const { center_name, center_code, address, city, state } = await request.json();
   if (!center_name || !center_code) {
     return NextResponse.json({ error: "center_name and center_code are required." }, { status: 400 });
   }
 
   const { data, error } = await supabaseAdmin
     .from("exam_centers")
-    .insert({ center_name, center_code: center_code.trim().toUpperCase(), address: address || null, city: city || null })
+    .insert({ center_name, center_code: center_code.trim().toUpperCase(), address: address || null, city: city || null, state: state || null })
     .select()
     .single();
 
