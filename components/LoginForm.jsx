@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Eye, EyeOff, Loader2, Lock, LogIn, TriangleAlert, User } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, KeyRound, Loader2, Lock, LogIn, MailCheck, TriangleAlert, User } from "lucide-react";
 
 const controlCls = (err) =>
   `h-[50px] w-full rounded-md border bg-[#fbfdff] pl-11 pr-3 text-[15px] font-medium text-ink outline-none transition placeholder:text-[#8a97b3] hover:border-[#7fa0d6] focus:border-brand focus:bg-white focus:ring-4 focus:ring-brand/15 ${
@@ -38,6 +38,81 @@ export default function LoginForm({ role, idLabel, idPlaceholder }) {
   const [message, setMessage] = useState("");
   const clear = (key) => errors[key] && setErrors((er) => ({ ...er, [key]: undefined }));
 
+  // Board login, step 2: the code e-mailed after the password was accepted
+  const [challenge, setChallenge] = useState("");
+  const [emailHint, setEmailHint] = useState("");
+  const [otp, setOtp] = useState("");
+  const [cooldown, setCooldown] = useState(0);
+  const [resent, setResent] = useState(false);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [cooldown]);
+
+  const backToPassword = () => {
+    setChallenge("");
+    setOtp("");
+    setPassword("");
+    setMessage("");
+    setStatus("idle");
+    setResent(false);
+  };
+
+  async function postJson(url, payload) {
+    const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    const data = await res.json().catch(() => ({}));
+    return { res, data };
+  }
+
+  async function onVerify(e) {
+    e.preventDefault();
+    if (status === "loading") return;
+    if (!/^\d{6}$/.test(otp)) {
+      setMessage("Enter the 6-digit code.");
+      setStatus("error");
+      return;
+    }
+    setStatus("loading");
+    setMessage("");
+    try {
+      const { res, data } = await postJson("/api/login/verify-otp", { challenge, otp });
+      if (res.ok && data.ok) {
+        setStatus("done");
+        window.location.assign(typeof data.redirect === "string" && data.redirect.startsWith("/") ? data.redirect : "/");
+        return;
+      }
+      setMessage(data.error || "The code could not be verified.");
+      setStatus("error");
+      setOtp("");
+      if (res.status === 401) backToPassword(); // the sign-in session expired
+    } catch {
+      setMessage("Network error. Please check your connection and try again.");
+      setStatus("error");
+    }
+  }
+
+  async function onResend() {
+    if (cooldown > 0 || status === "loading") return;
+    setMessage("");
+    setResent(false);
+    try {
+      const { res, data } = await postJson("/api/login/resend-otp", { challenge });
+      if (res.ok && data.ok) {
+        setResent(true);
+        setCooldown(60);
+        setStatus("idle");
+      } else {
+        setMessage(data.error || "Could not send the code again.");
+        setStatus("error");
+      }
+    } catch {
+      setMessage("Network error. Please check your connection and try again.");
+      setStatus("error");
+    }
+  }
+
   async function onSubmit(e) {
     e.preventDefault();
     if (status === "loading") return;
@@ -56,6 +131,15 @@ export default function LoginForm({ role, idLabel, idPlaceholder }) {
         body: JSON.stringify({ role, identifier: identifier.trim(), password }),
       });
       const data = await res.json().catch(() => ({}));
+      if (res.ok && data.ok && data.otpRequired && typeof data.challenge === "string") {
+        setChallenge(data.challenge);
+        setEmailHint(typeof data.emailHint === "string" ? data.emailHint : "");
+        setPassword("");
+        setOtp("");
+        setCooldown(60);
+        setStatus("idle");
+        return;
+      }
       if (res.ok && data.ok) {
         setStatus("done");
         window.location.assign(typeof data.redirect === "string" && data.redirect.startsWith("/") ? data.redirect : "/");
@@ -69,6 +153,77 @@ export default function LoginForm({ role, idLabel, idPlaceholder }) {
       setMessage("Network error. Please check your connection and try again.");
       setStatus("error");
     }
+  }
+
+  if (challenge) {
+    return (
+      <form onSubmit={onVerify} noValidate autoComplete="off" className="space-y-5">
+        <div className="flex items-start gap-3 rounded-md border border-[#c9daf2] bg-[#eef4fc] px-4 py-3">
+          <MailCheck size={22} strokeWidth={1.8} className="mt-0.5 shrink-0 text-brand" aria-hidden="true" />
+          <p className="text-[14px] font-medium leading-snug text-[#44557a]">
+            We sent a 6-digit code to <b className="text-navy-deep">{emailHint || "the registered e-mail address"}</b>. Enter it below to finish signing in. It is valid for 10 minutes.
+          </p>
+        </div>
+
+        <Field label="Login code" error={null} htmlFor={`${role}-otp`} icon={KeyRound}>
+          <input
+            id={`${role}-otp`}
+            name="otp"
+            type="text"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            maxLength={6}
+            autoFocus
+            value={otp}
+            onChange={(e) => {
+              setOtp(e.target.value.replace(/\D/g, "").slice(0, 6));
+              if (status === "error") setStatus("idle");
+            }}
+            placeholder="6-digit code"
+            className={`${controlCls(false)} font-mono text-[20px] font-bold tracking-[0.5em]`}
+          />
+        </Field>
+
+        {status === "error" && message && (
+          <p role="alert" className="rounded-md border border-[#e0242b]/40 bg-[#fff1f1] px-3 py-2.5 text-[14px] font-semibold text-[#b4161c]">
+            {message}
+          </p>
+        )}
+        {resent && status !== "error" && (
+          <p role="status" className="rounded-md border border-[#a7d8b4] bg-[#ecf8ef] px-3 py-2.5 text-[14px] font-semibold text-[#166534]">
+            A new code has been sent.
+          </p>
+        )}
+        {status === "done" && (
+          <p role="status" className="rounded-md border border-[#a7d8b4] bg-[#ecf8ef] px-3 py-2.5 text-[14px] font-semibold text-[#166534]">
+            Login successful. Redirecting...
+          </p>
+        )}
+
+        <button
+          type="submit"
+          disabled={status === "loading" || otp.length !== 6}
+          className="inline-flex h-[50px] w-full items-center justify-center gap-2 rounded-md bg-gradient-to-b from-[#2b6ae6] to-[#1048bd] text-[15px] font-bold text-white shadow-md shadow-blue-900/25 transition hover:brightness-110 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-70"
+        >
+          {status === "loading" ? <Loader2 size={18} className="animate-spin" /> : <LogIn size={18} />}
+          {status === "loading" ? "Verifying..." : "Verify and login"}
+        </button>
+
+        <div className="flex flex-wrap items-center justify-between gap-3 text-[14px] font-semibold">
+          <button type="button" onClick={backToPassword} className="inline-flex items-center gap-1.5 text-[#44557a] hover:text-navy">
+            <ArrowLeft size={15} /> Back
+          </button>
+          <button
+            type="button"
+            onClick={onResend}
+            disabled={cooldown > 0}
+            className="text-brand underline underline-offset-2 hover:text-navy disabled:cursor-not-allowed disabled:text-[#8a97b3] disabled:no-underline"
+          >
+            {cooldown > 0 ? `Send the code again in ${cooldown}s` : "Send the code again"}
+          </button>
+        </div>
+      </form>
+    );
   }
 
   return (

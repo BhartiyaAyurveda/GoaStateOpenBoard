@@ -59,6 +59,7 @@ import {
 import ContactManager from "@/components/admin/ContactManager";
 import SocialLinksManager from "@/components/admin/SocialLinksManager";
 import SecretarySignatureManager from "@/components/admin/SecretarySignatureManager";
+import ChangePasswordSection from "@/components/admin/ChangePasswordSection";
 import InstituteManager from "@/components/admin/InstituteManager";
 import InquiriesManager from "@/components/admin/InquiriesManager";
 import AnnouncementsManager from "@/components/admin/AnnouncementsManager";
@@ -833,6 +834,7 @@ export default function SuperAdminDashboardPage() {
     { id: "contact",        label: "Contact Info",          icon: Phone },
     { id: "social",         label: "Social Media Links",    icon: Share2 },
     { id: "institutes",     label: "Study Centres", icon: Building2,      badge: instituteCount },
+    { id: "password",       label: "Change Password",       icon: KeyRound },
   ];
 
   const adminName = adminUser.full_name || adminUser.username || "Super Admin";
@@ -925,7 +927,7 @@ export default function SuperAdminDashboardPage() {
 
             <div className="pt-4 mt-3 border-t border-white/10">
               <p className="px-3 pb-2 text-[12.5px] font-bold uppercase tracking-[0.16em] text-white/45">Settings</p>
-              <div className="space-y-0.5">{navigationItems.slice(7, 12).map(renderNavItem)}</div>
+              <div className="space-y-0.5">{navigationItems.slice(7).map(renderNavItem)}</div>
             </div>
 
             <div className="pt-4 mt-3 border-t border-white/10">
@@ -1445,6 +1447,11 @@ export default function SuperAdminDashboardPage() {
           {/* TAB 5: AFFILIATED INSTITUTES MANAGEMENT */}
           {activeTab === "institutes" && (
             <InstituteManager onShowToast={showToast} />
+          )}
+
+          {/* CHANGE PASSWORD (Board login, confirmed with an e-mailed code) */}
+          {activeTab === "password" && (
+            <ChangePasswordSection username={adminUser.username} fullName={adminUser.full_name} onDone={() => showToast("Password changed", "success")} />
           )}
 
           {/* ═══ TAB: COLLEGE MANAGEMENT ═══ */}

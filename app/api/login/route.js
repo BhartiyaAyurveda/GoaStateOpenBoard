@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { LOGIN_ROLES, authConfigured, authenticate, sessionCookieOptions } from "@/lib/auth";
+import { LOGIN_ROLES, authConfigured, authenticate, sessionCookieOptions, signOtpChallenge } from "@/lib/auth";
+import { adminOtpEmail, adminOtpRequired, emailOtpEnabled, maskEmail, requestOtp } from "@/lib/otp";
 
 // Only POST is exported, so every other method gets a 405 from Next.js.
 // Credentials are only ever read from the JSON body: never from the URL, and
@@ -108,6 +109,18 @@ export async function POST(request) {
       return json({ ok: false, error: "Invalid ID or password." }, 401);
     }
     hits.delete(acctKey);
+
+    // Board login needs a second step: a one-time code e-mailed to the admin address. No session cookie until it is entered.
+    if (role === "board" && adminOtpRequired()) {
+      if (!emailOtpEnabled()) {
+        return json({ ok: false, error: "Board login needs the e-mail service, which is not set up. Please contact the administrator." }, 503);
+      }
+      const otp = await requestOtp(adminOtpEmail(), "admin_login");
+      if (!otp.success) return json({ ok: false, error: otp.error || "Could not send the login code." }, 429);
+      const challenge = signOtpChallenge({ aid: session.user.id, usr: session.user.username });
+      return json({ ok: true, otpRequired: true, challenge, emailHint: maskEmail(adminOtpEmail()) });
+    }
+
     const res = json({ ok: true, redirect: role === "board" ? "/super-admin/dashboard" : "/college/dashboard" });
     res.cookies.set(session.cookieName, session.token, sessionCookieOptions());
     return res;
