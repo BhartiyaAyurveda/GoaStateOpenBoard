@@ -7,7 +7,7 @@ import {
   AlertTriangle, CheckCircle2, RefreshCw, Send, FileText,
   MessageSquare, User, Phone, GraduationCap, ChevronLeft,
   IdCard, FileBadge, BookOpen, Calendar, Hash,
-  Shield, ExternalLink, Printer, Clock,
+  Shield, ExternalLink, Printer, Clock, Copy, Check, XCircle, Hourglass,
 } from "lucide-react";
 
 /* ─── constants ──────────────────────────────────────────────── */
@@ -68,9 +68,9 @@ function Field({ label, value, mono }) {
 
 function Section({ n, title, icon: Icon, children }) {
   return (
-    <div className="bg-white rounded-2xl border border-[#d3e1f5] overflow-hidden shadow-xs">
+    <div className="bg-white rounded-2xl border border-[#d3e1f5] overflow-hidden shadow-xs break-inside-avoid">
       <div className="flex items-center gap-3 px-5 py-3.5 bg-gradient-to-r from-[#f4f8fe] to-[#eaf2fd] border-b border-[#d3e1f5]">
-        <span className="w-6 h-6 rounded-full bg-[#082a63] text-[#1b57d8] text-[12px] font-black flex items-center justify-center shrink-0">
+        <span className="w-6 h-6 rounded-full bg-[#082a63] text-white text-[12px] font-black flex items-center justify-center shrink-0">
           {n}
         </span>
         {Icon && <Icon className="w-4 h-4 text-[#1245b8] shrink-0" />}
@@ -104,6 +104,7 @@ function DocItem({ icon: Icon = FileText, label, url }) {
 
 function EduTable({ education }) {
   const rows = [
+    { key: "middle",       label: "Class VIII (8th)", sub: "Middle School" },
     { key: "high_school",  label: "Class X (10th)",   sub: "High School" },
     { key: "intermediate", label: "Class XII (12th)",  sub: "Intermediate" },
     { key: "graduation",   label: "Graduation",        sub: "Bachelor's" },
@@ -158,6 +159,67 @@ function EduTable({ education }) {
         </tbody>
       </table>
     </div>
+  );
+}
+
+function ApplicationProgress({ data, fmt }) {
+  const st = data.status;
+  const reviewed = ["under_review", "query_raised", "approved", "rejected"].includes(st);
+  const decided = st === "approved" || st === "rejected";
+  const steps = [
+    { title: "Submitted", sub: fmt(data.created_at), state: "done", icon: Send },
+    { title: "Board review", sub: reviewed ? "Reviewed by the Board" : "Waiting for the Board", state: reviewed ? "done" : "current", icon: Hourglass },
+    st === "rejected"
+      ? { title: "Rejected", sub: "Not approved by the Board", state: "bad", icon: XCircle }
+      : st === "query_raised"
+        ? { title: "Query raised", sub: "Correct the details and resubmit", state: "warn", icon: AlertTriangle }
+        : { title: "Approved", sub: st === "approved" ? "Admission approved" : "Awaiting the Board's decision", state: st === "approved" ? "done" : "todo", icon: CheckCircle2 },
+    { title: "Roll no. & admit card", sub: data.roll_no ? `Roll no. ${data.roll_no}` : st === "approved" ? "To be allotted by the Board" : "After approval", state: data.roll_no ? "done" : "todo", icon: IdCard },
+  ];
+  const tone = {
+    done: { ring: "bg-emerald-500 text-white", text: "text-[#082a63]" },
+    current: { ring: "bg-amber-400 text-white animate-pulse", text: "text-[#082a63]" },
+    warn: { ring: "bg-orange-500 text-white", text: "text-orange-800" },
+    bad: { ring: "bg-red-500 text-white", text: "text-red-700" },
+    todo: { ring: "bg-[#eaf2fd] text-[#8a97b3] border border-[#d3e1f5]", text: "text-[#8a97b3]" },
+  };
+  return (
+    <div className="no-print rounded-2xl border border-[#d3e1f5] bg-white p-4 sm:p-5 shadow-xs">
+      <p className="mb-3.5 text-[13px] font-black uppercase tracking-widest text-[#082a63]">Application progress</p>
+      <ol className="grid grid-cols-1 gap-3 sm:grid-cols-4 sm:gap-2">
+        {steps.map(({ title, sub, state, icon: Icon }, i) => (
+          <li key={title} className="relative flex items-start gap-3 sm:flex-col sm:gap-2">
+            {i > 0 && <span className={`absolute -top-3 left-[18px] h-3 w-px sm:hidden ${state === "todo" ? "bg-[#d3e1f5]" : "bg-emerald-300"}`} aria-hidden="true" />}
+            {i < steps.length - 1 && (
+              <span className={`absolute left-[44px] right-[-8px] top-[18px] hidden h-[2px] sm:block ${steps[i + 1].state === "todo" ? "bg-[#d3e1f5]" : "bg-emerald-300"}`} aria-hidden="true" />
+            )}
+            <span className={`relative z-[1] flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${tone[state].ring}`}>
+              <Icon className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+              <p className={`text-[14.5px] font-bold leading-tight ${tone[state].text}`}>{title}</p>
+              <p className="mt-0.5 text-[13px] leading-snug text-[#4a6090]">{sub}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+function CopyChip({ text }) {
+  const [done, setDone] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={async () => {
+        try { await navigator.clipboard.writeText(text); setDone(true); setTimeout(() => setDone(false), 1800); } catch {}
+      }}
+      className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-bold text-[#8ec9fa] hover:bg-white/10"
+      aria-label="Copy enrollment number"
+    >
+      {done ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />} {done ? "Copied" : "Copy"}
+    </button>
   );
 }
 
@@ -265,7 +327,7 @@ export default function RegistrationDetailPage() {
       </div>
 
       {/* ── hero card ── */}
-      <div className="bg-white rounded-2xl border border-[#d3e1f5] shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-[#d3e1f5] shadow-sm overflow-hidden break-inside-avoid">
         {/* dark header */}
         <div className="bg-gradient-to-br from-[#082a63] via-[#0b3a85] to-[#082a63] px-6 py-5">
           <div className="flex items-start gap-5">
@@ -276,8 +338,8 @@ export default function RegistrationDetailPage() {
                   className="w-20 h-24 object-cover rounded-xl border-2 border-[#1b57d8]/70 shadow-lg" />
               ) : (
                 <div className="w-20 h-24 rounded-xl border-2 border-[#1b57d8]/30 bg-[#1245b8]/60 flex flex-col items-center justify-center gap-1">
-                  <User className="w-8 h-8 text-[#1b57d8]/50" />
-                  <span className="text-[11px] text-[#1b57d8]/40 font-bold uppercase">No Photo</span>
+                  <User className="w-8 h-8 text-white/50" />
+                  <span className="text-[11px] text-white/50 font-bold uppercase">No Photo</span>
                 </div>
               )}
             </div>
@@ -285,13 +347,13 @@ export default function RegistrationDetailPage() {
             {/* info */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-[#1b57d8] text-[11px] font-black uppercase tracking-[3px]">Candidate Application</span>
+                <span className="text-[#8ec9fa] text-[11px] font-black uppercase tracking-[3px]">Candidate Application</span>
                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold border ${ss.pill}`}>
                   <span className={`w-1.5 h-1.5 rounded-full ${ss.dot}`} />{ss.label}
                 </span>
               </div>
               <h1 className="text-xl sm:text-2xl font-black text-white leading-tight">{data.candidate_name}</h1>
-              <p className="text-[#a9bde0] text-[13px] mt-0.5">
+              <p className="text-[#c9d9f1] text-[13px] mt-0.5">
                 {data.gender ? `${data.gender} · ` : ""}Son / Daughter of {data.father_name || "—"}
               </p>
 
@@ -301,6 +363,7 @@ export default function RegistrationDetailPage() {
                   <div className="inline-flex items-center gap-1.5 bg-[#1b57d8]/15 border border-[#1b57d8]/35 text-[#5db0f4] px-2.5 py-1 rounded-lg text-[12px] font-mono font-bold">
                     <IdCard className="w-3 h-3" />
                     {data.enrollment_no}
+                    <CopyChip text={data.enrollment_no} />
                   </div>
                 )}
                 {data.roll_no && (
@@ -337,6 +400,8 @@ export default function RegistrationDetailPage() {
         </div>
 
       </div>
+
+      <ApplicationProgress data={data} fmt={fmt} />
 
       {/* ── query alert ── */}
       {openQuery && tab === "details" && (
@@ -417,16 +482,33 @@ export default function RegistrationDetailPage() {
           </Section>
 
           {/* 5. Documents */}
-          <Section n="5" title="Uploaded Documents" icon={FileBadge}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <DocItem icon={User}     label="Passport Photo"          url={data.photo_url} />
-              <DocItem icon={FileText} label="Candidate Signature"     url={data.signature_url} />
-              <DocItem icon={IdCard}   label="Aadhaar Card"            url={data.aadhaar_url} />
-              <DocItem icon={FileText} label="10th Marksheet"          url={data.tenth_marksheet_url} />
-              <DocItem icon={FileText} label="12th Marksheet"          url={data.twelfth_marksheet_url} />
-              <DocItem icon={Shield}   label="Affidavit / Declaration" url={data.affidavit_url} />
-            </div>
-          </Section>
+          {(() => {
+            const isXII = /\bXII\b|senior\s*secondary/i.test(data.courses?.course_name || "");
+            const docs = [
+              { icon: User,     label: "Passport Photo",          url: data.photo_url,        required: true },
+              { icon: FileText, label: "Candidate Signature",     url: data.signature_url,    required: true },
+              { icon: IdCard,   label: "Aadhaar Card",            url: data.aadhaar_url,      required: true },
+              { icon: FileText, label: "8th Marksheet",           url: data.eighth_marksheet_url,  required: !isXII },
+              { icon: FileText, label: "10th Marksheet",          url: data.tenth_marksheet_url,   required: isXII },
+              { icon: FileText, label: "12th Marksheet",          url: data.twelfth_marksheet_url, required: false },
+              { icon: Shield,   label: "Affidavit / Declaration", url: data.affidavit_url,    required: false },
+            ].filter((d) => d.required || d.url); // a document that does not apply to this course and was not uploaded is not shown
+            const need = docs.filter((d) => d.required);
+            const have = need.filter((d) => d.url).length;
+            return (
+              <Section n="5" title="Uploaded Documents" icon={FileBadge}>
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <p className="text-[13.5px] text-[#3d5688]">{have} of {need.length} required documents uploaded</p>
+                  <span className={`rounded-full border px-2.5 py-0.5 text-[12px] font-bold ${have === need.length ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-800"}`}>
+                    {have === need.length ? "Complete" : "Incomplete"}
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {docs.map((d) => <DocItem key={d.label} icon={d.icon} label={d.label} url={d.url} />)}
+                </div>
+              </Section>
+            );
+          })()}
         </div>
       )}
 

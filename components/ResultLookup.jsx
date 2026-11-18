@@ -2,18 +2,16 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
-import Select from "@/components/ui/Select";
-import { Loader2, Printer, Search, RotateCcw, Hash, CalendarDays, ClipboardList, ShieldCheck } from "lucide-react";
-import { ENROLLMENT_PATTERN, RESULT_CLASSES, RESULT_SESSIONS } from "@/lib/result-options";
+import DatePicker from "@/components/ui/DatePicker";
+import { Loader2, Printer, Search, RotateCcw, Hash, CalendarDays, ShieldCheck } from "lucide-react";
+import { ENROLLMENT_PATTERN as ROLL_PATTERN } from "@/lib/result-options";
 import ResultMarksheet from "@/components/ResultMarksheet";
 
-const EMPTY = { cls: "", session: "", enrollment: "", dob: "" };
+const EMPTY = { roll: "", dob: "" };
 
 function validate(v) {
   const e = {};
-  if (!RESULT_CLASSES.some((c) => c.value === v.cls)) e.cls = "Select a class.";
-  if (!RESULT_SESSIONS.some((s) => s.value === v.session)) e.session = "Select an examination.";
-  if (!ENROLLMENT_PATTERN.test(v.enrollment.trim().toUpperCase())) e.enrollment = "Enter a valid enrollment number.";
+  if (!ROLL_PATTERN.test(v.roll.trim().toUpperCase())) e.roll = "Enter a valid roll number.";
   if (!v.dob) e.dob = "Enter your date of birth.";
   return e;
 }
@@ -49,8 +47,8 @@ const fmtDate = (iso) => {
 
 function ResultSheet({ data, onReset }) {
   const { candidate: c, subjects, summary, sample } = data;
-  const session = RESULT_SESSIONS.find((s) => s.value === c.session)?.label ?? c.session;
-  const cls = RESULT_CLASSES.find((x) => x.value === c.cls)?.label ?? c.cls;
+  const session = c.session;
+  const cls = c.cls === "X" ? "Class X – Secondary" : c.cls === "XII" ? "Class XII – Senior Secondary" : c.cls;
   const pass = summary.status === "PASS";
 
   return (
@@ -243,7 +241,7 @@ export default function ResultLookup() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...values,
-          enrollment: values.enrollment.trim().toUpperCase(),
+          rollNo: values.roll.trim().toUpperCase(),
           captchaToken: captcha.token,
           captchaAnswer,
         }),
@@ -287,90 +285,34 @@ export default function ResultLookup() {
     );
   }
 
-  const latest = RESULT_SESSIONS.find((s) => s.declared);
-
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-5 p-5 sm:p-7">
-      {/* class tabs (like the Board's result page) */}
-      <div role="group" aria-label="Select class" className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {RESULT_CLASSES.map((c) => {
-          const active = values.cls === c.value;
-          return (
-            <button
-              key={c.value}
-              type="button"
-              aria-pressed={active}
-              onClick={() => {
-                setValues((v) => ({ ...v, cls: c.value }));
-                if (errors.cls) setErrors((er) => ({ ...er, cls: undefined }));
-              }}
-              className={`rounded-full border px-4 py-2.5 text-[14px] font-bold transition ${
-                active
-                  ? "border-navy bg-navy text-white shadow-md"
-                  : errors.cls
-                    ? "border-[#e0242b] bg-[#fff8f8] text-ink"
-                    : "border-[#b9cbe6] bg-[#f4f8fe] text-ink hover:border-navy hover:bg-white"
-              }`}
-            >
-              {c.label}
-            </button>
-          );
-        })}
-      </div>
-      {errors.cls && (
-        <p role="alert" className="-mt-3 text-[13px] font-semibold text-[#e0242b]">
-          {errors.cls}
-        </p>
-      )}
-
-      {latest && (
-        <p className="inline-flex items-center gap-2 rounded-full border border-[#a7d8b4] bg-[#ecf8ef] px-3.5 py-1.5 text-[14px] font-semibold text-[#166534]">
-          <span className="h-2 w-2 rounded-full bg-[#16a34a]" aria-hidden="true" />
-          {latest.label} &mdash; Result declared
-        </p>
-      )}
-
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        <div className="sm:col-span-2">
-          <Field label="Examination" error={errors.session} htmlFor="r-session" icon={ClipboardList}>
-            <Select
-              id="r-session"
-              variant="public"
-              withIcon
-              invalid={Boolean(errors.session)}
-              ariaLabel="Examination"
-              placeholder="-- Select Examination --"
-              value={values.session}
-              onChange={(v) => set("session")({ target: { value: v } })}
-              options={RESULT_SESSIONS.map((s) => ({ value: s.value, label: s.label }))}
-            />
-          </Field>
-        </div>
-
-        <Field label="Enrollment No." error={errors.enrollment} htmlFor="r-enr" icon={Hash}>
+        <Field label="Roll No." error={errors.roll} htmlFor="r-roll" icon={Hash}>
           <input
-            id="r-enr"
+            id="r-roll"
             type="text"
             autoComplete="off"
             autoCapitalize="characters"
             maxLength={20}
-            value={values.enrollment}
-            onChange={set("enrollment")}
-            placeholder="Enter enrollment number"
-            className={`${controlCls(errors.enrollment)} uppercase placeholder:normal-case`}
+            value={values.roll}
+            onChange={set("roll")}
+            placeholder="Enter roll number"
+            className={`${controlCls(errors.roll)} uppercase placeholder:normal-case`}
           />
         </Field>
 
         <Field label="Date of Birth" error={errors.dob} htmlFor="r-dob" icon={CalendarDays}>
-          <input
+          <DatePicker
             id="r-dob"
-            type="date"
-            autoComplete="off"
+            variant="public"
+            withIcon
+            ariaLabel="Date of birth"
             min="1940-01-01"
             max={new Date().toISOString().slice(0, 10)}
             value={values.dob}
-            onChange={set("dob")}
-            className={controlCls(errors.dob)}
+            onChange={(v) => set("dob")({ target: { value: v } })}
+            invalid={Boolean(errors.dob)}
           />
         </Field>
 

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { ENROLLMENT_PATTERN, RESULT_CLASSES, RESULT_SESSIONS } from "@/lib/result-options";
+import { ENROLLMENT_PATTERN as ROLL_PATTERN } from "@/lib/result-options";
 import { findResult, resultsAvailable } from "@/lib/results";
 import { verifyChallenge } from "@/lib/captcha";
 
@@ -75,15 +75,11 @@ export async function POST(request) {
     }
 
     // validate (never trust client values)
-    const cls = typeof body.cls === "string" ? body.cls : "";
-    const session = typeof body.session === "string" ? body.session : "";
-    const enrollment = typeof body.enrollment === "string" ? body.enrollment.trim().toUpperCase() : "";
+    const rollNo = typeof body.rollNo === "string" ? body.rollNo.trim().toUpperCase() : "";
     const dob = typeof body.dob === "string" ? body.dob.trim() : "";
 
     const errors = {};
-    if (!RESULT_CLASSES.some((c) => c.value === cls)) errors.cls = "Select a valid class.";
-    if (!RESULT_SESSIONS.some((s) => s.value === session)) errors.session = "Select a valid examination.";
-    if (!ENROLLMENT_PATTERN.test(enrollment)) errors.enrollment = "Enter a valid enrollment number.";
+    if (!ROLL_PATTERN.test(rollNo)) errors.roll = "Enter a valid roll number.";
     if (!isValidDob(dob)) errors.dob = "Enter a valid date of birth.";
     if (Object.keys(errors).length) return json({ ok: false, errors }, 400);
 
@@ -95,7 +91,7 @@ export async function POST(request) {
       return json({ ok: false, error: "Online results will be available soon. Please check back later." }, 503);
     }
 
-    const result = await findResult({ cls, session, enrollment, dob });
+    const result = await findResult({ rollNo, dob });
     if (!result) {
       // one generic message for every mismatch, so details cannot be probed
       return json(

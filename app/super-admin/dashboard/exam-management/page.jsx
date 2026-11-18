@@ -6,10 +6,11 @@ import {
   BookOpen, Calendar, Hash, BarChart2, Plus, Trash2, Pencil,
   RefreshCw, CheckCircle2, AlertTriangle, Save,
   FileText, UserCheck, XCircle, Eye, ChevronDown, Printer, MapPin,
-  Clock, Users, Sparkles, CheckSquare, Square, Search, GraduationCap,
+  Clock, Users, Sparkles, CheckSquare, Square, Search, GraduationCap, Building2, CalendarDays,
 } from "lucide-react";
 import AdminPageShell from "@/components/admin/AdminPageShell";
 import Select from "@/components/ui/Select";
+import DatePicker from "@/components/ui/DatePicker";
 import { useConfirm } from "@/components/ui/ConfirmDialog";
 import { getNextSession, getPrevSession, get6DigitSession } from "@/lib/enrollment-roll-utils";
 
@@ -56,6 +57,9 @@ const YEARS = [
 
 // 1st / 2nd / 3rd year switch shared by the tabs
 function YearToggle({ value, onChange, label = "Year" }) {
+  // Goa State Open School programmes (Class X / XII) are single-year, so there is nothing to choose: always year 1.
+  return null;
+  // eslint-disable-next-line no-unreachable
   return (
     <div className="min-w-0">
       <span className="mb-1.5 block text-[13.5px] font-bold text-[#082a63]">{label}</span>
@@ -281,7 +285,7 @@ function SubjectsTab({
             options={courses.map((c) => ({ value: c.course_name, label: c.course_name }))} />
         </label>
 
-        {selectedCourse && (
+        {false && selectedCourse && (
           <div className="min-w-0">
             <span className={labelCls}>Year</span>
             <div className="grid grid-cols-3 gap-1 rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] p-1">
@@ -306,7 +310,7 @@ function SubjectsTab({
           <div className="rounded-2xl border border-[#d3e1f5] bg-white p-4 shadow-sm sm:p-5">
             <h3 className="mb-4 flex items-center gap-2 text-[17px] font-bold text-[#082a63]">
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#eaf2fd] text-[#1b57d8]"><Plus className="h-4 w-4" /></span>
-              Add New Subject <span className="rounded-full bg-[#eaf2fd] px-2.5 py-0.5 text-[12.5px] font-bold text-[#1245b8]">{yearLabel}</span>
+              Add New Subject
             </h3>
             <form onSubmit={(e) => { e.preventDefault(); handleAdd(); }}
               className="grid grid-cols-2 gap-4 lg:grid-cols-[2fr_1.2fr_1fr_1fr_1fr_auto] lg:items-end">
@@ -346,7 +350,7 @@ function SubjectsTab({
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#d3e1f5] bg-[#f4f8fe] px-4 py-3.5 sm:px-5">
               <div className="min-w-0">
                 <p className="truncate text-[16px] font-bold text-[#082a63]">{selectedCourse}</p>
-                <p className="text-[13.5px] text-[#3d5688]">{yearLabel} subjects</p>
+                <p className="text-[13.5px] text-[#3d5688]">Subjects</p>
               </div>
               <span className="rounded-full bg-[#082a63] px-3 py-1 text-[13px] font-bold text-white">{subjects.length} {subjects.length === 1 ? "subject" : "subjects"}</span>
             </div>
@@ -356,7 +360,7 @@ function SubjectsTab({
             ) : subjects.length === 0 ? (
               <div className="px-4 py-12 text-center">
                 <BookOpen className="mx-auto mb-3 h-10 w-10 text-[#a9bde0]" />
-                <p className="text-[16px] font-bold text-[#082a63]">No subjects yet for {yearLabel}</p>
+                <p className="text-[16px] font-bold text-[#082a63]">No subjects yet</p>
                 <p className="mt-1 text-[14px] text-[#4a6090]">Add the first subject using the form above.</p>
               </div>
             ) : (
@@ -575,14 +579,14 @@ function DatesheetTab({
           ) : rows.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-[#b9cbe6] bg-white px-4 py-12 text-center">
               <Calendar className="mx-auto mb-3 h-10 w-10 text-[#a9bde0]" />
-              <p className="text-[16px] font-bold text-[#082a63]">No subjects for {yearLabel}</p>
+              <p className="text-[16px] font-bold text-[#082a63]">No subjects for this programme</p>
               <p className="mt-1 text-[14px] text-[#4a6090]">Add subjects in the Subjects tab first, then set their dates here.</p>
             </div>
           ) : (
             <div className="overflow-hidden rounded-2xl border border-[#d3e1f5] bg-white shadow-sm">
               <div className="flex flex-col gap-3 border-b border-[#d3e1f5] bg-[#f4f8fe] px-4 py-3.5 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
                 <div className="min-w-0">
-                  <p className="text-[16px] font-bold text-[#082a63]">Exam schedule · {yearLabel}</p>
+                  <p className="text-[16px] font-bold text-[#082a63]">Exam schedule</p>
                   <p className="text-[13.5px] text-[#3d5688]">{scheduled} of {rows.length} subjects scheduled</p>
                 </div>
                 <div className="grid grid-cols-1 gap-2 sm:flex sm:items-center">
@@ -613,7 +617,7 @@ function DatesheetTab({
                       <tr key={row.id} className="transition-colors hover:bg-[#f4f8fe]">
                         <td className="px-5 py-3 font-bold text-[#082a63]">{row.subject_name}</td>
                         <td className="px-3 py-3">{row.subject_code ? <span className="rounded-md bg-[#eaf2fd] px-2 py-0.5 font-mono text-[13px] font-bold text-[#1245b8]">{row.subject_code}</span> : <span className="text-[#8a97b3]">—</span>}</td>
-                        <td className="px-3 py-3"><input type="date" value={row.exam_date || ""} onChange={(e) => update(i, "exam_date", e.target.value)} className={dateCls} /></td>
+                        <td className="px-3 py-3"><DatePicker size="md" ariaLabel="Exam date" value={row.exam_date || ""} onChange={(v) => update(i, "exam_date", v)} min="2000-01-01" max="2100-12-31" /></td>
                         <td className="px-3 py-3"><Select ariaLabel={`Exam time for ${row.subject_name}`} placeholder="Select timing" value={row.exam_time || ""} onChange={(v) => update(i, "exam_time", v)} options={timeOptions(row)} /></td>
                         <td className="px-5 py-3 text-center"><StatusPill row={row} /></td>
                       </tr>
@@ -634,7 +638,7 @@ function DatesheetTab({
                       <StatusPill row={row} />
                     </div>
                     <div className="mt-3 space-y-3">
-                      <label className="block"><span className={labelCls}>Exam date</span><input type="date" value={row.exam_date || ""} onChange={(e) => update(i, "exam_date", e.target.value)} className={fieldCls} /></label>
+                      <label className="block"><span className={labelCls}>Exam date</span><DatePicker ariaLabel="Exam date" value={row.exam_date || ""} onChange={(v) => update(i, "exam_date", v)} min="2000-01-01" max="2100-12-31" /></label>
                       <div><span className={labelCls}>Exam time</span><Select size="lg" ariaLabel={`Exam time for ${row.subject_name}`} placeholder="Select timing" value={row.exam_time || ""} onChange={(v) => update(i, "exam_time", v)} options={timeOptions(row)} /></div>
                     </div>
                   </div>
@@ -773,7 +777,7 @@ function RollNumbersTab({
         showToast(json.error || "Failed to allot roll numbers", "error");
       } else {
         const yearLabel = targetYear === "3" ? "3rd Year" : targetYear === "2" ? "2nd Year" : "1st Year";
-        showToast(`Allotted ${json.allotted} roll numbers for ${yearLabel}!`);
+        showToast(`Allotted ${json.allotted} roll numbers!`);
         setSelectedStudentIds(new Set());
         load();
       }
@@ -1044,56 +1048,45 @@ function RollNumbersTab({
             {activeSubTab === "pending" && (
               <div className="p-3 sm:p-5 space-y-5">
                 {stats.pendingCount > 0 && (
-                  <div className="rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50/70 to-[#f4f8fe] p-4 space-y-3">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <Sparkles className="w-4 h-4 text-amber-600" />
-                          <h4 className="text-[15px] font-bold text-[#082a63] uppercase tracking-wide">
-                            Live Roll Number Formation Pattern
-                          </h4>
-                        </div>
-                        <p className="text-[15px] text-[#3d5688] mt-0.5">
-                          Formula: [College Initials] + [6-digit Session] + [Sequence 01..]
-                        </p>
+                  <div className="overflow-hidden rounded-xl border border-[#d3e1f5] bg-white">
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#eaf2fd] bg-[#f4f8fe] px-4 py-3">
+                      <div className="min-w-0">
+                        <h4 className="text-[15.5px] font-bold text-[#082a63]">Roll number format</h4>
+                        <p className="text-[14px] text-[#3d5688]">College initials + 6-digit session + sequence number</p>
                       </div>
-
-                      {/* Live preview badge */}
-                      <div className="inline-flex items-center gap-2 bg-white px-3.5 py-1.5 rounded-xl border border-amber-200 shadow-xs">
-                        <span className="text-[15px] font-medium text-[#3d5688]">Next Allotted Preview:</span>
-                        <span className="font-mono font-bold text-[17px] text-[#082a63] bg-amber-100/70 px-2 py-0.5 rounded-md">
-                          {previewRollNo}
-                        </span>
+                      <div className="inline-flex items-center gap-2.5 rounded-xl border border-[#d3e1f5] bg-white px-3.5 py-2">
+                        <span className="text-[14px] font-medium text-[#3d5688]">Next roll number</span>
+                        <span className="rounded-md bg-[#082a63] px-2.5 py-0.5 font-mono text-[16px] font-bold tracking-wide text-white">{previewRollNo}</span>
                       </div>
                     </div>
 
-                    {/* Breakdown chips & override input */}
-                    <div className="flex flex-wrap items-center gap-3 pt-1 border-t border-amber-100">
-                      <div className="flex items-center gap-1.5 text-[15px]">
-                        <span className="px-2 py-1 bg-white rounded-lg border border-amber-200 font-mono font-semibold text-[#082a63]">
-                          🏛️ Initials: {sampleInitials}
-                        </span>
-                        <span className="text-amber-500 font-bold">+</span>
-                        <span className="px-2 py-1 bg-white rounded-lg border border-amber-200 font-mono font-semibold text-[#082a63]">
-                          🗓️ Session: {sessionDigits}
-                        </span>
-                        <span className="text-amber-500 font-bold">+</span>
-                        <span className="px-2 py-1 bg-white rounded-lg border border-amber-200 font-mono font-semibold text-[#082a63]">
-                          🔢 Seq: 01, 02..
-                        </span>
+                    <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-[1fr_auto] sm:items-end">
+                      <div className="flex flex-wrap items-center gap-2 text-[14px]">
+                        {[
+                          { icon: Building2, label: "College initials", value: sampleInitials },
+                          { icon: CalendarDays, label: "Session", value: sessionDigits },
+                          { icon: Hash, label: "Sequence", value: "01, 02 …" },
+                        ].map(({ icon: Icon, label, value }, i) => (
+                          <span key={label} className="inline-flex items-center gap-2">
+                            {i > 0 && <span className="font-bold text-[#9db7e0]">+</span>}
+                            <span className="inline-flex items-center gap-2 rounded-lg border border-[#d3e1f5] bg-[#f4f8fe] px-2.5 py-1.5">
+                              <Icon className="h-4 w-4 shrink-0 text-[#1245b8]" />
+                              <span className="text-[#4a6090]">{label}</span>
+                              <span className="font-mono font-bold text-[#082a63]">{value}</span>
+                            </span>
+                          </span>
+                        ))}
                       </div>
 
-                      <div className="flex w-full flex-wrap items-center gap-2 sm:ml-auto sm:w-auto">
-                        <label className="text-[15px] font-bold text-[#3d5688] whitespace-nowrap">
-                          Custom Prefix Override:
-                        </label>
+                      <label className="block min-w-0 sm:w-64">
+                        <span className="mb-1 block text-[13.5px] font-bold text-[#082a63]">Custom prefix <span className="font-medium text-[#6b7ea3]">(optional)</span></span>
                         <input
                           value={prefix}
                           onChange={(e) => setPrefix(e.target.value)}
                           placeholder={`Auto (${sampleInitials}${sessionDigits})`}
-                          className="px-2.5 py-1 rounded-lg border border-[#d3e1f5] bg-white text-[15px] font-mono text-[#082a63] focus:outline-none focus:ring-2 focus:ring-[#1b57d8] w-full sm:w-48"
+                          className="h-10 w-full rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] px-3 font-mono text-[14.5px] text-[#082a63] outline-none placeholder:text-[#8a97b3] focus:border-[#1b57d8] focus:bg-white focus:ring-2 focus:ring-[#1b57d8]/15"
                         />
-                      </div>
+                      </label>
                     </div>
                   </div>
                 )}
@@ -1125,7 +1118,7 @@ function RollNumbersTab({
                         type="button"
                         onClick={() => handleAllot("selected")}
                         disabled={allotting}
-                        className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-[15px] font-bold disabled:opacity-60 transition-colors shadow-xs"
+                        className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-[#082a63] hover:bg-[#0b3a85] text-white text-[15px] font-bold disabled:opacity-60 transition-colors shadow-xs"
                       >
                         <Hash className="w-3.5 h-3.5" />
                         {allotting ? "Allotting..." : `Allot Selected (${selectedStudentIds.size})`}
@@ -1162,9 +1155,7 @@ function RollNumbersTab({
                     <p className="text-[15px] text-[#3d5688] mt-1 max-w-md mx-auto">
                       {searchQuery
                         ? "Try adjusting your search query."
-                        : `All eligible students in this session have already been allotted ${
-                            targetYear === "2" ? "2nd Year" : "1st Year"
-                          } roll numbers.`}
+                        : "All eligible students in this session have already been allotted roll numbers."}
                     </p>
                     {stats.allottedCount > 0 && !searchQuery && (
                       <button
@@ -1311,9 +1302,7 @@ function RollNumbersTab({
                     <p className="text-[15px] text-[#3d5688] mt-1">
                       {searchQuery
                         ? "Try searching with a different keyword."
-                        : `There are currently no students with ${
-                            targetYear === "2" ? "2nd Year" : "1st Year"
-                          } roll numbers in this session.`}
+                        : "There are currently no students with roll numbers in this session."}
                     </p>
                     {stats.pendingCount > 0 && !searchQuery && (
                       <button
@@ -1492,7 +1481,7 @@ function ResultsTab({
     const res = await fetch(`/api/admin/results/${s.id}/publish${yrParam}`, { method: publish ? "POST" : "DELETE" });
     const json = await res.json();
     if (!res.ok) showToast(json.error || "Failed", "error");
-    else { showToast(publish ? `${s.year_label || ""} Result published!` : `${s.year_label || ""} Result unpublished`); load(); }
+    else { showToast(publish ? "Result published!" : "Result unpublished"); load(); }
     setPublishing(null);
   };
 
@@ -1566,7 +1555,7 @@ function ResultsTab({
                       <tr key={s.id} className="transition-colors hover:bg-[#f4f8fe]">
                         <td className="whitespace-nowrap px-5 py-3 font-bold text-[#1245b8]">
                           {s.roll_no}
-                          {s.year_label && <span className="ml-1.5 rounded bg-[#eaf2fd] px-1.5 py-0.5 text-[12.5px] font-semibold text-[#3d5688]">{s.year_label}</span>}
+                          
                         </td>
                         <td className="px-3 py-3 font-bold text-[#082a63]">{s.candidate_name}</td>
                         <td className="px-3 py-3 text-[#3d5688]">{s.course}</td>
@@ -1592,7 +1581,7 @@ function ResultsTab({
                         <p className="break-words text-[16px] font-bold text-[#082a63]">{s.candidate_name}</p>
                         <p className="mt-0.5 text-[14px] font-bold text-[#1245b8]">
                           {s.roll_no}
-                          {s.year_label && <span className="ml-1.5 rounded bg-[#eaf2fd] px-1.5 py-0.5 text-[12.5px] font-semibold text-[#3d5688]">{s.year_label}</span>}
+                          
                         </p>
                         <p className="mt-0.5 break-words text-[14px] text-[#3d5688]">{s.course}</p>
                       </div>

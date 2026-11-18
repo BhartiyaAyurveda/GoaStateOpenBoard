@@ -15,7 +15,7 @@ export async function GET(request) {
   return NextResponse.json({ ok: true, settings });
 }
 
-const ALLOWED_KEYS = ["maintenance_mode", "maintenance_message", "contact_info", "social_links"];
+const ALLOWED_KEYS = ["maintenance_mode", "maintenance_message", "contact_info", "social_links", "secretary_signature"];
 
 // PATCH /api/admin/settings — update one or more settings
 // Body: { key: "maintenance_mode", value: "true" }
@@ -28,6 +28,18 @@ export async function PATCH(request) {
 
   if (!ALLOWED_KEYS.includes(key) || typeof value !== "string" || value.length > 20000) {
     return NextResponse.json({ error: "Invalid setting." }, { status: 400 });
+  }
+
+  // the Secretary's signature: JSON { url } where url is an https image address, or "" to remove it
+  if (key === "secretary_signature") {
+    let ok = false;
+    try {
+      const parsed = JSON.parse(value);
+      ok = parsed && typeof parsed === "object" && typeof parsed.url === "string" && (parsed.url === "" || /^https:\/\//i.test(parsed.url)) && parsed.url.length <= 2000;
+    } catch {
+      ok = false;
+    }
+    if (!ok) return NextResponse.json({ error: "Invalid signature." }, { status: 400 });
   }
 
   const { error } = await supabaseAdmin

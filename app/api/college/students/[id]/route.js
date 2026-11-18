@@ -28,7 +28,7 @@ export async function GET(request, { params }) {
 const RESUBMIT_FIELDS = [
   "candidate_name", "father_name", "mother_name", "dob", "gender", "category",
   "aadhar_no", "phone", "email", "address", "city", "state", "pincode",
-  "photo_url", "tenth_marksheet_url", "twelfth_marksheet_url",
+  "photo_url", "eighth_marksheet_url", "tenth_marksheet_url", "twelfth_marksheet_url",
 ];
 
 export async function PATCH(request, { params }) {

@@ -2,8 +2,12 @@ import { Download, Eye, FileText } from "lucide-react";
 
 // "See a sample" box on the Admit Card / Result / Enrollment Card pages.
 // The sample PDFs (dummy data only) are in /public/samples.
+// Change SAMPLES_VERSION whenever the PDFs in /public/samples are replaced: browsers keep a PDF with the same
+// address in their cache, so without a new "?v=" they would keep showing the old sample.
+const SAMPLES_VERSION = "20261119d";
+
 export default function SamplePdfCard({ title, file, note }) {
-  const href = `/samples/${file}`;
+  const href = `/samples/${file}?v=${SAMPLES_VERSION}`;
   return (
     <section className="card-shadow overflow-hidden rounded-lg bg-white print:hidden">
       <div className="flex h-[56px] items-center gap-2 bg-gradient-to-r from-[#dfeafa] to-[#eef4fc] px-5">

@@ -58,6 +58,7 @@ import {
 
 import ContactManager from "@/components/admin/ContactManager";
 import SocialLinksManager from "@/components/admin/SocialLinksManager";
+import SecretarySignatureManager from "@/components/admin/SecretarySignatureManager";
 import InstituteManager from "@/components/admin/InstituteManager";
 import InquiriesManager from "@/components/admin/InquiriesManager";
 import AnnouncementsManager from "@/components/admin/AnnouncementsManager";
@@ -65,6 +66,7 @@ import HomeCustomizer from "@/components/admin/HomeCustomizer";
 import SyllabusUploader from "@/components/admin/SyllabusUploader";
 import Modal from "@/components/ui/Modal";
 import Select from "@/components/ui/Select";
+import DatePicker from "@/components/ui/DatePicker";
 import { useConfirm } from "@/components/ui/ConfirmDialog";
 
 // Labelled input with a leading icon (used by the Register College modal)
@@ -318,6 +320,7 @@ export default function SuperAdminDashboardPage() {
   const [resetSaving, setResetSaving] = useState(false);
   const [resetCredentials, setResetCredentials] = useState(null);
   const [togglingClgId, setTogglingClgId] = useState(null);
+  const [deletingClgId, setDeletingClgId] = useState(null);
 
   // ── Courses Management State ─────────────────────────────
   const [courses, setCourses] = useState([]);
@@ -545,6 +548,29 @@ export default function SuperAdminDashboardPage() {
       }
     } catch {}
     setTogglingClgId(null);
+  };
+
+  const deleteCollege = async (college) => {
+    if (!(await confirm({
+      title: "Delete college?",
+      message: `"${college.college_name}" and its login (${college.username}) will be removed. This cannot be undone. A college that already has student registrations cannot be deleted; deactivate it instead.`,
+      confirmLabel: "Delete college",
+      danger: true,
+    }))) return;
+    setDeletingClgId(college.id);
+    try {
+      const res = await fetch(`/api/admin/colleges/${college.id}`, { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.ok) {
+        setColleges((prev) => prev.filter((c) => c.id !== college.id));
+        showToast("College deleted", "success");
+      } else {
+        showToast(data.error || "Could not delete the college.", "error");
+      }
+    } catch {
+      showToast("Network error", "error");
+    }
+    setDeletingClgId(null);
   };
 
   const saveEditCollege = async (e) => {
@@ -1585,8 +1611,8 @@ export default function SuperAdminDashboardPage() {
                   { key: "inactive", label: "Inactive", value: clgCounts.inactive, Icon: ShieldOff, tone: "bg-red-100 text-red-600" },
                 ].map(({ key, label, value, Icon, tone }) => (
                   <button key={key} onClick={() => setClgFilter(key)}
-                    className={`flex items-center gap-3 rounded-2xl border bg-white p-3 sm:p-4 text-left transition hover:shadow-md ${clgFilter === key ? "border-[#1b57d8] ring-2 ring-[#1b57d8]/15" : "border-[#d3e1f5]"}`}>
-                    <span className={`hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${tone}`}><Icon className="h-5 w-5" /></span>
+                    className={`flex items-center gap-3 rounded-2xl border bg-white p-3 text-left transition hover:shadow-md sm:px-4 sm:py-3 ${clgFilter === key ? "border-[#1b57d8] ring-2 ring-[#1b57d8]/15" : "border-[#d3e1f5]"}`}>
+                    <span className={`hidden sm:flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${tone}`}><Icon className="h-5 w-5" /></span>
                     <span className="min-w-0">
                       <span className="block text-2xl font-extrabold leading-none text-[#082a63]">{value}</span>
                       <span className="mt-1 block text-[10.5px] sm:text-[12px] font-bold uppercase tracking-normal sm:tracking-wider text-[#4a6090]">{label}</span>
@@ -1695,7 +1721,7 @@ export default function SuperAdminDashboardPage() {
                     <table className="w-full text-[15px] text-left">
                       <thead className="bg-[#f4f8fe] border-b border-[#d3e1f5]">
                         <tr>
-                          <th className="py-3.5 px-5 text-[12.5px] font-bold uppercase tracking-wider text-[#4a6090]">College</th>
+                          <th className="w-[34%] min-w-[260px] py-3.5 px-5 text-[12.5px] font-bold uppercase tracking-wider text-[#4a6090]">College</th>
                           <th className="py-3.5 px-5 text-[12.5px] font-bold uppercase tracking-wider text-[#4a6090]">Username</th>
                           <th className="py-3.5 px-5 text-[12.5px] font-bold uppercase tracking-wider text-[#4a6090]">Contact</th>
                           <th className="py-3.5 px-5 text-[12.5px] font-bold uppercase tracking-wider text-[#4a6090]">Registered</th>
@@ -1714,38 +1740,42 @@ export default function SuperAdminDashboardPage() {
                                 <div className="min-w-0">
                                   <p className="font-bold text-[#082a63] leading-tight">{clg.college_name}</p>
                                   {clg.city && (
-                                    <p className="mt-0.5 flex items-center gap-1 text-[#3d5688] text-[14px]">
-                                      <MapPin className="h-3.5 w-3.5 shrink-0" /> {clg.city}{clg.state ? `, ${clg.state}` : ""}
+                                    <p className="mt-1 flex items-start gap-1.5 text-[#3d5688] text-[14px] leading-snug">
+                                      <MapPin className="mt-[3px] h-3.5 w-3.5 shrink-0" /> <span>{clg.city}{clg.state ? `, ${clg.state}` : ""}</span>
                                     </p>
                                   )}
                                 </div>
                               </div>
                             </td>
                             <td className="py-4 px-5">
-                              <span className="inline-block rounded-lg bg-[#eaf2fd] px-2.5 py-1 font-mono text-[14px] font-semibold text-[#082a63]">{clg.username}</span>
+                              <span className="inline-block whitespace-nowrap rounded-lg bg-[#eaf2fd] px-2.5 py-1 font-mono text-[14px] font-semibold text-[#082a63]">{clg.username}</span>
                             </td>
-                            <td className="py-4 px-5 space-y-1">
-                              {clg.email && <p className="flex items-center gap-2 text-[#3d5688]"><MailIcon className="h-4 w-4 shrink-0 text-[#6b7fa6]" /> {clg.email}</p>}
-                              {clg.phone && <p className="flex items-center gap-2 text-[#3d5688]"><Phone className="h-4 w-4 shrink-0 text-[#6b7fa6]" /> {clg.phone}</p>}
+                            <td className="py-4 px-5 space-y-1.5">
+                              {clg.email && <p className="flex items-center gap-2 whitespace-nowrap text-[#3d5688]"><MailIcon className="h-4 w-4 shrink-0 text-[#6b7fa6]" /> {clg.email}</p>}
+                              {clg.phone && <p className="flex items-center gap-2 whitespace-nowrap text-[#3d5688]"><Phone className="h-4 w-4 shrink-0 text-[#6b7fa6]" /> {clg.phone}</p>}
                               {!clg.email && !clg.phone && <span className="text-[#a9bde0]">—</span>}
                             </td>
                             <td className="py-4 px-5 whitespace-nowrap text-[14.5px] text-[#4a6090]">{fmtClgDate(clg.created_at)}</td>
                             <td className="py-4 px-5">
                               <button onClick={() => toggleCollegeActive(clg)} disabled={togglingClgId === clg.id} title="Click to change status"
-                                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[14px] font-bold transition-all ${clg.is_active ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200" : "bg-red-100 text-red-600 hover:bg-red-200"}`}>
+                                className={`inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1 rounded-full text-[14px] font-bold transition-all ${clg.is_active ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200" : "bg-red-100 text-red-600 hover:bg-red-200"}`}>
                                 {togglingClgId === clg.id ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : clg.is_active ? <CheckCircle2 className="w-3.5 h-3.5" /> : <ShieldOff className="w-3.5 h-3.5" />}
                                 {clg.is_active ? "Active" : "Inactive"}
                               </button>
                             </td>
-                            <td className="py-4 px-5">
+                            <td className="whitespace-nowrap py-4 px-5">
                               <div className="flex items-center justify-end gap-2">
                                 <button onClick={() => openEditCollege(clg)}
-                                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#d3e1f5] bg-white px-3 py-1.5 text-[14px] font-bold text-[#082a63] hover:bg-[#f4f8fe] transition-colors">
+                                  className="inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#d3e1f5] bg-white px-3 text-[14px] font-bold text-[#082a63] hover:bg-[#f4f8fe] transition-colors">
                                   <Pencil className="w-3.5 h-3.5" /> Edit
                                 </button>
                                 <button onClick={() => openResetCollege(clg)}
-                                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#d3e1f5] bg-white px-3 py-1.5 text-[14px] font-bold text-[#082a63] hover:border-amber-300 hover:bg-amber-50 hover:text-amber-800 transition-colors">
+                                  className="inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#d3e1f5] bg-white px-3 text-[14px] font-bold text-[#082a63] hover:border-amber-300 hover:bg-amber-50 hover:text-amber-800 transition-colors">
                                   <KeyRound className="w-3.5 h-3.5" /> Reset password
+                                </button>
+                                <button onClick={() => deleteCollege(clg)} disabled={deletingClgId === clg.id} aria-label={`Delete ${clg.college_name}`} title="Delete college"
+                                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#d3e1f5] bg-white text-[#3d5688] hover:border-red-200 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-60">
+                                  {deletingClgId === clg.id ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                                 </button>
                               </div>
                             </td>
@@ -1787,6 +1817,10 @@ export default function SuperAdminDashboardPage() {
                           <button onClick={() => openResetCollege(clg)}
                             className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#d3e1f5] bg-white py-2.5 text-[14px] font-bold text-[#082a63] hover:border-amber-300 hover:bg-amber-50 hover:text-amber-800">
                             <KeyRound className="h-4 w-4" /> Reset password
+                          </button>
+                          <button onClick={() => deleteCollege(clg)} disabled={deletingClgId === clg.id}
+                            className="col-span-2 inline-flex items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-white py-2.5 text-[14px] font-bold text-red-600 hover:bg-red-50 disabled:opacity-60">
+                            {deletingClgId === clg.id ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />} Delete college
                           </button>
                         </div>
                       </div>
@@ -2149,11 +2183,12 @@ export default function SuperAdminDashboardPage() {
                 {[
                   { key: "sessions", label: "Exam Sessions", count: examSessions.length },
                   { key: "centers", label: "Exam Centers", count: examCenters.length },
+                  { key: "signature", label: "Signature" },
                 ].map((t) => (
                   <button key={t.key} onClick={() => setExamSubTab(t.key)}
                     className={`flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-2.5 py-2.5 text-[13.5px] font-bold transition sm:flex-none sm:gap-2 sm:px-4 sm:text-[14.5px] ${examSubTab === t.key ? "bg-[#082a63] text-white shadow-sm" : "text-[#3d5688] hover:bg-[#f4f8fe]"}`}>
                     {t.label}
-                    <span className={`rounded-full px-2 py-0.5 text-[12px] font-extrabold ${examSubTab === t.key ? "bg-white/20 text-white" : "bg-[#eaf2fd] text-[#1b57d8]"}`}>{t.count}</span>
+                    {t.count !== undefined && <span className={`rounded-full px-2 py-0.5 text-[12px] font-extrabold ${examSubTab === t.key ? "bg-white/20 text-white" : "bg-[#eaf2fd] text-[#1b57d8]"}`}>{t.count}</span>}
                   </button>
                 ))}
               </div>
@@ -2197,13 +2232,11 @@ export default function SuperAdminDashboardPage() {
                       </label>
                       <label className="block min-w-0">
                         <span className="mb-1.5 block text-[13.5px] font-bold text-[#082a63]">Start date</span>
-                        <input type="date" value={newSession.start_date} onChange={e => setNewSession(p => ({ ...p, start_date: e.target.value }))}
-                          className="h-11 w-full min-w-0 rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] px-3.5 text-[15px] text-[#082a63] outline-none focus:border-[#1b57d8] focus:bg-white focus:ring-2 focus:ring-[#1b57d8]/15" />
+                        <DatePicker ariaLabel="Start date" value={newSession.start_date} onChange={(v) => setNewSession(p => ({ ...p, start_date: v }))} min="2000-01-01" max="2100-12-31" />
                       </label>
                       <label className="block min-w-0">
                         <span className="mb-1.5 block text-[13.5px] font-bold text-[#082a63]">End date</span>
-                        <input type="date" value={newSession.end_date} min={newSession.start_date || undefined} onChange={e => setNewSession(p => ({ ...p, end_date: e.target.value }))}
-                          className="h-11 w-full min-w-0 rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] px-3.5 text-[15px] text-[#082a63] outline-none focus:border-[#1b57d8] focus:bg-white focus:ring-2 focus:ring-[#1b57d8]/15" />
+                        <DatePicker ariaLabel="End date" value={newSession.end_date} min={newSession.start_date || "2000-01-01"} max="2100-12-31" onChange={(v) => setNewSession(p => ({ ...p, end_date: v }))} />
                       </label>
                     </div>
                     <div className="mt-5 flex flex-col gap-2.5 sm:flex-row">
@@ -2264,6 +2297,8 @@ export default function SuperAdminDashboardPage() {
                   </div>
                 </div>
               )}
+
+              {examSubTab === "signature" && <SecretarySignatureManager onShowToast={showToast} />}
 
               {examSubTab === "centers" && (
                 <div className="space-y-4">
@@ -2573,18 +2608,18 @@ export default function SuperAdminDashboardPage() {
               <div className="flex-1 bg-black/50" onClick={() => setSelectedApp(null)} />
               <div className="w-full max-w-2xl bg-white flex flex-col overflow-hidden shadow-2xl">
                 {/* Header */}
-                <div className="bg-[#082a63] text-white px-6 py-4 flex items-center justify-between shrink-0">
-                  <div>
-                    <h3 className="font-bold text-lg">{selectedApp.candidate_name}</h3>
-                    <p className="text-[15px] text-[#d3e1f5]">{selectedApp.enrollment_no || "No enrollment no."}</p>
+                <div className="bg-[#082a63] text-white px-4 py-4 sm:px-6 flex items-center justify-between gap-3 shrink-0">
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-lg leading-tight break-words">{selectedApp.candidate_name}</h3>
+                    <p className="text-[15px] text-[#d3e1f5] font-mono break-all">{selectedApp.enrollment_no || "No enrollment no."}</p>
                   </div>
-                  <button onClick={() => setSelectedApp(null)} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors">
+                  <button onClick={() => setSelectedApp(null)} aria-label="Close" className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg hover:bg-white/10 transition-colors">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
 
                 {/* Body */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-5">
+                <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-5">
                   {appDetailLoading ? (
                     <div className="text-center py-12">
                       <RefreshCw className="w-6 h-6 animate-spin mx-auto text-[#1b57d8]" />
@@ -2618,24 +2653,39 @@ export default function SuperAdminDashboardPage() {
                           ["State", selectedApp.state],
                           ["City", selectedApp.city],
                         ].map(([label, val]) => val ? (
-                          <div key={label} className="bg-[#f4f8fe] rounded-xl p-3 border border-[#d3e1f5]">
-                            <p className="text-[14px] font-bold uppercase text-[#3d5688] mb-0.5">{label}</p>
-                            <p className="font-semibold text-[#082a63] truncate">{val}</p>
+                          <div key={label} className={`min-w-0 bg-[#f4f8fe] rounded-xl p-3 border border-[#d3e1f5] ${["Email", "Course", "College"].includes(label) ? "col-span-2" : ""}`}>
+                            <p className="text-[13px] sm:text-[14px] font-bold uppercase text-[#3d5688] mb-0.5">{label}</p>
+                            <p className="font-semibold text-[#082a63] break-words">{val}</p>
                           </div>
                         ) : null)}
                       </div>
 
                       {/* Document Links */}
-                      {(selectedApp.photo_url || selectedApp.tenth_marksheet_url || selectedApp.twelfth_marksheet_url) && (
-                        <div>
-                          <p className="text-[15px] font-bold text-[#082a63] mb-2 uppercase tracking-wide">Documents</p>
-                          <div className="flex flex-wrap gap-2">
-                            {selectedApp.photo_url && <a href={selectedApp.photo_url} target="_blank" rel="noreferrer" className="px-3 py-1.5 rounded-lg bg-[#eaf2fd] text-[15px] font-semibold text-[#082a63] border border-[#d3e1f5] hover:border-[#1b57d8]">Photo</a>}
-                            {selectedApp.tenth_marksheet_url && <a href={selectedApp.tenth_marksheet_url} target="_blank" rel="noreferrer" className="px-3 py-1.5 rounded-lg bg-[#eaf2fd] text-[15px] font-semibold text-[#082a63] border border-[#d3e1f5] hover:border-[#1b57d8]">10th Marksheet</a>}
-                            {selectedApp.twelfth_marksheet_url && <a href={selectedApp.twelfth_marksheet_url} target="_blank" rel="noreferrer" className="px-3 py-1.5 rounded-lg bg-[#eaf2fd] text-[15px] font-semibold text-[#082a63] border border-[#d3e1f5] hover:border-[#1b57d8]">12th Marksheet</a>}
+                      {(() => {
+                        const docs = [
+                          ["Photo", selectedApp.photo_url],
+                          ["Signature", selectedApp.signature_url],
+                          ["Aadhaar", selectedApp.aadhaar_url],
+                          ["8th Marksheet", selectedApp.eighth_marksheet_url],
+                          ["10th Marksheet", selectedApp.tenth_marksheet_url],
+                          ["12th Marksheet", selectedApp.twelfth_marksheet_url],
+                          ["Affidavit", selectedApp.affidavit_url],
+                        ].filter(([, url]) => url);
+                        if (!docs.length) return null;
+                        return (
+                          <div>
+                            <p className="text-[15px] font-bold text-[#082a63] mb-2 uppercase tracking-wide">Documents</p>
+                            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+                              {docs.map(([label, url]) => (
+                                <a key={label} href={url} target="_blank" rel="noreferrer"
+                                  className="inline-flex items-center justify-center rounded-lg border border-[#d3e1f5] bg-[#eaf2fd] px-3 py-2 text-center text-[15px] font-semibold text-[#082a63] hover:border-[#1b57d8]">
+                                  {label}
+                                </a>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        );
+                      })()}
 
                       {/* Existing Queries */}
                       {appQueries.length > 0 && (
@@ -2662,19 +2712,19 @@ export default function SuperAdminDashboardPage() {
 
                 {/* Actions Footer */}
                 {!appDetailLoading && selectedApp.status !== "approved" && selectedApp.status !== "rejected" && (
-                  <div className="border-t border-[#d3e1f5] px-6 py-4 flex flex-wrap gap-2 shrink-0 bg-[#f4f8fe]">
+                  <div className="border-t border-[#d3e1f5] px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6 sm:py-4 grid grid-cols-2 gap-2 sm:grid-cols-3 shrink-0 bg-[#f4f8fe]">
                     <button onClick={() => approveApp(selectedApp.id)} disabled={actionLoading}
-                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[15px] font-bold transition-all disabled:opacity-60"
+                      className="inline-flex h-11 items-center justify-center gap-1.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[15px] font-bold transition-all disabled:opacity-60"
                     >
                       <CheckCircle className="w-4 h-4" /> Approve
                     </button>
                     <button onClick={() => setQueryModal(true)} disabled={actionLoading}
-                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-[15px] font-bold transition-all disabled:opacity-60"
+                      className="inline-flex h-11 items-center justify-center gap-1.5 px-3 whitespace-nowrap rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-[15px] font-bold transition-all disabled:opacity-60"
                     >
                       <MessageSquarePlus className="w-4 h-4" /> Raise Query
                     </button>
                     <button onClick={() => setRejectModal(true)} disabled={actionLoading}
-                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-[15px] font-bold transition-all disabled:opacity-60"
+                      className="col-span-2 sm:col-span-1 inline-flex h-11 items-center justify-center gap-1.5 px-3 rounded-xl bg-red-600 hover:bg-red-700 text-white text-[15px] font-bold transition-all disabled:opacity-60"
                     >
                       <XCircle className="w-4 h-4" /> Reject
                     </button>
@@ -2698,6 +2748,8 @@ export default function SuperAdminDashboardPage() {
                       { value: "general", label: "General" },
                       { value: "photo", label: "Photograph" },
                       { value: "aadhaar", label: "Aadhaar Card" },
+                      { value: "signature", label: "Signature" },
+                      { value: "marksheet_8th", label: "8th Marksheet" },
                       { value: "marksheet_10th", label: "10th Marksheet" },
                       { value: "marksheet_12th", label: "12th Marksheet" },
                       { value: "personal_details", label: "Personal Details" },

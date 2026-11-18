@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Plus, Pencil, Trash2, RefreshCw, X, CheckCircle2, AlertTriangle, Building2, CalendarDays, Clock, Users } from "lucide-react";
 import AdminPageShell from "@/components/admin/AdminPageShell";
 import Select from "@/components/ui/Select";
+import DatePicker from "@/components/ui/DatePicker";
 import { useConfirm } from "@/components/ui/ConfirmDialog";
 
 const EMPTY_FORM = { course_id: "", exam_center: "", exam_date: "", exam_time: "", session_label: "", max_students: 100 };
@@ -204,7 +205,7 @@ export default function ExamConfigPage() {
                 />
               </Field>
               <Field label="Exam Date">
-                <input type="date" value={form.exam_date} onChange={(e) => setForm((f) => ({ ...f, exam_date: e.target.value }))} className={inputCls} />
+                <DatePicker ariaLabel="Exam date" value={form.exam_date} onChange={(v) => setForm((f) => ({ ...f, exam_date: v }))} min="2000-01-01" max="2100-12-31" />
               </Field>
               <Field label="Exam Time">
                 <Select size="lg" ariaLabel="Exam time" placeholder="Select timing" value={form.exam_time || ""}

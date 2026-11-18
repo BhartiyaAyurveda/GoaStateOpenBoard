@@ -23,6 +23,18 @@ export async function POST(request) {
 
     // Language option: when the course has language options the student must pick exactly one of them
     const { data: courseRow } = await supabaseAdmin.from("courses").select("course_name").eq("id", body.course_id).maybeSingle();
+
+    // Required documents: Class X = Passport photo, Signature, Aadhaar, 8th marksheet;
+    // Class XII = Passport photo, Signature, Aadhaar, 10th marksheet. (Mobile and e-mail are optional.)
+    const isXII = /\bXII\b|senior\s*secondary/i.test(courseRow?.course_name || "");
+    const missingDocs = [];
+    if (!body.photo_url) missingDocs.push("passport photograph");
+    if (!body.signature_url) missingDocs.push("signature");
+    if (!body.aadhaar_url) missingDocs.push("Aadhaar card");
+    if (isXII ? !body.tenth_marksheet_url : !body.eighth_marksheet_url) missingDocs.push(isXII ? "10th marksheet" : "8th marksheet");
+    if (missingDocs.length) {
+      return NextResponse.json({ error: `Please upload: ${missingDocs.join(", ")}.` }, { status: 400 });
+    }
     const { data: langOptions } = await supabaseAdmin
       .from("course_subjects")
       .select("id")
@@ -80,6 +92,7 @@ export async function POST(request) {
       aadhaar_url:         body.aadhaar_url         || null,
       tenth_marksheet_url: body.tenth_marksheet_url || null,
       twelfth_marksheet_url: body.twelfth_marksheet_url || null,
+      eighth_marksheet_url: body.eighth_marksheet_url || null,
       affidavit_url:       body.affidavit_url       || null,
       // Status
       status: "pending",

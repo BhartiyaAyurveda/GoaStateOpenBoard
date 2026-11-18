@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import useSecretarySignature from "@/components/useSecretarySignature";
 
 function Cell({ children, className = "" }) {
   return (
@@ -9,6 +10,7 @@ function Cell({ children, className = "" }) {
 }
 
 export default function MarksheetTemplate({ data, showPageBreak = false }) {
+  const secretarySignature = useSecretarySignature();
   if (!data) return null;
 
   const { student, subjects = [], summary, issueDate, certificateNo } = data;
@@ -159,16 +161,10 @@ export default function MarksheetTemplate({ data, showPageBreak = false }) {
           <div className="flex items-end gap-6">
             <div className="text-center text-[10px] text-[#64748b]">
               <div className="h-12 flex items-end justify-center mb-1">
-              </div>
-              <div className="w-28 border-t border-[#0B1E36] pt-1 mx-auto text-[#0B1E36] font-medium">Prepared By / तयार करपी</div>
-            </div>
-            <div className="text-center text-[10px] text-[#64748b]">
-              <div className="h-12 flex items-end justify-center mb-1">
-              </div>
-              <div className="w-28 border-t border-[#0B1E36] pt-1 mx-auto text-[#0B1E36] font-medium">Checked By / तपासपी</div>
-            </div>
-            <div className="text-center text-[10px] text-[#64748b]">
-              <div className="h-12 flex items-end justify-center mb-1">
+                {secretarySignature && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={secretarySignature} alt="Secretary signature" className="max-h-12 max-w-[8rem] object-contain" style={{ mixBlendMode: "multiply" }} />
+                )}
               </div>
               <div className="w-32 border-t border-[#0B1E36] pt-1 mx-auto text-[#0B1E36] font-medium">Secretary / सचिव</div>
             </div>

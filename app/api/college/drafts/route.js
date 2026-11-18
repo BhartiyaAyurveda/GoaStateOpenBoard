@@ -18,7 +18,7 @@ export async function GET(request) {
   return NextResponse.json({ ok: true, drafts: data || [] });
 }
 
-// POST — create a new draft after email OTP verification
+// POST — create a new draft (the candidate's e-mail is optional)
 export async function POST(request) {
   const session = await requireCollege(request);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -26,13 +26,11 @@ export async function POST(request) {
   const body = await request.json();
   const { email, candidate_name, father_name, form_data } = body;
 
-  if (!email) return NextResponse.json({ error: "email is required" }, { status: 400 });
-
   const { data, error } = await supabaseAdmin
     .from("registration_drafts")
     .insert({
       college_id: session.college_id,
-      email: email.trim().toLowerCase(),
+      email: (typeof email === "string" ? email : "").trim().toLowerCase(),
       candidate_name: candidate_name || "",
       father_name: father_name || "",
       status: "verified",

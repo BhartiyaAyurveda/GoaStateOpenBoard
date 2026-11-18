@@ -1,5 +1,8 @@
 "use client";
 
+import useSecretarySignature from "@/components/useSecretarySignature";
+import FitCard from "@/components/FitCard";
+
 function fmtDate(d) {
   if (!d) return "—";
   const p = d.split("-");
@@ -22,6 +25,7 @@ function fmtExamDate(d) {
 }
 
 export default function AdmitCardTemplate({ data, showPageBreak = false }) {
+  const secretarySignature = useSecretarySignature();
   if (!data) return null;
 
   const subjects = data.subjects || [];
@@ -29,6 +33,7 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
   const printZoom = subjects.length <= 6 ? 1 : subjects.length === 7 ? 0.95 : subjects.length === 8 ? 0.91 : 0.87;
 
   return (
+    <FitCard>
     <div
       className="result-marksheet-wrapper w-full max-w-[860px] mx-auto font-sans text-[#171717] shadow-2xl print:shadow-none"
       style={{
@@ -37,7 +42,6 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
       }}
     >
       <style>{`
-        .result-marksheet-wrapper img { filter: grayscale(1); }
         @media print {
           @page { size: A4 portrait; margin: 0; }
           html, body {
@@ -65,7 +69,7 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
       `}</style>
 
       {/* ── CLEAN ACADEMIC SINGLE SOLID BORDER (EXACT RESULT TEMPLATE STYLE) ── */}
-      <div className="relative bg-white overflow-hidden" style={{ border: "2px solid #1b1b1b" }}>
+      <div className="relative bg-white overflow-hidden" style={{ border: "2px solid #e9a8c2" }}>
         {/* Watermark */}
         <div
           className="pointer-events-none absolute inset-0 flex items-center justify-center select-none overflow-hidden"
@@ -82,15 +86,15 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
         <div className="relative z-10">
           {/* ── 1. HEADER BAND ── */}
           <div
-            style={{ background: "linear-gradient(135deg, #131313 0%, #1b1b1b 40%, #2a2a2a 100%)" }}
+            style={{ background: "linear-gradient(135deg,#fbd7e6 0%,#fde6ef 50%,#fff2f7 100%)" }}
             className="px-5 py-4 flex items-center gap-4"
           >
             {/* Left logo */}
             <div
               className="shrink-0 w-[90px] h-[90px] rounded-full bg-white flex items-center justify-center shadow-xl"
               style={{
-                border: "2.5px solid #545454",
-                boxShadow: "0 0 0 4px #54545430, 0 4px 16px #00000060",
+                border: "2.5px solid #e9a8c2",
+                boxShadow: "0 0 0 4px #e9a8c240, 0 4px 16px #00000060",
               }}
             >
               <img
@@ -103,26 +107,26 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
             {/* Center text */}
             <div className="flex-1 text-center">
               <div
-                className="text-[#9f9f9f] text-[18px] sm:text-[20px] font-extrabold tracking-wide leading-tight"
+                className="text-[#a63a69] text-[18px] sm:text-[20px] font-extrabold tracking-wide leading-tight"
                 lang="kok"
                 style={{ fontFamily: "var(--font-noto-deva), 'Noto Sans Devanagari', sans-serif" }}
               >
                 गोंय राज्य मुक्त शाळा
               </div>
-              <h1 className="text-white text-[12px] sm:text-[13px] font-bold tracking-[0.16em] uppercase leading-tight mt-1">
+              <h1 className="text-[#5c1736] text-[12px] sm:text-[13px] font-bold tracking-[0.16em] uppercase leading-tight mt-1">
                 Goa State Open School
               </h1>
               <div className="flex items-center justify-center gap-2 mt-1.5">
                 <div
                   className="h-px flex-1 max-w-[80px]"
-                  style={{ background: "linear-gradient(90deg, transparent, #545454)" }}
+                  style={{ background: "linear-gradient(90deg, transparent, #e9a8c2)" }}
                 />
-                <span className="text-[#b3b3b3] text-[8.5px] font-medium tracking-wider whitespace-nowrap px-1">
+                <span className="text-[#b0607f] text-[8.5px] font-medium tracking-wider whitespace-nowrap px-1">
                   Open schooling &nbsp;✦&nbsp; Flexible learning &nbsp;✦&nbsp; Examination Division
                 </span>
                 <div
                   className="h-px flex-1 max-w-[80px]"
-                  style={{ background: "linear-gradient(90deg, #545454, transparent)" }}
+                  style={{ background: "linear-gradient(90deg, #e9a8c2, transparent)" }}
                 />
               </div>
             </div>
@@ -135,7 +139,7 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
           <div
             style={{
               height: 4,
-              background: "linear-gradient(90deg, #434343, #545454, #9f9f9f, #545454, #434343)",
+              background: "linear-gradient(90deg,#f3b9cf,#e58aac,#f3b9cf)",
             }}
           />
 
@@ -147,19 +151,19 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
             <div className="flex items-center justify-center gap-3">
               <div
                 className="h-px flex-1"
-                style={{ background: "linear-gradient(90deg, transparent, #545454)" }}
+                style={{ background: "linear-gradient(90deg, transparent, #e9a8c2)" }}
               />
               <div>
-                <div className="text-[#1b1b1b] font-extrabold text-[13px] tracking-[0.2em] uppercase">
+                <div className="text-[#2b1722] font-extrabold text-[13px] tracking-[0.2em] uppercase">
                   Examination Hall Ticket &nbsp;/&nbsp; प्रवेश पत्र
                 </div>
-                <div className="text-[#434343] text-[9.5px] font-semibold tracking-wider mt-0.5">
+                <div className="text-[#8a2b57] text-[9.5px] font-semibold tracking-wider mt-0.5">
                   {data.session_label || "Annual Examination"}
                 </div>
               </div>
               <div
                 className="h-px flex-1"
-                style={{ background: "linear-gradient(90deg, #545454, transparent)" }}
+                style={{ background: "linear-gradient(90deg, #e9a8c2, transparent)" }}
               />
             </div>
           </div>
@@ -169,37 +173,37 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
             {/* ── CANDIDATE DETAILS + PHOTO ── */}
             <div
               className="overflow-hidden bg-white"
-              style={{ border: "1px solid #545454", borderRadius: 4 }}
+              style={{ border: "1px solid #e9a8c2", borderRadius: 4 }}
             >
               <div
-                style={{ background: "linear-gradient(90deg, #1b1b1b, #2a2a2a)" }}
+                style={{ background: "linear-gradient(90deg,#fbd9e7,#fde9f1)" }}
                 className="px-4 py-1.5 flex items-center gap-2"
               >
                 <span
                   style={{
                     width: 3,
                     height: 14,
-                    background: "#545454",
+                    background: "#e9a8c2",
                     borderRadius: 2,
                     flexShrink: 0,
                     display: "inline-block",
                   }}
                 />
-                <span className="text-[9.5px] font-extrabold text-white uppercase tracking-[0.15em]">
+                <span className="text-[9.5px] font-extrabold text-[#7a1f46] uppercase tracking-[0.15em]">
                   Candidate &amp; Examination Particulars / उमेदवार तपशील
                 </span>
               </div>
               <div className="flex items-stretch">
-                <div className="flex-1 divide-y divide-dashed" style={{ borderColor: "#e7e7e7" }}>
+                <div className="flex-1 divide-y divide-dashed" style={{ borderColor: "#f3d3df" }}>
                   {[
                     [["Candidate Name", (data.candidate_name || "—").toUpperCase(), true], ["Roll Number", data.roll_no || "—", true, true]],
                     [["Father's Name", (data.father_name || "—").toUpperCase()], ["Enrollment No.", data.enrollment_no || "—", false, true]],
-                    [["Date of Birth", fmtDate(data.dob)], ["Exam Year", data.exam_year_label || "1st Year"]],
+                    [["Date of Birth", fmtDate(data.dob)], ["Gender", data.gender || "—"]],
                   ].map((row, ri) => (
                     <div
                       key={ri}
                       className="grid grid-cols-2"
-                      style={{ borderBottom: "1px dashed #e7e7e7" }}
+                      style={{ borderBottom: "1px dashed #f3d3df" }}
                     >
                       {row.map(([label, val, bold, mono]) => (
                         <div
@@ -208,7 +212,7 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
                           style={{
                             borderRight:
                               row.indexOf([label, val, bold, mono]) === 0
-                                ? "1px dashed #e7e7e7"
+                                ? "1px dashed #f3d3df"
                                 : undefined,
                           }}
                         >
@@ -226,7 +230,7 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
                           <span style={{ color: "#a1a1a1", fontSize: 10 }}>:</span>
                           <span
                             style={{
-                              color: "#1b1b1b",
+                              color: "#2b1722",
                               fontSize: bold ? 11.5 : 10.5,
                               fontWeight: 700,
                               fontFamily: mono ? "monospace" : undefined,
@@ -241,7 +245,7 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
                   ))}
                   <div
                     className="flex items-start gap-2 px-4 py-[5.5px]"
-                    style={{ borderBottom: "1px dashed #e7e7e7" }}
+                    style={{ borderBottom: "1px dashed #f3d3df" }}
                   >
                     <span
                       style={{
@@ -258,7 +262,7 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
                     <span style={{ color: "#a1a1a1", fontSize: 10, marginTop: 1 }}>:</span>
                     <span
                       style={{
-                        color: "#1b1b1b",
+                        color: "#2b1722",
                         fontSize: 10.5,
                         fontWeight: 700,
                         textTransform: "uppercase",
@@ -284,7 +288,7 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
                     <span style={{ color: "#a1a1a1", fontSize: 10, marginTop: 1 }}>:</span>
                     <span
                       style={{
-                        color: "#1b1b1b",
+                        color: "#2b1722",
                         fontSize: 10.5,
                         fontWeight: 700,
                         textTransform: "uppercase",
@@ -299,15 +303,15 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
                 {/* Photo */}
                 <div
                   className="shrink-0 w-[96px] flex flex-col items-center justify-center gap-1 p-2"
-                  style={{ borderLeft: "1px dashed #e7e7e7", background: "#fafafa" }}
+                  style={{ borderLeft: "1px dashed #f3d3df", background: "#fff7fa" }}
                 >
                   <div
                     style={{
-                      border: "2px solid #1b1b1b",
+                      border: "2px solid #2b1722",
                       width: 78,
                       height: 100,
                       overflow: "hidden",
-                      background: "#f4f4f4",
+                      background: "#fdf0f5",
                       position: "relative",
                       boxShadow: "2px 2px 6px rgba(0,0,0,0.15)",
                       display: "flex",
@@ -356,30 +360,30 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
             {/* ── EXAMINATION SCHEDULE TABLE ── */}
             <div
               className="overflow-hidden bg-white"
-              style={{ border: "1px solid #545454", borderRadius: 4 }}
+              style={{ border: "1px solid #e9a8c2", borderRadius: 4 }}
             >
               <div
-                style={{ background: "linear-gradient(90deg, #1b1b1b, #2a2a2a)" }}
+                style={{ background: "linear-gradient(90deg,#fbd9e7,#fde9f1)" }}
                 className="px-4 py-1.5 flex items-center gap-2"
               >
                 <span
                   style={{
                     width: 3,
                     height: 14,
-                    background: "#545454",
+                    background: "#e9a8c2",
                     borderRadius: 2,
                     flexShrink: 0,
                     display: "inline-block",
                   }}
                 />
-                <span className="text-[9.5px] font-extrabold text-white uppercase tracking-[0.15em]">
+                <span className="text-[9.5px] font-extrabold text-[#7a1f46] uppercase tracking-[0.15em]">
                   Examination Schedule / परिक्षा वेळापत्रक
                 </span>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-left">
                   <thead>
-                    <tr style={{ background: "#1b1b1b" }} className="text-white">
+                    <tr style={{ background: "#fbd9e7" }} className="text-[#7a1f46]">
                       <th
                         className="py-2.5 px-2 text-center font-bold uppercase tracking-wide border-r border-white/10"
                         style={{ width: "6%", fontSize: 10.5 }}
@@ -418,32 +422,32 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
                         <tr
                           key={sub.subject_code || idx}
                           style={{
-                            background: idx % 2 === 0 ? "#ffffff" : "#fafafa",
-                            borderBottom: "1px solid #e7e7e7",
+                            background: idx % 2 === 0 ? "#ffffff" : "#fff7fa",
+                            borderBottom: "1px solid #f3d3df",
                           }}
                         >
                           <td
                             className="py-2 print:py-1.5 px-2 text-center font-bold border-r border-slate-200"
-                            style={{ color: "#434343", fontSize: 11 }}
+                            style={{ color: "#8a2b57", fontSize: 11 }}
                           >
                             {idx + 1}
                           </td>
                           <td
                             className="py-2 print:py-1.5 px-3 text-center font-mono font-extrabold border-r border-slate-200"
-                            style={{ color: "#434343", fontSize: 10.5 }}
+                            style={{ color: "#8a2b57", fontSize: 10.5 }}
                           >
                             {sub.subject_code || "—"}
                           </td>
                           <td
                             className="py-2 print:py-1.5 px-3 border-r border-slate-200"
-                            style={{ fontWeight: 700, color: "#1b1b1b", fontSize: 11.5 }}
+                            style={{ fontWeight: 700, color: "#2b1722", fontSize: 11.5 }}
                           >
                             {sub.subject_name}
                           </td>
                           <td
                             className="py-2 print:py-1.5 px-3 text-center border-r border-slate-200"
                             style={{
-                              color: "#1b1b1b",
+                              color: "#2b1722",
                               fontWeight: 700,
                               fontSize: 11,
                               whiteSpace: "nowrap",
@@ -477,28 +481,28 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
             {/* ── IMPORTANT INSTRUCTIONS (BILINGUAL) ── */}
             <div
               className="overflow-hidden bg-white"
-              style={{ border: "1px solid #545454", borderRadius: 4 }}
+              style={{ border: "1px solid #e9a8c2", borderRadius: 4 }}
             >
               <div
-                style={{ background: "linear-gradient(90deg, #1b1b1b, #2a2a2a)" }}
+                style={{ background: "linear-gradient(90deg,#fbd9e7,#fde9f1)" }}
                 className="px-4 py-1.5 flex items-center gap-2"
               >
                 <span
                   style={{
                     width: 3,
                     height: 14,
-                    background: "#545454",
+                    background: "#e9a8c2",
                     borderRadius: 2,
                     flexShrink: 0,
                     display: "inline-block",
                   }}
                 />
-                <span className="text-[9.5px] font-extrabold text-white uppercase tracking-[0.15em]">
+                <span className="text-[9.5px] font-extrabold text-[#7a1f46] uppercase tracking-[0.15em]">
                   Important Instructions / म्हत्वाच्यो सूचना
                 </span>
               </div>
               <div className="grid grid-cols-2 bg-[#ffffff]">
-                <div className="p-3 border-r border-dashed border-[#e7e7e7]">
+                <div className="p-3 border-r border-dashed border-[#f3d3df]">
                   {[
                     "This Admit Card must be produced at the exam centre along with valid Govt. Photo ID.",
                     "Report at the examination centre at least 30 minutes before scheduled start time.",
@@ -509,7 +513,7 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
                       key={idx}
                       className="flex gap-2 mb-1.5 last:mb-0 text-[9.5px] text-slate-600 leading-relaxed"
                     >
-                      <span className="font-extrabold text-[#545454] shrink-0">{idx + 1}.</span>
+                      <span className="font-extrabold text-[#8a2b57] shrink-0">{idx + 1}.</span>
                       <span>{item}</span>
                     </div>
                   ))}
@@ -526,7 +530,7 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
                       key={idx}
                       className="flex gap-2 mb-1.5 last:mb-0 text-[9.5px] text-slate-600 leading-relaxed"
                     >
-                      <span className="font-extrabold text-[#545454] shrink-0">{idx + 1}.</span>
+                      <span className="font-extrabold text-[#8a2b57] shrink-0">{idx + 1}.</span>
                       <span>{item}</span>
                     </div>
                   ))}
@@ -537,34 +541,34 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
             {/* ── 4. SIGNATURES & VERIFICATION (EXACT RESULT MARKSHEET STYLE) ── */}
             <div
               className="overflow-hidden"
-              style={{ border: "1px solid #545454", borderRadius: 4 }}
+              style={{ border: "1px solid #e9a8c2", borderRadius: 4 }}
             >
               {/* Top label bar */}
               <div
-                style={{ background: "linear-gradient(90deg, #1b1b1b, #2a2a2a)" }}
+                style={{ background: "linear-gradient(90deg,#fbd9e7,#fde9f1)" }}
                 className="px-4 py-1.5 flex items-center gap-2"
               >
                 <span
                   style={{
                     width: 3,
                     height: 14,
-                    background: "#545454",
+                    background: "#e9a8c2",
                     borderRadius: 2,
                     flexShrink: 0,
                     display: "inline-block",
                   }}
                 />
-                <span className="text-[9.5px] font-extrabold text-white uppercase tracking-[0.15em]">
+                <span className="text-[9.5px] font-extrabold text-[#7a1f46] uppercase tracking-[0.15em]">
                   Authorisation &amp; Verification / प्राधिकृत पडताळणी
                 </span>
               </div>
 
               <div
-                style={{ background: "linear-gradient(180deg, #ffffff, #fafafa)" }}
-                className="px-6 py-4 flex items-end justify-between gap-6"
+                style={{ background: "linear-gradient(180deg, #ffffff, #fff7fa)" }}
+                className="px-6 py-3 flex items-end justify-around gap-6"
               >
-                {/* Candidate Signature */}
-                <div className="flex-1 text-center">
+                {/* Secretary signature */}
+                <div style={{ width: 220, maxWidth: "100%", textAlign: "center" }}>
                   <div
                     style={{
                       height: 44,
@@ -575,6 +579,14 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
                       position: "relative",
                     }}
                   >
+                    {secretarySignature && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={secretarySignature}
+                        alt="Secretary signature"
+                        style={{ position: "absolute", left: "50%", bottom: 2, transform: "translateX(-50%)", maxHeight: 42, maxWidth: "92%", objectFit: "contain", mixBlendMode: "multiply" }}
+                      />
+                    )}
                     <div
                       style={{
                         position: "absolute",
@@ -584,112 +596,12 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
                         width: 6,
                         height: 6,
                         borderRadius: "50%",
-                        background: "#545454",
+                        background: "#e9a8c2",
                       }}
                     />
                   </div>
-                  <div style={{ fontSize: 9.5, fontWeight: 800, color: "#1b1b1b" }}>
-                    Signature of Candidate
-                  </div>
-                  <div style={{ fontSize: 8, color: "#727272", marginTop: 1 }}>
-                    (In presence of Invigilator)
-                  </div>
-                </div>
-
-                {/* Center Seal */}
-                <div className="shrink-0 flex flex-col items-center gap-1">
-                  <div
-                    style={{
-                      width: 74,
-                      height: 74,
-                      borderRadius: "50%",
-                      border: "2.5px solid #1b1b1b",
-                      background: "radial-gradient(circle at 40% 35%, #ffffff 60%, #f4f4f4)",
-                      boxShadow:
-                        "0 0 0 2px #545454, 0 0 0 4px rgba(157,157,157,0.25), 0 3px 12px rgba(27,27,27,0.2)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      position: "relative",
-                    }}
-                  >
-                    <div
-                      style={{
-                        position: "absolute",
-                        inset: 5,
-                        borderRadius: "50%",
-                        border: "1.2px dashed rgba(27,27,27,0.5)",
-                      }}
-                    />
-                    <div
-                      style={{
-                        position: "absolute",
-                        inset: 9,
-                        borderRadius: "50%",
-                        border: "0.5px dotted rgba(157,157,157,0.7)",
-                      }}
-                    />
-                    <img
-                      src="/images/logo.png"
-                      alt=""
-                      style={{
-                        width: 38,
-                        height: 38,
-                        objectFit: "contain",
-                        position: "relative",
-                        zIndex: 1,
-                      }}
-                    />
-                  </div>
-                  <div className="text-center">
-                    <div
-                      style={{
-                        fontSize: 8.5,
-                        fontWeight: 800,
-                        color: "#1b1b1b",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.08em",
-                      }}
-                    >
-                      Official Seal
-                    </div>
-                    <div style={{ fontSize: 7, color: "#434343", fontWeight: 700 }}>
-                      GOA STATE OPEN SCHOOL
-                    </div>
-                  </div>
-                </div>
-
-                {/* Principal Signature */}
-                <div className="flex-1 text-center">
-                  <div
-                    style={{
-                      height: 44,
-                      borderBottom: "1.5px solid #a1a1a1",
-                      marginBottom: 6,
-                      marginLeft: 8,
-                      marginRight: 8,
-                      position: "relative",
-                    }}
-                  >
-                    <div
-                      style={{
-                        position: "absolute",
-                        bottom: -3,
-                        left: "50%",
-                        transform: "translateX(-50%)",
-                        width: 6,
-                        height: 6,
-                        borderRadius: "50%",
-                        background: "#545454",
-                      }}
-                    />
-                  </div>
-                  <div style={{ fontSize: 9.5, fontWeight: 800, color: "#1b1b1b" }}>
-                    Signature of Principal
-                  </div>
-                  <div style={{ fontSize: 8, color: "#727272", marginTop: 1 }}>
-                    (With College Seal)
-                  </div>
+                  <div style={{ fontSize: 10, fontWeight: 800, color: "#2b1722", letterSpacing: "0.03em" }}>Secretary</div>
+                  <div style={{ fontSize: 8.5, color: "#727272", fontWeight: 600, marginTop: 1 }}>Goa State Open School</div>
                 </div>
               </div>
             </div>
@@ -700,7 +612,7 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
                 style={{
                   height: 3,
                   background:
-                    "linear-gradient(90deg, #434343, #545454, #9f9f9f, #545454, #434343)",
+                    "linear-gradient(90deg,#f3b9cf,#e58aac,#f3b9cf)",
                 }}
               />
               <div className="text-center py-1 text-[8px] text-[#727272] tracking-wide">
@@ -711,5 +623,6 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
         </div>
       </div>
     </div>
+    </FitCard>
   );
 }

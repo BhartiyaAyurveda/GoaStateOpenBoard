@@ -120,6 +120,10 @@ body {
 }
 
 @media print {
+  /* cards shown scaled down on a phone (components/FitCard.jsx) print at their normal size */
+  .fit-card { height: auto !important; }
+  .fit-card-inner { width: auto !important; transform: none !important; }
+
   @page {
     size: A4 portrait;
     margin: 12mm 14mm;
@@ -147,6 +151,26 @@ body {
     padding: 0 !important;
   }
 
+  /* The dashboards are a fixed, clipped "app shell" (sidebar + a scrolling main area). For paper, let the
+     content flow normally so every page of it is printed, not only what fits on the screen. */
+  body:has([data-dashboard]) [data-dashboard] {
+    min-height: 0 !important;
+    display: block !important;
+    background: #fff !important; /* plain white paper, no tinted page background */
+  }
+  body:has([data-dashboard]) [data-dashboard] > .fixed.inset-0 {
+    position: static !important;
+    inset: auto !important;
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  body:has([data-dashboard]) [data-dashboard] > .fixed.inset-0 > div {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
   body:has([data-dashboard]) button {
     display: none !important;
   }

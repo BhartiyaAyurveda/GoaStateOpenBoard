@@ -24,7 +24,7 @@ const instructions = [
 
 function Panel({ icon: Icon, title, className = "", children }) {
   return (
-    <section className={`card-shadow flex flex-col overflow-hidden rounded-lg bg-white ${className}`}>
+    <section className={`card-shadow flex flex-col overflow-hidden rounded-lg bg-white print:overflow-visible print:rounded-none print:shadow-none ${className}`}>
       <div className="flex h-[56px] items-center gap-2 bg-gradient-to-r from-[#dfeafa] to-[#eef4fc] px-5 print:hidden">
         <Icon size={24} strokeWidth={1.8} className="text-navy" />
         <h2 className="text-[21px] font-bold leading-none tracking-tight text-ink">{title}</h2>
@@ -43,7 +43,7 @@ export default async function AdmitCardPage() {
       <Navbar />
 
       <main id="main-content">
-        <div className="mx-auto grid max-w-[1320px] grid-cols-1 gap-6 px-4 py-10 sm:px-6 lg:grid-cols-[1.45fr_1fr] lg:items-start lg:py-14">
+        <div className="mx-auto grid max-w-[1320px] grid-cols-1 gap-6 px-4 py-10 sm:px-6 lg:grid-cols-[1.45fr_1fr] lg:items-start lg:py-14 print:block print:max-w-none print:p-0">
           <Panel icon={IdCard} title="Download Admit Card">
             <AdmitCardLookup />
           </Panel>

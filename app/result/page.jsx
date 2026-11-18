@@ -12,12 +12,11 @@ export const revalidate = 60; // contact details (header menu, footer, help boxe
 
 export const metadata = {
   title: "Examination Result | Goa State Open School",
-  description: "Check your Goa State Open School Class X / Class XII examination result online using your enrollment number and date of birth.",
+  description: "Check your Goa State Open School Class X / Class XII examination result online using your roll number and date of birth.",
 };
 
 const instructions = [
-  "Select your class and the examination for which you want to check the result.",
-  "Enter your Enrollment Number exactly as printed on your Enrollment Card.",
+  "Enter your Roll Number exactly as printed on your Admit Card.",
   "Enter your Date of Birth as given in your admission form.",
   "Click \"Get Result\". You can print the result sheet for your reference.",
   "The online result is provisional. The original marksheet issued by Goa State Open School is final.",
@@ -25,7 +24,7 @@ const instructions = [
 
 function Panel({ icon: Icon, title, className = "", children }) {
   return (
-    <section className={`card-shadow flex flex-col overflow-hidden rounded-lg bg-white ${className}`}>
+    <section className={`card-shadow flex flex-col overflow-hidden rounded-lg bg-white print:overflow-visible print:rounded-none print:shadow-none ${className}`}>
       <div className="flex h-[56px] items-center gap-2 bg-gradient-to-r from-[#dfeafa] to-[#eef4fc] px-5 print:hidden">
         <Icon size={24} strokeWidth={1.8} className="text-navy" />
         <h2 className="text-[21px] font-bold leading-none tracking-tight text-ink">{title}</h2>
@@ -44,7 +43,7 @@ export default async function ResultPage() {
       <Navbar />
 
       <main id="main-content">
-        <div className="mx-auto grid max-w-[1320px] grid-cols-1 gap-6 px-4 py-10 sm:px-6 lg:grid-cols-[1.45fr_1fr] lg:items-start lg:py-14">
+        <div className="mx-auto grid max-w-[1320px] grid-cols-1 gap-6 px-4 py-10 sm:px-6 lg:grid-cols-[1.45fr_1fr] lg:items-start lg:py-14 print:block print:max-w-none print:p-0">
           <Panel icon={FileSearch} title="Check Your Result">
             <ResultLookup />
           </Panel>

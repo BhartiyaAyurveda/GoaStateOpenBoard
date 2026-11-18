@@ -2,10 +2,11 @@
 
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
-import { Pencil, Save, CheckCircle2, XCircle, AlertTriangle, GraduationCap, MessageSquarePlus, Eye } from "lucide-react";
+import { Pencil, Save, CheckCircle2, XCircle, AlertTriangle, GraduationCap, MessageSquarePlus, Eye, User, Copy, Check, ClipboardCheck, Circle } from "lucide-react";
 import AdminPageShell from "@/components/admin/AdminPageShell";
 import Modal from "@/components/ui/Modal";
 import Select from "@/components/ui/Select";
+import DatePicker from "@/components/ui/DatePicker";
 import { useConfirm } from "@/components/ui/ConfirmDialog";
 
 const QUERY_FIELD_OPTIONS = [
@@ -23,6 +24,7 @@ const QUERY_FIELD_OPTIONS = [
   { value: "photo_url", label: "Passport Photo / पासपोर्ट फोटो" },
   { value: "signature_url", label: "Signature / सही" },
   { value: "aadhaar_url", label: "Aadhaar Card / आधार कार्ड" },
+  { value: "eighth_marksheet_url", label: "8th Marksheet / 8वी गूणपत्रिका" },
   { value: "tenth_marksheet_url", label: "10th Marksheet / 10वी गूणपत्रिका" },
   { value: "twelfth_marksheet_url", label: "12th Marksheet / 12वी गूणपत्रिका" },
 ];
@@ -38,7 +40,7 @@ const STATUS_COLORS = {
 
 function StatusBadge({ status }) {
   return (
-    <span className={`text-[15px] font-bold px-2.5 py-0.5 rounded-full border uppercase tracking-wide ${STATUS_COLORS[status] || "bg-gray-100 text-gray-700 border-gray-300"}`}>
+    <span className={`text-[13px] font-bold px-2.5 py-0.5 rounded-full border uppercase tracking-wide ${STATUS_COLORS[status] || "bg-gray-100 text-gray-700 border-gray-300"}`}>
       {status?.replace(/_/g, " ")}
     </span>
   );
@@ -54,6 +56,22 @@ function DocLink({ url, label }) {
       </svg>
       {label}
     </a>
+  );
+}
+
+function CopyChip({ text, label = "Copy" }) {
+  const [done, setDone] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={async () => {
+        try { await navigator.clipboard.writeText(text); setDone(true); setTimeout(() => setDone(false), 1800); } catch {}
+      }}
+      className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11.5px] font-bold text-[#8ec9fa] hover:bg-white/10"
+      aria-label={label}
+    >
+      {done ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />} {done ? "Copied" : "Copy"}
+    </button>
   );
 }
 
@@ -248,12 +266,29 @@ export default function RegistrationDetailPage({ params }) {
     </section>
   );
 
+  // Class XII needs the 10th marksheet, Class X the 8th. A document that does not apply and was not uploaded is not listed.
+  const isXII = /\bXII\b|senior\s*secondary/i.test(reg.courses?.course_name || reg.course_name || "");
+  const eduRows = [["8th / Middle School", edu.middle], ["10th / High School", edu.high_school], ["12th / Intermediate", edu.intermediate], ["Graduation", edu.graduation], ["Other", edu.other]].filter(([, d]) => d?.board);
   const docs = [
-    { label: "Aadhaar Card", url: reg.aadhaar_url },
-    { label: "10th Marksheet", url: reg.tenth_marksheet_url || reg.marksheet_10th_url },
-    { label: "12th Marksheet", url: reg.twelfth_marksheet_url || reg.marksheet_12th_url },
-    { label: "Other Document", url: reg.affidavit_url || reg.other_doc_url },
+    { label: "Aadhaar Card", url: reg.aadhaar_url, required: true },
+    { label: "8th Marksheet", url: reg.eighth_marksheet_url, required: !isXII },
+    { label: "10th Marksheet", url: reg.tenth_marksheet_url || reg.marksheet_10th_url, required: isXII },
+    { label: "12th Marksheet", url: reg.twelfth_marksheet_url || reg.marksheet_12th_url, required: false },
+    { label: "Other Document", url: reg.affidavit_url || reg.other_doc_url, required: false },
+  ].filter((d) => d.required || d.url);
+
+  // what the Board should be able to see before approving
+  const checks = [
+    { label: "Passport photo", ok: !!reg.photo_url },
+    { label: "Signature", ok: !!reg.signature_url },
+    { label: "Aadhaar card", ok: !!reg.aadhaar_url },
+    isXII
+      ? { label: "10th marksheet", ok: !!(reg.tenth_marksheet_url || reg.marksheet_10th_url) }
+      : { label: "8th marksheet", ok: !!reg.eighth_marksheet_url },
+    { label: "Name, father's name and date of birth", ok: !!(reg.candidate_name && reg.father_name && reg.dob) },
+    { label: isXII ? "10th class details" : "8th class details", ok: isXII ? !!edu.high_school?.board : !!edu.middle?.board },
   ];
+  const missing = checks.filter((c) => !c.ok);
 
   return (
     <AdminPageShell
@@ -264,15 +299,57 @@ export default function RegistrationDetailPage({ params }) {
       actions={actions}
     >
       <div className="space-y-5">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <StatusBadge status={reg.status} />
-          <span className="text-[14.5px] text-[#3d5688]">Applied on <b className="text-[#082a63]">{fmtDate(reg.created_at)}</b></span>
-          {reg.status === "approved" && (
-            <Link href={`/super-admin/dashboard/admit-cards/${reg.id}`}
-              className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-[#082a63] px-3.5 text-[14px] font-bold text-white transition hover:bg-[#0b3a85]">
-              <GraduationCap className="h-4 w-4" /> Admit Card
-            </Link>
-          )}
+        {/* summary */}
+        <div className="overflow-hidden rounded-2xl border border-[#d3e1f5] bg-white shadow-sm">
+          <div className="flex items-start gap-4 bg-gradient-to-br from-[#082a63] via-[#0b3a85] to-[#082a63] p-4 sm:gap-5 sm:p-6">
+            {reg.photo_url ? (
+              <button type="button" onClick={() => setPreviewImg({ src: reg.photo_url, title: "Passport Photo" })} aria-label="View passport photo"
+                className="h-24 w-[76px] shrink-0 overflow-hidden rounded-xl border-2 border-white/40 bg-white/10 shadow-lg sm:h-28 sm:w-[88px]">
+                <img src={reg.photo_url} alt="Passport photo" className="h-full w-full object-cover" />
+              </button>
+            ) : (
+              <div className="flex h-24 w-[76px] shrink-0 flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-white/30 bg-white/5 sm:h-28 sm:w-[88px]">
+                <User className="h-7 w-7 text-white/50" />
+                <span className="text-[11px] font-bold uppercase text-white/50">No photo</span>
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[11.5px] font-black uppercase tracking-[2.5px] text-[#8ec9fa]">Candidate application</span>
+                <StatusBadge status={reg.status} />
+              </div>
+              <h2 className="mt-1 break-words text-[22px] font-extrabold leading-tight text-white sm:text-[28px]">{reg.candidate_name}</h2>
+              <p className="mt-0.5 text-[14px] text-[#c9d9f1]">{reg.gender ? `${reg.gender} · ` : ""}Son / Daughter of {reg.father_name || "—"}</p>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {reg.enrollment_no && (
+                  <span className="inline-flex items-center gap-1 rounded-lg border border-[#5db0f4]/40 bg-[#1b57d8]/20 px-2.5 py-1 font-mono text-[12.5px] font-bold text-[#bfe0ff]">
+                    {reg.enrollment_no} <CopyChip text={reg.enrollment_no} label="Copy enrollment number" />
+                  </span>
+                )}
+                {reg.roll_no && <span className="rounded-lg border border-white/20 bg-white/10 px-2.5 py-1 font-mono text-[12.5px] font-bold text-[#e3edfa]">Roll: {reg.roll_no}</span>}
+                <span className="rounded-lg border border-white/15 bg-white/10 px-2.5 py-1 text-[12.5px] font-semibold text-[#c9d9f1]">Applied {fmtDate(reg.created_at)}</span>
+                {reg.status === "approved" && (
+                  <Link href={`/super-admin/dashboard/admit-cards/${reg.id}`}
+                    className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-white px-3 text-[13px] font-bold text-[#082a63] transition hover:bg-[#eaf2fd]">
+                    <GraduationCap className="h-4 w-4" /> Admit card
+                  </Link>
+                )}
+              </div>
+            </div>
+          </div>
+          <dl className="grid grid-cols-2 divide-x divide-y divide-[#eaf2fd] border-t border-[#d3e1f5] bg-[#f8fafc] sm:grid-cols-4 sm:divide-y-0">
+            {[
+              ["Course", reg.courses?.course_name || reg.course_name],
+              ["Session", reg.session_label || reg.academic_session],
+              ["College", reg.colleges?.college_name],
+              ["Category", reg.category?.toUpperCase()],
+            ].map(([k, v]) => (
+              <div key={k} className="min-w-0 px-4 py-3">
+                <dt className="text-[11.5px] font-bold uppercase tracking-wider text-[#8a97b3]">{k}</dt>
+                <dd className="mt-0.5 break-words text-[14px] font-bold leading-snug text-[#082a63]">{v || "—"}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
 
         {actionMsg && <div role="status" className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3.5 text-[15px] font-semibold text-emerald-800"><CheckCircle2 className="h-4 w-4 shrink-0" /> {actionMsg}</div>}
@@ -286,7 +363,7 @@ export default function RegistrationDetailPage({ params }) {
                 <Info label="Candidate name / नांव" value={reg.candidate_name} />
                 <Info label="Father's name / बापायचें नांव" value={reg.father_name} />
                 <Info label="Mother's name / आवयचें नांव" value={reg.mother_name} />
-                <Info label="Date of birth / जल्मतारीख" value={reg.dob} />
+                <Info label="Date of birth / जल्मतारीख" value={fmtDate(reg.dob)} />
                 <Info label="Gender / लिंग" value={reg.gender?.toUpperCase()} />
                 <Info label="Category / वर्ग" value={reg.category?.toUpperCase()} />
                 <Info label="Mobile / मोबाइल" value={reg.phone} />
@@ -311,7 +388,7 @@ export default function RegistrationDetailPage({ params }) {
             </Section>
 
             <Section n="3" title="Educational qualifications / शैक्षणीक पात्रता" flush>
-              {[["10th / High School", edu.high_school], ["12th / Intermediate", edu.intermediate], ["Graduation", edu.graduation], ["Other", edu.other]].filter(([, d]) => d?.board).length === 0 ? (
+              {eduRows.length === 0 ? (
                 <p className="px-5 py-8 text-center text-[14.5px] text-[#6b7ea3]">No qualifications entered.</p>
               ) : (
                 <div className="overflow-x-auto">
@@ -324,8 +401,7 @@ export default function RegistrationDetailPage({ params }) {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#e4edf9] text-[#082a63]">
-                      {[["10th / High School", edu.high_school], ["12th / Intermediate", edu.intermediate], ["Graduation", edu.graduation], ["Other", edu.other]]
-                        .filter(([, d]) => d?.board)
+                      {eduRows
                         .map(([label, d]) => (
                           <tr key={label}>
                             <td className="px-4 py-3 font-bold">{label}</td>
@@ -361,7 +437,7 @@ export default function RegistrationDetailPage({ params }) {
                   ) : <span className="text-[14px] italic text-red-500">Not uploaded</span>}
                 </div>
                 {docs.map(({ label, url }) => (
-                  <div key={label} className="flex flex-col items-center justify-between gap-2 rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] p-3 text-center">
+                  <div key={label} className={`flex flex-col items-center justify-between gap-2 rounded-xl border p-3 text-center ${url ? "border-[#d3e1f5] bg-[#f4f8fe]" : "border-red-200 bg-red-50/50"}`}>
                     <span className="text-[14px] font-bold text-[#082a63]">{label}</span>
                     <DocLink url={url} label="View" />
                   </div>
@@ -370,8 +446,29 @@ export default function RegistrationDetailPage({ params }) {
             </Section>
           </div>
 
-          {/* Right: queries */}
+          {/* Right: checklist + queries */}
           <div className="min-w-0 space-y-5">
+            <section className="overflow-hidden rounded-2xl border border-[#d3e1f5] bg-white shadow-sm">
+              <div className="flex items-center justify-between gap-3 border-b border-[#d3e1f5] bg-[#f4f8fe] px-4 py-3.5 sm:px-5">
+                <h3 className="flex items-center gap-2 text-[15.5px] font-bold text-[#082a63]"><ClipboardCheck className="h-5 w-5 text-[#1245b8]" /> Review checklist</h3>
+                <span className={`rounded-full border px-2.5 py-0.5 text-[12.5px] font-bold ${missing.length === 0 ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-800"}`}>
+                  {checks.length - missing.length}/{checks.length}
+                </span>
+              </div>
+              <ul className="divide-y divide-[#eaf2fd] px-4 sm:px-5">
+                {checks.map((c) => (
+                  <li key={c.label} className="flex items-center gap-2.5 py-2.5 text-[14.5px]">
+                    {c.ok ? <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" /> : <Circle className="h-5 w-5 shrink-0 text-red-400" />}
+                    <span className={c.ok ? "text-[#082a63]" : "font-semibold text-red-700"}>{c.label}</span>
+                    {!c.ok && <span className="ml-auto text-[12.5px] font-bold text-red-600">Missing</span>}
+                  </li>
+                ))}
+              </ul>
+              <p className={`border-t px-4 py-3 text-[13.5px] font-medium sm:px-5 ${missing.length === 0 ? "border-emerald-100 bg-emerald-50/60 text-emerald-800" : "border-amber-100 bg-amber-50/60 text-amber-900"}`}>
+                {missing.length === 0 ? "Everything required is present. This application is ready to approve." : `${missing.length} item${missing.length === 1 ? " is" : "s are"} missing. You can raise a query to the college below.`}
+              </p>
+            </section>
+
             <section className="overflow-hidden rounded-2xl border border-[#d3e1f5] bg-white shadow-sm">
               <div className="flex items-center gap-2.5 border-b border-amber-200 bg-amber-50 px-4 py-3.5 sm:px-5">
                 <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600" />
@@ -462,7 +559,11 @@ export default function RegistrationDetailPage({ params }) {
               ].map(({ key, label, type }) => (
                 <label key={key} className="block min-w-0">
                   <span className={labelCls}>{label}</span>
-                  <input type={type} value={editForm[key] || ""} onChange={setEdit(key)} className={fieldCls} />
+                  {type === "date" ? (
+                    <DatePicker size="lg" ariaLabel={label} value={editForm[key] || ""} onChange={(v) => setEditForm((p) => ({ ...p, [key]: v }))} min="1940-01-01" max={new Date().toISOString().slice(0, 10)} />
+                  ) : (
+                    <input type={type} value={editForm[key] || ""} onChange={setEdit(key)} className={fieldCls} />
+                  )}
                 </label>
               ))}
               <div>

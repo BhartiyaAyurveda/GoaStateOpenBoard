@@ -3,13 +3,24 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { CheckCircle2, ClipboardList, GraduationCap, UserPlus, Sparkles, RefreshCw } from "lucide-react";
+import { CheckCircle2, ClipboardList, GraduationCap, UserPlus, Sparkles, RefreshCw, Copy, Check, Building2, CalendarDays, Hourglass, ShieldCheck, Ticket, ArrowRight } from "lucide-react";
 import StudentRegistrationForm from "@/components/college/StudentRegistrationForm";
 import { useDashboard } from "../DashboardContext";
 
 export default function RegisterStudentPage() {
   const { college, courses, loadStudents, showToast } = useDashboard();
   const [regSuccess, setRegSuccess] = useState(null);
+  const [copied, setCopied] = useState(false);
+
+  const copyEnrollment = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      showToast("Could not copy. Please select and copy the number.", "error");
+    }
+  };
   const searchParams = useSearchParams();
   const draftId = searchParams.get("draftId");
 
@@ -83,60 +94,100 @@ export default function RegisterStudentPage() {
 
       {/* Success Confirmation Card or Multi-step Form */}
       {!draftLoading && !draftError && (
-        regSuccess ? (
-          <div className="bg-white rounded-3xl border border-emerald-200 p-8 sm:p-12 shadow-sm text-center space-y-5">
-            <div className="w-16 h-16 rounded-3xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto shadow-xs border border-emerald-200">
-              <CheckCircle2 className="w-9 h-9" />
-            </div>
-
-            <div className="space-y-1.5">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[13px] sm:text-[15px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                Registration Submitted Successfully
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-bold text-[#082a63]">
-                {regSuccess.candidate_name}
-              </h2>
-              <p className="text-[15px] text-[#3d5688]">
-                Student registration has been submitted for admin review.
-              </p>
-            </div>
-
-            <div className="p-5 rounded-2xl bg-[#f4f8fe] border border-[#d3e1f5] max-w-sm mx-auto text-left space-y-2 text-[15px]">
-              <div className="flex items-center justify-between">
-                <span className="text-[#3d5688]">Enrollment No:</span>
-                <span className="font-mono font-bold text-[#082a63] tracking-wide">
-                  {regSuccess.enrollment_no || `#${regSuccess.id?.slice(0, 10).toUpperCase()}`}
-                </span>
+        regSuccess ? (() => {
+          const enrollment = regSuccess.enrollment_no || `#${regSuccess.id?.slice(0, 10).toUpperCase()}`;
+          const submittedOn = regSuccess.created_at
+            ? new Date(regSuccess.created_at).toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
+            : new Date().toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+          const steps = [
+            { icon: Hourglass, title: "Board review", text: "The Board checks the details and documents and approves the admission." },
+            { icon: Ticket, title: "Roll number & admit card", text: "After approval, a roll number is allotted and the admit card is generated." },
+            { icon: ShieldCheck, title: "Result", text: "Marks are entered and the result is published online." },
+          ];
+          return (
+            <div className="overflow-hidden rounded-3xl border border-emerald-200 bg-white shadow-sm">
+              {/* top band */}
+              <div className="relative bg-gradient-to-b from-emerald-50 to-white px-5 pb-6 pt-9 text-center sm:px-10 sm:pt-11">
+                <div className="relative mx-auto flex h-20 w-20 items-center justify-center">
+                  <span className="absolute inset-0 rounded-full bg-emerald-200/50 animate-ping [animation-duration:2.4s]" aria-hidden="true" />
+                  <span className="relative flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 ring-8 ring-emerald-100">
+                    <CheckCircle2 className="h-10 w-10" strokeWidth={2.2} />
+                  </span>
+                </div>
+                <p className="mt-5 text-[13px] font-bold uppercase tracking-[0.14em] text-emerald-700">Registration submitted</p>
+                <h2 className="mt-1.5 break-words text-[26px] font-extrabold leading-tight tracking-tight text-[#082a63] sm:text-[34px]">
+                  {regSuccess.candidate_name}
+                </h2>
+                <p className="mx-auto mt-1.5 max-w-md text-[15px] text-[#3d5688]">
+                  The registration has been sent to the Board for review. You can track it under <b>All Registrations</b>.
+                </p>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-[#3d5688]">Status:</span>
-                <span className="font-bold text-amber-700 bg-amber-100 px-2.5 py-0.5 rounded-full text-[13px]">
-                  Under Review
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-[#3d5688]">College:</span>
-                <span className="font-semibold text-[#082a63] text-right">
-                  {college?.college_name}
-                </span>
-              </div>
-            </div>
 
-            <div className="flex flex-wrap items-center justify-center gap-3 pt-3">
-              <button
-                onClick={() => { setRegSuccess(null); loadStudents(); }}
-                className="inline-flex h-12 items-center gap-2 px-6 rounded-xl bg-[#1b57d8] hover:bg-[#1245b8] active:scale-95 text-white text-[15px] font-bold transition-all shadow-sm"
-              >
-                <UserPlus className="w-4 h-4" />
-                <span>Register Another Student</span>
-              </button>
-              <Link href="/college/dashboard/registrations"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white border border-[#d3e1f5] hover:border-[#082a63] active:scale-95 text-[#082a63] text-[15px] font-bold transition-all shadow-xs">
-                <span>View in All Registrations</span>
-              </Link>
+              <div className="space-y-6 px-5 pb-8 sm:px-10">
+                {/* enrollment number */}
+                <div className="mx-auto max-w-xl rounded-2xl border border-dashed border-[#9db7e0] bg-[#f4f8fe] p-4 text-center sm:p-5">
+                  <p className="text-[12.5px] font-bold uppercase tracking-wider text-[#4a6090]">Enrollment number</p>
+                  <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
+                    <span className="break-all font-mono text-[26px] font-extrabold tracking-wider text-[#082a63] sm:text-[32px]">{enrollment}</span>
+                    <button
+                      type="button"
+                      onClick={() => copyEnrollment(enrollment)}
+                      className={`inline-flex h-10 items-center gap-1.5 rounded-xl border px-3.5 text-[14px] font-bold transition ${copied ? "border-emerald-300 bg-emerald-50 text-emerald-700" : "border-[#d3e1f5] bg-white text-[#082a63] hover:border-[#1b57d8]"}`}
+                    >
+                      {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} {copied ? "Copied" : "Copy"}
+                    </button>
+                  </div>
+                  <p className="mt-2 text-[13.5px] text-[#3d5688]">Keep this number safe. The student needs it, with the date of birth, for the enrollment card, admit card and result.</p>
+                </div>
+
+                {/* details */}
+                <dl className="mx-auto grid max-w-3xl grid-cols-1 gap-3 sm:grid-cols-3">
+                  <div className="rounded-2xl border border-[#d3e1f5] bg-white p-4">
+                    <dt className="flex items-center gap-1.5 text-[12.5px] font-bold uppercase tracking-wider text-[#4a6090]"><Hourglass className="h-3.5 w-3.5" /> Status</dt>
+                    <dd className="mt-2"><span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-[14px] font-bold text-amber-800"><span className="h-1.5 w-1.5 rounded-full bg-amber-500" /> Under review</span></dd>
+                  </div>
+                  <div className="rounded-2xl border border-[#d3e1f5] bg-white p-4">
+                    <dt className="flex items-center gap-1.5 text-[12.5px] font-bold uppercase tracking-wider text-[#4a6090]"><Building2 className="h-3.5 w-3.5" /> College</dt>
+                    <dd className="mt-2 break-words text-[15px] font-bold text-[#082a63]">{college?.college_name || "—"}</dd>
+                  </div>
+                  <div className="rounded-2xl border border-[#d3e1f5] bg-white p-4">
+                    <dt className="flex items-center gap-1.5 text-[12.5px] font-bold uppercase tracking-wider text-[#4a6090]"><CalendarDays className="h-3.5 w-3.5" /> Submitted</dt>
+                    <dd className="mt-2 text-[15px] font-bold text-[#082a63]">{submittedOn}</dd>
+                  </div>
+                </dl>
+
+                {/* what happens next */}
+                <div className="mx-auto max-w-3xl">
+                  <h3 className="mb-3 text-[15px] font-bold text-[#082a63]">What happens next</h3>
+                  <ol className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    {steps.map(({ icon: Icon, title, text }, i) => (
+                      <li key={title} className="relative rounded-2xl border border-[#d3e1f5] bg-[#f9fbff] p-4">
+                        <span className="absolute right-3 top-2.5 text-[26px] font-extrabold leading-none text-[#dbe6f6]" aria-hidden="true">{i + 1}</span>
+                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#082a63] text-white"><Icon className="h-4.5 w-4.5" /></span>
+                        <p className="mt-2.5 text-[15px] font-bold text-[#082a63]">{title}</p>
+                        <p className="mt-1 text-[13.5px] leading-snug text-[#3d5688]">{text}</p>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+
+                {/* actions */}
+                <div className="mx-auto flex max-w-xl flex-col gap-3 sm:flex-row sm:justify-center">
+                  <button
+                    onClick={() => { setRegSuccess(null); loadStudents(); }}
+                    className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-[#1b57d8] px-6 text-[15px] font-bold text-white shadow-sm transition hover:bg-[#1245b8] active:scale-95 sm:flex-none"
+                  >
+                    <UserPlus className="h-4 w-4" /> Register another student
+                  </button>
+                  <Link href="/college/dashboard/registrations"
+                    className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-[#d3e1f5] bg-white px-6 text-[15px] font-bold text-[#082a63] transition hover:border-[#082a63] active:scale-95 sm:flex-none">
+                    View in all registrations <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
             </div>
-          </div>
-        ) : (
+          );
+        })() : (
           <StudentRegistrationForm
             courses={courses}
             college={college}

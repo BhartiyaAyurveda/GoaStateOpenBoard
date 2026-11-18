@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Select from "@/components/ui/Select";
+import DatePicker from "@/components/ui/DatePicker";
 import {
   CheckCircle2,
   ChevronRight,
@@ -39,8 +40,9 @@ const INDIAN_STATES = [
   "Tripura","Uttar Pradesh","Uttarakhand","West Bengal",
 ];
 
-// academic sessions from 2020-2021 up to the current one (the academic year starts in July), newest first
-const FIRST_SESSION_YEAR = 2020;
+// Fallback list (2015-2016 up to the current one; the academic year starts in July; newest first). It is used only if
+// the sessions cannot be loaded from the database (Board dashboard > Exam Management > Exam Sessions).
+const FIRST_SESSION_YEAR = 2015;
 function buildSessions() {
   const now = new Date();
   const current = now.getMonth() >= 6 ? now.getFullYear() : now.getFullYear() - 1;
@@ -71,6 +73,7 @@ const blank = {
   language_subject_id:"",
   // Education
   education: {
+    middle:       { board:"", year:"", total:"", obtained:"", percentage:"" },
     high_school:  { board:"", year:"", total:"", obtained:"", percentage:"" },
     intermediate: { board:"", year:"", total:"", obtained:"", percentage:"" },
     graduation:   { board:"", year:"", total:"", obtained:"", percentage:"", system:"marks", cgpa:"", cgpa_scale:"10" },
@@ -78,7 +81,7 @@ const blank = {
   },
   // Docs
   photo_url:"", signature_url:"", aadhaar_url:"",
-  tenth_marksheet_url:"", twelfth_marksheet_url:"", affidavit_url:"",
+  eighth_marksheet_url:"", tenth_marksheet_url:"", twelfth_marksheet_url:"", affidavit_url:"",
 };
 
 // ── Upload via server route ────────────────────────────────────────────────
@@ -319,6 +322,63 @@ function EduRow({ label, hindiLabel, required, value, onChange, allowCgpa = fals
   );
 }
 
+// ── Education card (phones): the same fields as EduRow, stacked with labels ─────────
+function EduCard({ label, hindiLabel, required, value, onChange, error }) {
+  const [obtainedError, setObtainedError] = useState("");
+
+  const set = (k, v) => {
+    const updated = { ...value, [k]: v };
+    if (k === "obtained" || k === "total") {
+      const obt = parseFloat(k === "obtained" ? v : updated.obtained);
+      const tot = parseFloat(k === "total" ? v : updated.total);
+      if (!isNaN(obt) && !isNaN(tot) && tot > 0) {
+        if (obt > tot) { setObtainedError("Obtained cannot exceed total"); onChange(updated); return; }
+        setObtainedError("");
+        updated.percentage = ((obt / tot) * 100).toFixed(2);
+      } else { setObtainedError(""); }
+    }
+    onChange(updated);
+  };
+
+  const inp = "w-full h-12 px-3.5 text-[15px] rounded-xl border border-[#d3e1f5] bg-[#f4f8fe] text-[#082a63] placeholder-[#8a97b3] font-medium focus:outline-none focus:ring-4 focus:ring-[#1b57d8]/15 focus:border-[#1b57d8] focus:bg-white transition-all";
+  const lbl = "mb-1.5 block text-[13px] font-bold text-[#082a63]";
+
+  return (
+    <div className="rounded-2xl border border-[#d3e1f5] bg-white p-4 space-y-3.5">
+      <div>
+        <p className="text-[16px] font-bold text-[#082a63]">{label}{required && <span className="ml-1 text-red-500">*</span>}</p>
+        <p className="text-[13.5px] text-slate-500">{hindiLabel}</p>
+      </div>
+
+      <div>
+        <label className={lbl}>School / Board / University</label>
+        <input value={value.board} onChange={(e) => set("board", e.target.value)} placeholder="e.g. CBSE / Goa Board / School name" className={inp} />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className={lbl}>Passing year</label>
+          <input value={value.year} onChange={(e) => set("year", e.target.value.replace(/\D/g, ""))} placeholder="YYYY" maxLength={4} inputMode="numeric" className={inp} />
+        </div>
+        <div>
+          <label className={lbl}>Percentage %</label>
+          <input value={value.percentage} onChange={(e) => set("percentage", e.target.value)} placeholder="%" type="number" step="0.01" inputMode="decimal" className={inp + " bg-[#eaf2fd] font-semibold"} />
+        </div>
+        <div>
+          <label className={lbl}>Total marks</label>
+          <input value={value.total} onChange={(e) => set("total", e.target.value)} placeholder="Total" type="number" min={0} inputMode="numeric" className={inp} />
+        </div>
+        <div>
+          <label className={lbl}>Marks obtained</label>
+          <input value={value.obtained} onChange={(e) => set("obtained", e.target.value)} placeholder="Obtained" type="number" min={0} inputMode="numeric"
+            className={inp + (obtainedError ? " !border-red-400" : "")} />
+        </div>
+      </div>
+      {obtainedError && <p className="text-[13px] font-semibold text-red-600">{obtainedError}</p>}
+    </div>
+  );
+}
+
 // ── Doc Upload Tile ────────────────────────────────────────────────────────
 function DocUpload({ label, required, hint, value, onChange, accept = "image/*,.pdf" }) {
   const [uploading, setUploading] = useState(false);
@@ -422,6 +482,26 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
   const [form, setForm]             = useState(initialData?.form ? { ...blank, ...initialData.form } : blank);
   // language options of the selected course (English and the other subjects are compulsory)
   const languageOptions = courses.find((c) => c.id === form.course_id)?.language_options || [];
+  // Class X: 8th class details + 8th marksheet. Class XII: 10th class details + 10th marksheet.
+  const chosenCourseName = courses.find((c) => c.id === form.course_id)?.course_name || "";
+  const isXII = /\bXII\b|senior\s*secondary/i.test(chosenCourseName);
+  // academic sessions come from the database; the built-in list above is only the fallback
+  const [sessionList, setSessionList] = useState(SESSIONS);
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/college/sessions", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!alive || !d?.ok || !Array.isArray(d.sessions) || d.sessions.length === 0) return;
+        setSessionList(d.sessions);
+        // a brand-new form starts on the session the Board marked Active
+        if (!initialData?.form?.academic_session && d.active) {
+          setForm((f) => (f.academic_session === blank.academic_session ? { ...f, academic_session: d.active } : f));
+        }
+      })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [errors, setErrors]         = useState({});
   const [submitting, setSubmitting] = useState(false);
 
@@ -429,25 +509,7 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
   const [activeDraftId, setActiveDraftId] = useState(initialDraftId);
   const [draftSaving, setDraftSaving]     = useState(false);
 
-  // Email OTP state
-  const [emailVerified, setEmailVerified]     = useState(!!initialDraftId); // skip OTP gate when resuming
-  const [otpSent, setOtpSent]                 = useState(false);
-  const [otpDigits, setOtpDigits]             = useState(["","","","","",""]);
-  const otpRefs                               = useRef([]);
-  const otpInput                              = otpDigits.join("");
-  const [otpLoading, setOtpLoading]           = useState(false);
-  const [otpError, setOtpError]               = useState("");
-  const [otpSuccess, setOtpSuccess]           = useState("");
-  const [otpCooldown, setOtpCooldown]         = useState(0);
-
-  const startOtpCooldown = () => {
-    setOtpCooldown(60);
-    const t = setInterval(() => {
-      setOtpCooldown(c => { if (c <= 1) { clearInterval(t); return 0; } return c - 1; });
-    }, 1000);
-  };
-
-  // Create DB draft after OTP verified (or lazily on first autosave)
+  // Create the DB draft lazily, on the first autosave
   const createDraftIfNeeded = async (currentForm) => {
     if (activeDraftId) return activeDraftId;
     try {
@@ -468,45 +530,6 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
       }
     } catch {}
     return null;
-  };
-
-  const handleSendOtp = async () => {
-    if (!form.email?.trim() || !/\S+@\S+\.\S+/.test(form.email)) {
-      setOtpError("Please enter a valid email address first.");
-      return;
-    }
-    setOtpLoading(true); setOtpError(""); setOtpSuccess("");
-    try {
-      const res = await fetch("/api/student/send-otp", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: form.email.trim() }),
-      });
-      const data = await res.json();
-      if (!res.ok) { setOtpError(data.error || "Failed to send OTP."); }
-      else if (data.skipped) { setEmailVerified(true); setOtpSuccess("Email accepted."); createDraftIfNeeded(form); }
-      else { setOtpSent(true); setOtpSuccess("OTP sent! Check your email inbox."); setOtpDigits(["","","","","",""]); setTimeout(() => otpRefs.current[0]?.focus(), 100); startOtpCooldown(); }
-    } catch { setOtpError("Network error."); }
-    setOtpLoading(false);
-  };
-
-  const handleVerifyOtp = async () => {
-    if (!otpInput.trim() || otpInput.length < 6) { setOtpError("Enter the 6-digit OTP."); return; }
-    setOtpLoading(true); setOtpError(""); setOtpSuccess("");
-    try {
-      const res = await fetch("/api/student/verify-otp", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: form.email.trim(), otp: otpInput.trim() }),
-      });
-      const data = await res.json();
-      if (!res.ok) { setOtpError(data.error || "Invalid OTP."); }
-      else {
-        setEmailVerified(true);
-        setOtpSuccess("Email verified successfully!");
-        // Create DB draft immediately after OTP verification
-        createDraftIfNeeded(form);
-      }
-    } catch { setOtpError("Network error."); }
-    setOtpLoading(false);
   };
 
   const [captchaCode, setCaptchaCode] = useState(() => {
@@ -530,7 +553,7 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
       education: { ...f.education, [level]: { ...f.education[level], [k]: v } },
     }));
 
-  // Autosave to DB whenever step advances (only when email is verified)
+  // Autosave to DB whenever the step advances
   const autosaveDraft = async (draftFormData, currentStep) => {
     const id = activeDraftId || await createDraftIfNeeded(draftFormData);
     if (!id) return;
@@ -555,7 +578,6 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
 
   // Save on tab close / browser unload — fire-and-forget best effort
   useEffect(() => {
-    if (!emailVerified) return;
     const handleUnload = () => {
       const id = activeDraftId;
       if (!id) return;
@@ -568,7 +590,7 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
     };
     window.addEventListener("beforeunload", handleUnload);
     return () => window.removeEventListener("beforeunload", handleUnload);
-  }, [emailVerified, activeDraftId, form, step]);
+  }, [activeDraftId, form, step]);
 
   // ── Validation per step ──────────────────────────────────────────────────
   const validate = (s) => {
@@ -579,10 +601,11 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
       if (!form.dob)                  e.dob            = "Date of birth is required";
     }
     if (s === 2) {
-      if (!form.phone.trim() || !/^[6-9]\d{9}$/.test(form.phone))
-        e.phone = "Valid 10-digit mobile number required (starts with 6-9)";
-      if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email))
-        e.email = "Valid email address required";
+      // mobile number and e-mail are optional, but must be valid when given
+      if (form.phone.trim() && !/^[6-9]\d{9}$/.test(form.phone.trim()))
+        e.phone = "Enter a valid 10-digit mobile number (starts with 6-9)";
+      if (form.email.trim() && !/\S+@\S+\.\S+/.test(form.email.trim()))
+        e.email = "Enter a valid email address";
       if (!form.address.trim()) e.address = "Complete address is required";
       if (!form.state.trim())   e.state   = "State is required";
       if (form.pincode && !/^\d{6}$/.test(form.pincode))
@@ -593,17 +616,16 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
       else if (languageOptions.length > 0 && !form.language_subject_id) e.language_subject_id = "Please choose a language option";
     }
     if (s === 4) {
-      const hs = form.education.high_school;
-      if (!hs.board) e["edu_hs_board"] = "High school board required";
-      if (!hs.year)  e["edu_hs_year"]  = "Passing year required";
-      const inter = form.education.intermediate;
-      if (!inter.board) e["edu_inter_board"] = "Intermediate board required";
-      if (!inter.year)  e["edu_inter_year"]  = "Passing year required";
+      // the qualification the student already has: 10th for Class XII, 8th for Class X
+      const prev = isXII ? form.education.high_school : form.education.middle;
+      if (!prev?.board) e["edu_prev_board"] = isXII ? "High school board required" : "School / board required";
+      if (!prev?.year)  e["edu_prev_year"]  = "Passing year required";
     }
     if (s === 5) {
-      if (!form.photo_url)             e.photo_url = "Passport size photograph required";
-      if (!form.tenth_marksheet_url)   e.tenth     = "10th High School marksheet required";
-      if (!form.twelfth_marksheet_url) e.twelfth   = "12th Intermediate marksheet required";
+      if (!form.photo_url)     e.photo_url     = "Passport size photograph required";
+      if (!form.signature_url) e.signature_url = "Candidate signature required";
+      if (!form.aadhaar_url)   e.aadhaar_url   = "Aadhaar card required";
+      if (isXII ? !form.tenth_marksheet_url : !form.eighth_marksheet_url) e.edu_doc = isXII ? "10th marksheet required" : "8th marksheet required";
     }
     return e;
   };
@@ -611,14 +633,10 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
   const next = () => {
     const e = validate(step);
     if (Object.keys(e).length > 0) { setErrors(e); return; }
-    if (step === 2 && !emailVerified) {
-      setErrors({ email: "Please verify your email address with OTP before proceeding." });
-      return;
-    }
     setErrors({});
     const nextStep = Math.min(step + 1, 6);
     setStep(nextStep);
-    if (emailVerified) autosaveDraft(form, nextStep);
+    autosaveDraft(form, nextStep);
   };
 
   const back = () => {
@@ -694,11 +712,15 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
         <SectionLabel>Personal Info / वैयक्तिक म्हायती</SectionLabel>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Date of Birth / जल्मतारीख" req icon={Calendar} error={errors.dob}>
-            <input
-              type="date"
+            <DatePicker
+              variant="form"
+              withIcon
+              ariaLabel="Date of birth"
               value={form.dob}
-              onChange={(e) => set("dob", e.target.value)}
-              className={inputIconCls}
+              onChange={(v) => set("dob", v)}
+              min="1940-01-01"
+              max={new Date().toISOString().slice(0, 10)}
+              invalid={Boolean(errors.dob)}
             />
           </Field>
 
@@ -740,7 +762,7 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
     2: (
       <div className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Mobile Number / मोबाइल क्रमांक" req error={errors.phone}>
+          <Field label="Mobile Number / मोबाइल क्रमांक (Optional)" error={errors.phone}>
             <input
               value={form.phone}
               onChange={(e) => set("phone", e.target.value)}
@@ -750,100 +772,15 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
             />
           </Field>
 
-          <div className="space-y-2">
-            <Field label="Email Address / ईमेल पत्तो" req error={errors.email}>
-              <div className="flex gap-2">
-                <input
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => { set("email", e.target.value); setEmailVerified(false); setOtpSent(false); setOtpDigits(["","","","","",""]); setOtpError(""); setOtpSuccess(""); }}
-                  placeholder="candidate@email.com"
-                  disabled={emailVerified}
-                  className={inputCls + (emailVerified ? " opacity-70" : "")}
-                />
-                {!emailVerified && (
-                  <button type="button" onClick={handleSendOtp} disabled={otpLoading || otpCooldown > 0}
-                    className="shrink-0 w-20 sm:w-auto sm:px-4 py-2.5 rounded-xl bg-[#082a63] text-white text-[13px] font-bold disabled:opacity-50 hover:bg-[#0b3a85] transition-colors whitespace-nowrap cursor-pointer flex items-center justify-center">
-                    {otpLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : otpCooldown > 0 ? `${otpCooldown}s` : otpSent ? "Resend" : "Send OTP"}
-                  </button>
-                )}
-                {emailVerified && (
-                  <div className="shrink-0 flex items-center gap-1 px-2.5 py-2 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-700 text-[13px] font-bold whitespace-nowrap">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> <span className="hidden xs:inline">Verified</span>
-                  </div>
-                )}
-              </div>
-            </Field>
-            {otpError && (
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-50 border border-red-200 text-red-700 text-[13px] font-semibold animate-in fade-in">
-                <AlertTriangle className="w-3.5 h-3.5 shrink-0" />{otpError}
-              </div>
-            )}
-            {emailVerified ? (
-              <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-[13px] font-bold animate-in fade-in">
-                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
-                Email verified successfully! / ईमेल पडताळणी जाली
-              </div>
-            ) : otpSuccess && (
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-[13px] font-semibold animate-in fade-in">
-                <Mail className="w-3.5 h-3.5 shrink-0" />{otpSuccess}
-              </div>
-            )}
-            {otpSent && !emailVerified && (
-              <div className="rounded-2xl border border-[#1b57d8]/40 bg-gradient-to-br from-[#FFFBF2] to-[#f4f8fe] p-4 space-y-3 animate-in fade-in">
-                <p className="text-[13px] font-bold uppercase tracking-widest text-[#1245b8] flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  Enter OTP / ओटीपी नोंद करात
-                </p>
-                <div className="flex items-center gap-1.5 sm:gap-2 w-full">
-                  {otpDigits.map((d, i) => (
-                    <input
-                      key={i}
-                      ref={el => otpRefs.current[i] = el}
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={1}
-                      value={d}
-                      disabled={otpLoading}
-                      onChange={e => {
-                        const val = e.target.value.replace(/\D/g,"").slice(-1);
-                        const next = [...otpDigits];
-                        next[i] = val;
-                        setOtpDigits(next);
-                        if (val && i < 5) otpRefs.current[i + 1]?.focus();
-                      }}
-                      onKeyDown={e => {
-                        if (e.key === "Backspace" && !otpDigits[i] && i > 0) otpRefs.current[i - 1]?.focus();
-                        if (e.key === "ArrowLeft" && i > 0) otpRefs.current[i - 1]?.focus();
-                        if (e.key === "ArrowRight" && i < 5) otpRefs.current[i + 1]?.focus();
-                      }}
-                      onPaste={e => {
-                        e.preventDefault();
-                        const pasted = e.clipboardData.getData("text").replace(/\D/g,"").slice(0,6);
-                        const next = ["","","","","",""];
-                        pasted.split("").forEach((ch, idx) => { next[idx] = ch; });
-                        setOtpDigits(next);
-                        otpRefs.current[Math.min(pasted.length, 5)]?.focus();
-                      }}
-                      className={`flex-1 min-w-0 max-w-[44px] aspect-square text-center text-base font-bold rounded-xl border-2 outline-none transition-all disabled:opacity-50
-                        ${d ? "border-[#082a63] bg-[#082a63] text-white" : "border-[#d3e1f5] bg-white text-[#082a63]"}
-                        focus:ring-4 focus:ring-[#1b57d8]/25 focus:border-[#1b57d8]`}
-                    />
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  onClick={handleVerifyOtp}
-                  disabled={otpLoading || otpDigits.some(d => !d)}
-                  className="w-full mt-1 py-2.5 rounded-xl bg-[#1b57d8] hover:bg-[#1245b8] active:scale-95 text-white text-[15px] font-extrabold disabled:opacity-50 transition-all shadow-sm cursor-pointer flex items-center justify-center gap-2"
-                >
-                  {otpLoading
-                    ? <><RefreshCw className="w-4 h-4 animate-spin" /> Verifying…</>
-                    : <><CheckCircle2 className="w-4 h-4" /> Verify OTP / पडताळणी करात</>}
-                </button>
-              </div>
-            )}
-          </div>
+          <Field label="Email Address / ईमेल पत्तो (Optional)" error={errors.email}>
+            <input
+              type="email"
+              value={form.email}
+              onChange={(e) => set("email", e.target.value)}
+              placeholder="candidate@email.com"
+              className={inputCls}
+            />
+          </Field>
 
           <div className="sm:col-span-2">
             <Field label="Permanent Address / कायमचो पत्तो" req error={errors.address}>
@@ -902,7 +839,7 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
               ariaLabel="Academic session"
               value={form.academic_session}
               onChange={(v) => set("academic_session", v)}
-              options={SESSIONS.map((se) => ({ value: se, label: se }))}
+              options={(sessionList.includes(form.academic_session) || !form.academic_session ? sessionList : [form.academic_session, ...sessionList]).map((se) => ({ value: se, label: se }))}
             />
           </Field>
         </div>
@@ -955,10 +892,26 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
     4: (
       <div className="space-y-3">
         <p className="text-[13px] sm:text-[15px] text-[#3d5688]">
-          Fill in High School (10th) and Intermediate (12th) details. Graduation and other qualifications are optional.
+          {isXII
+            ? "Fill in the High School (10th) details."
+            : "Fill in the Middle School (8th class) details."}
         </p>
 
-        <div className="overflow-x-auto rounded-md border border-slate-200">
+        {/* phones: a stacked card */}
+        <div className="sm:hidden">
+          {isXII ? (
+            <EduCard label="High School (10th)" hindiLabel="हायस्कूल (10वी)" required
+              value={form.education.high_school}
+              onChange={v => setForm(f => ({ ...f, education: { ...f.education, high_school: v } }))} />
+          ) : (
+            <EduCard label="Middle School (8th)" hindiLabel="मिडल स्कूल (8वी)" required
+              value={form.education.middle || blank.education.middle}
+              onChange={v => setForm(f => ({ ...f, education: { ...f.education, middle: v } }))} />
+          )}
+        </div>
+
+        {/* tablet / desktop: the table */}
+        <div className="hidden overflow-x-auto rounded-md border border-slate-200 sm:block">
           <table className="w-full min-w-[640px] text-left border-collapse">
             <thead>
               <tr className="bg-[#f4f8fe] border-b border-slate-300 text-[13px] sm:text-[13px] font-bold text-[#082a63] uppercase tracking-wide">
@@ -971,25 +924,22 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-slate-200">
-              <EduRow label="High School (10th)" hindiLabel="हायस्कूल (10वी)" required
-                value={form.education.high_school}
-                onChange={v => setForm(f => ({ ...f, education: { ...f.education, high_school: v } }))} />
-              <EduRow label="Intermediate (12th / 10+2)" hindiLabel="उच्च माध्यमीक (12वी)" required
-                value={form.education.intermediate}
-                onChange={v => setForm(f => ({ ...f, education: { ...f.education, intermediate: v } }))} />
-              <EduRow label="Graduation" hindiLabel="पदवी (वैकल्पीक)" allowCgpa
-                value={form.education.graduation}
-                onChange={v => setForm(f => ({ ...f, education: { ...f.education, graduation: v } }))} />
-              <EduRow label="Other / Diploma" hindiLabel="हेर / डिप्लोमा" allowCgpa
-                value={form.education.other}
-                onChange={v => setForm(f => ({ ...f, education: { ...f.education, other: v } }))} />
+              {isXII ? (
+                <EduRow label="High School (10th)" hindiLabel="हायस्कूल (10वी)" required
+                  value={form.education.high_school}
+                  onChange={v => setForm(f => ({ ...f, education: { ...f.education, high_school: v } }))} />
+              ) : (
+                <EduRow label="Middle School (8th)" hindiLabel="मिडल स्कूल (8वी)" required
+                  value={form.education.middle || blank.education.middle}
+                  onChange={v => setForm(f => ({ ...f, education: { ...f.education, middle: v } }))} />
+              )}
             </tbody>
           </table>
         </div>
 
-        {(errors.edu_hs_board || errors.edu_inter_board) && (
+        {(errors.edu_prev_board || errors.edu_prev_year) && (
           <p className={errCls}>
-            Please fill in High School and Intermediate board name and passing year.
+            {isXII ? "Please fill in the High School (10th) board name and passing year." : "Please fill in the Middle School (8th) name / board and passing year."}
           </p>
         )}
       </div>
@@ -998,7 +948,7 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
     5: (
       <div className="space-y-4">
         <p className="text-[13px] text-[#3d5688]">
-          Upload clear, legible document scans in JPG, PNG, or PDF format (maximum 5MB each). Passport photo and academic marksheets are mandatory.
+          Upload clear, legible document scans in JPG, PNG, or PDF format (maximum 5MB each). Passport photo, signature, Aadhaar card and the {isXII ? "10th" : "8th"} marksheet are mandatory.
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -1012,6 +962,7 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
           />
           <DocUpload
             label="Candidate Signature"
+            required
             hint="Clear signature in blue/black ink on white paper"
             accept="image/*"
             value={form.signature_url}
@@ -1019,27 +970,31 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
           />
           <DocUpload
             label="Aadhaar Card"
+            required
             hint="Front and back scan (image or PDF)"
             accept="image/*,.pdf"
             value={form.aadhaar_url}
             onChange={(v) => set("aadhaar_url", v)}
           />
-          <DocUpload
-            label="10th High School Marksheet"
-            required
-            hint="Official matric certificate or mark statement"
-            accept="image/*,.pdf"
-            value={form.tenth_marksheet_url}
-            onChange={(v) => set("tenth_marksheet_url", v)}
-          />
-          <DocUpload
-            label="12th Intermediate Marksheet"
-            required
-            hint="Official 10+2 marksheet or certificate"
-            accept="image/*,.pdf"
-            value={form.twelfth_marksheet_url}
-            onChange={(v) => set("twelfth_marksheet_url", v)}
-          />
+          {isXII ? (
+            <DocUpload
+              label="10th Marksheet"
+              required
+              hint="Official 10th marksheet or certificate"
+              accept="image/*,.pdf"
+              value={form.tenth_marksheet_url}
+              onChange={(v) => set("tenth_marksheet_url", v)}
+            />
+          ) : (
+            <DocUpload
+              label="8th Marksheet"
+              required
+              hint="Official 8th class marksheet or certificate"
+              accept="image/*,.pdf"
+              value={form.eighth_marksheet_url}
+              onChange={(v) => set("eighth_marksheet_url", v)}
+            />
+          )}
           <DocUpload
             label="Affidavit / Declaration (Optional)"
             hint="Self-declaration affidavit if applicable"
@@ -1049,9 +1004,9 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
           />
         </div>
 
-        {(errors.photo_url || errors.tenth || errors.twelfth) && (
+        {(errors.photo_url || errors.signature_url || errors.aadhaar_url || errors.edu_doc) && (
           <p className={errCls}>
-            Please upload all mandatory documents (Passport Photo, 10th and 12th Marksheets).
+            Please upload all mandatory documents (Passport Photo, Signature, Aadhaar Card and the {isXII ? "10th" : "8th"} Marksheet).
           </p>
         )}
       </div>
@@ -1148,8 +1103,7 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
                 ["Photo", form.photo_url],
                 ["Signature", form.signature_url],
                 ["Aadhaar Card", form.aadhaar_url],
-                ["10th Marksheet", form.tenth_marksheet_url],
-                ["12th Marksheet", form.twelfth_marksheet_url],
+                isXII ? ["10th Marksheet", form.tenth_marksheet_url] : ["8th Marksheet", form.eighth_marksheet_url],
                 ["Affidavit", form.affidavit_url],
               ].map(([lbl, val]) => (
                 <span
@@ -1382,7 +1336,7 @@ export default function StudentRegistrationForm({ courses = [], college, onSucce
           </div>
           <span className="text-[13px] font-semibold text-[#d3e1f5] hidden sm:inline-block shrink-0">
             {step === 5 ? "JPG / PNG / PDF · Max 5MB" :
-             step === 4 ? "10th & 12th mandatory" :
+             step === 4 ? (isXII ? "10th details mandatory" : "8th details mandatory") :
              step === 1 ? "* Fields mandatory" :
              `Step ${step} of ${STEPS.length}`}
           </span>

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import { CalendarDays, Hash, Loader2, Printer, RotateCcw, Search, ShieldCheck } from "lucide-react";
 import { ENROLLMENT_PATTERN } from "@/lib/result-options";
+import DatePicker from "@/components/ui/DatePicker";
 import EnrollmentCardTemplate from "@/components/EnrollmentCardTemplate";
 
 const EMPTY = { enrollment: "", dob: "" };
@@ -161,15 +162,16 @@ export default function EnrollmentCardLookup() {
         </Field>
 
         <Field label="Date of Birth" error={errors.dob} htmlFor="e-dob" icon={CalendarDays}>
-          <input
+          <DatePicker
             id="e-dob"
-            type="date"
-            autoComplete="off"
+            variant="public"
+            withIcon
+            ariaLabel="Date of birth"
             min="1940-01-01"
             max={new Date().toISOString().slice(0, 10)}
             value={values.dob}
-            onChange={set("dob")}
-            className={controlCls(errors.dob)}
+            onChange={(v) => set("dob")({ target: { value: v } })}
+            invalid={Boolean(errors.dob)}
           />
         </Field>
       </div>
