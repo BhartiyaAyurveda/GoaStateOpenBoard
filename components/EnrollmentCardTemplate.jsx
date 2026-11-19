@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import FitCard from "@/components/FitCard";
+import PrintFooter from "@/components/PrintFooter";
 import useSecretarySignature from "@/components/useSecretarySignature";
 
 // Student Enrollment Card (A4). Same look as the Admit Card and the Statement of Marks:
@@ -64,12 +65,11 @@ export default function EnrollmentCardTemplate({ data }) {
 
   return (
     <FitCard>
-    <div className="enrollment-card-wrapper mx-auto w-full max-w-[860px] font-sans text-[#171717] shadow-2xl print:shadow-none">
+    <div className="enrollment-card-wrapper doc-card-page mx-auto w-full max-w-[860px] font-sans text-[#171717] shadow-2xl print:shadow-none">
       <style>{`
         @media print {
-          @page { size: A4 portrait; margin: 8mm 8mm 6mm 8mm; }
           html, body { background: #ffffff !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; margin: 0 !important; padding: 0 !important; }
-          .enrollment-card-wrapper { width: calc(194mm / ${printZoom}) !important; max-width: calc(194mm / ${printZoom}) !important; margin: 0 auto !important; zoom: ${printZoom} !important; box-shadow: none !important; }
+          .enrollment-card-wrapper { width: calc(194mm / ${printZoom}) !important; max-width: calc(194mm / ${printZoom}) !important; margin: 0 auto !important; padding: 8mm 0 6mm 0 !important; zoom: ${printZoom} !important; box-shadow: none !important; }
         }
       `}</style>
 
@@ -223,6 +223,7 @@ export default function EnrollmentCardTemplate({ data }) {
           </div>
         </div>
       </div>
+      <PrintFooter />
     </div>
     </FitCard>
   );

@@ -12,12 +12,14 @@ import About from "@/components/About";
 import Stats from "@/components/Stats";
 import Recognitions from "@/components/Recognitions";
 import Footer from "@/components/Footer";
+import SiteJsonLd from "@/components/SiteJsonLd";
 
 export const revalidate = 60; // refresh notices from the dashboard every minute
 
 export default function Home() {
   return (
     <>
+      <SiteJsonLd />
       <TopBar />
       <Header />
       <Navbar />

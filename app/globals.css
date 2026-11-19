@@ -129,6 +129,17 @@ body {
     margin: 12mm 14mm;
   }
 
+  /* The three cards (enrollment card, admit card, result) print on a page with NO margin, so the browser has
+     no room to add its own URL / date / "Page 1 of 1" header and footer. The spacing around the card is
+     padding on the card wrapper instead. A named page always beats the plain @page above. */
+  @page doc-card {
+    size: A4 portrait;
+    margin: 0;
+  }
+  .doc-card-page {
+    page: doc-card;
+  }
+
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;

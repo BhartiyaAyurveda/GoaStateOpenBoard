@@ -6,6 +6,8 @@ import Header from "@/components/Header";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import FaqList from "@/components/FaqList";
+import JsonLd from "@/components/JsonLd";
+import { FAQS } from "@/lib/faqs";
 
 export const revalidate = 60; // contact details (header menu, footer, help boxes) come from the dashboard
 
@@ -25,6 +27,13 @@ export default async function FaqPage() {
   const contact = await getContactInfo();
   return (
     <>
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: FAQS.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+        }}
+      />
       <TopBar />
       <Header />
       <Navbar />

@@ -2,6 +2,7 @@
 
 import useSecretarySignature from "@/components/useSecretarySignature";
 import FitCard from "@/components/FitCard";
+import PrintFooter from "@/components/PrintFooter";
 
 function fmtDate(d) {
   if (!d) return "—";
@@ -35,7 +36,7 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
   return (
     <FitCard>
     <div
-      className="result-marksheet-wrapper w-full max-w-[860px] mx-auto font-sans text-[#171717] shadow-2xl print:shadow-none"
+      className="result-marksheet-wrapper doc-card-page w-full max-w-[860px] mx-auto font-sans text-[#171717] shadow-2xl print:shadow-none"
       style={{
         pageBreakAfter: showPageBreak ? "always" : "auto",
         breakAfter: showPageBreak ? "page" : "auto",
@@ -43,7 +44,7 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
     >
       <style>{`
         @media print {
-          @page { size: A4 portrait; margin: 0; }
+          /* the page itself has no margin (named page "doc-card" in globals.css), so the browser prints no URL/date header or footer */
           html, body {
             background: #ffffff !important;
             -webkit-print-color-adjust: exact !important;
@@ -53,13 +54,13 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
           }
           .no-print { display: none !important; }
           .result-marksheet-wrapper {
-            width: calc(192mm / ${printZoom}) !important;
-            max-width: calc(192mm / ${printZoom}) !important;
+            width: calc(190mm / ${printZoom}) !important;
+            max-width: calc(190mm / ${printZoom}) !important;
             zoom: ${printZoom} !important;
-            margin: 10mm auto 0 auto !important;
+            margin: 0 auto !important;
             box-sizing: border-box !important;
             box-shadow: none !important;
-            padding: 0 !important;
+            padding: 6mm 0 3mm 0 !important;
             page-break-inside: avoid !important;
             break-inside: avoid !important;
             page-break-after: ${showPageBreak ? "always !important" : "auto !important"};
@@ -622,6 +623,7 @@ export default function AdmitCardTemplate({ data, showPageBreak = false }) {
           </div>
         </div>
       </div>
+      <PrintFooter />
     </div>
     </FitCard>
   );

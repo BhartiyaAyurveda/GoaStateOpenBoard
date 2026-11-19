@@ -111,7 +111,8 @@ export async function POST(request) {
     hits.delete(acctKey);
 
     // Board login needs a second step: a one-time code e-mailed to the admin address. No session cookie until it is entered.
-    if (role === "board" && adminOtpRequired()) {
+    // (an account with admins.otp_required = false signs in with the password alone)
+    if (role === "board" && adminOtpRequired() && session.user.otpRequired) {
       if (!emailOtpEnabled()) {
         return json({ ok: false, error: "Board login needs the e-mail service, which is not set up. Please contact the administrator." }, 503);
       }

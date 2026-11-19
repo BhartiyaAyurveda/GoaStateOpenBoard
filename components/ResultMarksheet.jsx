@@ -3,6 +3,7 @@
 import Image from "next/image";
 import useSecretarySignature from "@/components/useSecretarySignature";
 import FitCard from "@/components/FitCard";
+import PrintFooter from "@/components/PrintFooter";
 
 // Official-style "Statement of Marks" shown to a student after the result lookup (and printed on A4).
 // Layout follows the Bhartiya Ayurveda student marksheet: header band, title bar, candidate box with photo,
@@ -68,12 +69,11 @@ export default function ResultMarksheet({ data }) {
 
   return (
     <FitCard>
-    <div className="result-marksheet-wrapper mx-auto w-full max-w-[860px] font-sans text-[#171717] shadow-2xl print:shadow-none">
+    <div className="result-marksheet-wrapper doc-card-page mx-auto w-full max-w-[860px] font-sans text-[#171717] shadow-2xl print:shadow-none">
       <style>{`
         @media print {
-          @page { size: A4 portrait; margin: 8mm 8mm 6mm 8mm; }
           html, body { background: #ffffff !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; margin: 0 !important; padding: 0 !important; }
-          .result-marksheet-wrapper { width: calc(194mm / ${printZoom}) !important; max-width: calc(194mm / ${printZoom}) !important; margin: 0 auto !important; zoom: ${printZoom} !important; box-shadow: none !important; }
+          .result-marksheet-wrapper { width: calc(194mm / ${printZoom}) !important; max-width: calc(194mm / ${printZoom}) !important; margin: 0 auto !important; padding: 8mm 0 6mm 0 !important; zoom: ${printZoom} !important; box-shadow: none !important; }
         }
       `}</style>
 
@@ -267,6 +267,7 @@ export default function ResultMarksheet({ data }) {
           </div>
         </div>
       </div>
+      <PrintFooter />
     </div>
     </FitCard>
   );
