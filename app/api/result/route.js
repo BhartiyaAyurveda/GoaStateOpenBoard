@@ -78,7 +78,10 @@ export async function POST(request) {
     const rollNo = typeof body.rollNo === "string" ? body.rollNo.trim().toUpperCase() : "";
     const dob = typeof body.dob === "string" ? body.dob.trim() : "";
 
+    const cls = typeof body.cls === "string" ? body.cls.trim().toUpperCase() : "";
+
     const errors = {};
+    if (cls !== "X" && cls !== "XII") errors.cls = "Select Class X or Class XII.";
     if (!ROLL_PATTERN.test(rollNo)) errors.roll = "Enter a valid roll number.";
     if (!isValidDob(dob)) errors.dob = "Enter a valid date of birth.";
     if (Object.keys(errors).length) return json({ ok: false, errors }, 400);
@@ -91,11 +94,11 @@ export async function POST(request) {
       return json({ ok: false, error: "Online results will be available soon. Please check back later." }, 503);
     }
 
-    const result = await findResult({ rollNo, dob });
+    const result = await findResult({ rollNo, dob, cls });
     if (!result) {
       // one generic message for every mismatch, so details cannot be probed
       return json(
-        { ok: false, error: "No result found for the details entered. Please check them and try again." },
+        { ok: false, error: `No Class ${cls} result found for the details entered. Please check the class, roll number and date of birth and try again.` },
         404,
       );
     }

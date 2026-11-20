@@ -16,6 +16,7 @@ export const metadata = {
 };
 
 const instructions = [
+  "Select your class: Class X and Class XII results are checked separately.",
   "Enter your Roll Number exactly as printed on your Admit Card.",
   "Enter your Date of Birth as given in your admission form.",
   "Click \"Get Result\". You can print the result sheet for your reference.",

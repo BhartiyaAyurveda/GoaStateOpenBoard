@@ -144,7 +144,19 @@ export default function AboutPage() {
         <div className="mx-auto max-w-[1320px] space-y-10 px-4 py-12 sm:px-6 lg:space-y-14 lg:py-16">
           {/* Overview */}
           <Panel icon={Landmark} title="Overview">
-            <div className="grid grid-cols-1 gap-8 p-6 sm:p-9 lg:min-h-[420px] lg:grid-cols-[1fr_1.25fr] lg:items-center lg:gap-10 lg:p-10">
+            <div className="flow-root p-6 sm:p-9 lg:p-10">
+              {/* Image floats right so the text wraps around it and no empty column is left beside the long copy */}
+              <div className="mb-6 overflow-hidden rounded-lg bg-[#dbe9f9] shadow-md ring-1 ring-black/5 lg:float-right lg:mb-6 lg:ml-10 lg:w-[56%]">
+                <Image
+                  src="/images/about-overview-v2.webp"
+                  alt="Goa State Open School: recognised open schooling for Secondary (Class X) and Senior Secondary (Class XII), for working youth, homemakers, learners in remote areas and persons with disabilities. Study at your own pace with study material and contact sessions, public examinations and a recognised certificate."
+                  width={1672}
+                  height={941}
+                  priority
+                  sizes="(min-width: 1024px) 640px, 100vw"
+                  className="h-auto w-full"
+                />
+              </div>
               <div className="space-y-5 text-[16.5px] font-medium leading-[1.8] text-ink">
                 <p className="inline-flex items-center gap-2.5 rounded-md bg-navy px-5 py-2.5 text-[18px] font-extrabold uppercase tracking-[0.16em] text-white shadow-md sm:text-[20px]">
                   <span className="h-2.5 w-2.5 rounded-full bg-sky" aria-hidden="true" /> An Autonomous Body
@@ -186,17 +198,6 @@ export default function AboutPage() {
                 <p>
                   GSOS is a self-sustained body without any financial commitment on the part of the State Government.
                 </p>
-              </div>
-              <div className="self-start overflow-hidden rounded-lg bg-[#dbe9f9] shadow-md ring-1 ring-black/5">
-                <Image
-                  src="/images/about-main.webp"
-                  alt="Goa State Open School: recognised open schooling for Secondary (Class X) and Senior Secondary (Class XII), for working youth, homemakers, learners in remote areas and persons with disabilities. Study at your own pace with study material and contact sessions, public examinations and a recognised certificate."
-                  width={1672}
-                  height={941}
-                  priority
-                  sizes="(min-width: 1024px) 640px, 100vw"
-                  className="h-auto w-full"
-                />
               </div>
             </div>
           </Panel>

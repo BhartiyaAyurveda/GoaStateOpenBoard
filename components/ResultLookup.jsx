@@ -7,7 +7,11 @@ import { Loader2, Printer, Search, RotateCcw, Hash, CalendarDays, ShieldCheck } 
 import { ENROLLMENT_PATTERN as ROLL_PATTERN } from "@/lib/result-options";
 import ResultMarksheet from "@/components/ResultMarksheet";
 
-const EMPTY = { roll: "", dob: "" };
+const EMPTY = { cls: "X", roll: "", dob: "" };
+const CLASS_TABS = [
+  { value: "X", label: "Class X", sub: "Secondary" },
+  { value: "XII", label: "Class XII", sub: "Senior Secondary" },
+];
 
 function validate(v) {
   const e = {};
@@ -216,8 +220,18 @@ export default function ResultLookup() {
     if (errors[key]) setErrors((er) => ({ ...er, [key]: undefined }));
   };
 
+  // Class X and Class XII are checked separately: switching class clears the entered details
+  const chooseClass = (cls) => {
+    if (cls === values.cls) return;
+    setValues({ ...EMPTY, cls });
+    setErrors({});
+    setStatus("idle");
+    setMessage("");
+    loadCaptcha();
+  };
+
   const reset = () => {
-    setValues(EMPTY);
+    setValues((v) => ({ ...EMPTY, cls: v.cls }));
     setErrors({});
     setStatus("idle");
     setMessage("");
@@ -287,6 +301,27 @@ export default function ResultLookup() {
 
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-5 p-5 sm:p-7">
+      <div role="tablist" aria-label="Select class" className="grid grid-cols-2 gap-2 rounded-lg bg-[#eef4fc] p-1.5">
+        {CLASS_TABS.map((t) => {
+          const active = values.cls === t.value;
+          return (
+            <button
+              key={t.value}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => chooseClass(t.value)}
+              className={`rounded-md px-3 py-2.5 text-center transition ${
+                active ? "bg-navy text-white shadow-md" : "text-ink hover:bg-white"
+              }`}
+            >
+              <span className="block text-[16px] font-extrabold leading-tight">{t.label} Result</span>
+              <span className={`block text-[12.5px] font-semibold ${active ? "text-white/80" : "text-[#5b6b8c]"}`}>{t.sub}</span>
+            </button>
+          );
+        })}
+      </div>
+
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <Field label="Roll No." error={errors.roll} htmlFor="r-roll" icon={Hash}>
           <input
@@ -376,7 +411,7 @@ export default function ResultLookup() {
           className="inline-flex h-[46px] min-w-[150px] items-center justify-center gap-2 rounded-md bg-gradient-to-b from-[#2b6ae6] to-[#1048bd] px-7 text-[14.5px] font-bold text-white shadow-md shadow-blue-900/25 transition hover:brightness-110 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-70"
         >
           {status === "loading" ? <Loader2 size={17} className="animate-spin" /> : <Search size={17} />}
-          {status === "loading" ? "Searching..." : "Get Result"}
+          {status === "loading" ? "Searching..." : `Get Class ${values.cls} Result`}
         </button>
         <button
           type="button"
