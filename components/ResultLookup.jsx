@@ -311,12 +311,15 @@ export default function ResultLookup() {
               role="tab"
               aria-selected={active}
               onClick={() => chooseClass(t.value)}
-              className={`rounded-md px-3 py-2.5 text-center transition ${
+              className={`min-w-0 rounded-md px-2 py-2.5 text-center transition sm:px-3 ${
                 active ? "bg-navy text-white shadow-md" : "text-ink hover:bg-white"
               }`}
             >
-              <span className="block text-[16px] font-extrabold leading-tight">{t.label} Result</span>
-              <span className={`block text-[12.5px] font-semibold ${active ? "text-white/80" : "text-[#5b6b8c]"}`}>{t.sub}</span>
+              <span className="block whitespace-nowrap text-[15px] font-extrabold leading-tight sm:text-[16px]">
+                {t.label}
+                <span className="hidden sm:inline"> Result</span>
+              </span>
+              <span className={`block text-[12px] font-semibold leading-tight sm:text-[12.5px] ${active ? "text-white/80" : "text-[#5b6b8c]"}`}>{t.sub}</span>
             </button>
           );
         })}
@@ -404,11 +407,11 @@ export default function ResultLookup() {
         </p>
       )}
 
-      <div className="flex flex-wrap items-center gap-3 border-t border-dashed border-[#9db7e0] pt-5">
+      <div className="flex items-center gap-3 border-t border-dashed border-[#9db7e0] pt-5">
         <button
           type="submit"
           disabled={status === "loading"}
-          className="inline-flex h-[46px] min-w-[150px] items-center justify-center gap-2 rounded-md bg-gradient-to-b from-[#2b6ae6] to-[#1048bd] px-7 text-[14.5px] font-bold text-white shadow-md shadow-blue-900/25 transition hover:brightness-110 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-70"
+          className="inline-flex h-[46px] min-w-0 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-md bg-gradient-to-b from-[#2b6ae6] to-[#1048bd] px-4 text-[14.5px] sm:min-w-[150px] sm:flex-none sm:px-7 font-bold text-white shadow-md shadow-blue-900/25 transition hover:brightness-110 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-70"
         >
           {status === "loading" ? <Loader2 size={17} className="animate-spin" /> : <Search size={17} />}
           {status === "loading" ? "Searching..." : `Get Class ${values.cls} Result`}
@@ -416,7 +419,7 @@ export default function ResultLookup() {
         <button
           type="button"
           onClick={reset}
-          className="h-[46px] rounded-md border border-[#9db7e0] bg-white px-7 text-[14.5px] font-bold text-ink transition hover:bg-[#f2f7fe]"
+          className="h-[46px] shrink-0 rounded-md border border-[#9db7e0] bg-white px-5 text-[14.5px] font-bold text-ink transition hover:bg-[#f2f7fe] sm:px-7"
         >
           Reset
         </button>
