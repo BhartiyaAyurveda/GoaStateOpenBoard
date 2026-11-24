@@ -16,6 +16,7 @@ export const metadata = {
 };
 
 const instructions = [
+  "Select your class: Class X and Class XII enrollment cards are downloaded separately.",
   "Enter the Enrollment Number you received when your Study Centre submitted your admission.",
   "Enter your Date of Birth as given in your admission form.",
   "Click \"Get Enrollment Card\", then print it or save it as PDF.",

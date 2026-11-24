@@ -174,8 +174,9 @@ export default function ResultMarksheet({ data }) {
                 <table className="w-full min-w-[560px] border-collapse text-left">
                   <thead>
                     <tr style={{ background: "#fbd9e7" }} className="text-[#7a1f46]">
+                      <th className="border-r border-white/10 px-2 py-2.5 text-center font-bold uppercase tracking-wide" style={{ width: "6%", fontSize: 11 }}>S.No</th>
                       <th className="border-r border-white/10 px-2 py-2.5 text-center font-bold uppercase tracking-wide" style={{ width: "10%", fontSize: 11 }}>Code</th>
-                      <th className="border-r border-white/10 px-3 py-2.5 font-bold uppercase tracking-wide" style={{ width: "31%", fontSize: 11 }}>Subject Name</th>
+                      <th className="border-r border-white/10 px-3 py-2.5 font-bold uppercase tracking-wide" style={{ width: "27%", fontSize: 11 }}>Subject Name</th>
                       {[["Theory", "marks / max"], ["Practical", "marks / max"], ["CA", "marks / max"], ["Total", "marks / max"]].map(([a, b]) => (
                         <th key={a} className="border-r border-white/10 px-2 py-2.5 text-center font-bold uppercase tracking-wide" style={{ fontSize: 10.5 }}>
                           {a}<br /><span style={{ fontWeight: 400, fontSize: 8, color: "#b0607f", textTransform: "none" }}>{b}</span>
@@ -187,6 +188,7 @@ export default function ResultMarksheet({ data }) {
                   <tbody>
                     {subjects.map((s, i) => (
                       <tr key={`${s.code}-${i}`} style={{ background: !s.pass ? "#f5f5f5" : i % 2 === 0 ? "#ffffff" : "#fff7fa", borderBottom: "1px solid #f3d3df" }}>
+                        <td className="border-r border-slate-200 px-2 py-2 print:py-1.5 text-center font-bold" style={{ color: NAVY, fontSize: 11 }}>{i + 1}</td>
                         <td className="border-r border-slate-200 px-2 py-2 print:py-1.5 text-center font-mono font-extrabold" style={{ color: BRAND_DARK, fontSize: 9.5 }}>{s.code || "—"}</td>
                         <td className="border-r border-slate-200 px-3 py-2 print:py-1.5" style={{ fontWeight: 700, color: NAVY, fontSize: 12 }}>{s.name}</td>
                         {[[s.thObt, s.thMax], [s.prObt, s.prMax], [s.caObt, s.caMax]].map(([obt, max], k) => (
@@ -209,7 +211,7 @@ export default function ResultMarksheet({ data }) {
                       </tr>
                     ))}
                     <tr style={{ background: "linear-gradient(90deg,#fbd9e7,#fde9f1)", borderTop: `2px solid ${BRAND}` }}>
-                      <td colSpan={5} className="border-r border-[#f0b5cb] px-3 py-2.5 text-right" style={{ fontSize: 9.5, fontWeight: 800, color: SKY, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                      <td colSpan={6} className="border-r border-[#f0b5cb] px-3 py-2.5 text-right" style={{ fontSize: 9.5, fontWeight: 800, color: SKY, textTransform: "uppercase", letterSpacing: "0.08em" }}>
                         Grand Total / <span lang="kok" className="font-devanagari normal-case tracking-normal">एकूण गूण</span>
                       </td>
                       <td className="border-r border-[#f0b5cb] px-2 py-2.5 text-center font-mono font-extrabold" style={{ color: SKY }}>

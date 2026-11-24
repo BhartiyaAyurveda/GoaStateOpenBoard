@@ -76,7 +76,9 @@ export async function POST(request) {
     // validate (never trust client values)
     const enrollment = typeof body.enrollment === "string" ? body.enrollment.trim().toUpperCase() : "";
     const dob = typeof body.dob === "string" ? body.dob.trim() : "";
+    const cls = typeof body.cls === "string" ? body.cls.trim().toUpperCase() : "";
     const errors = {};
+    if (cls !== "X" && cls !== "XII") errors.cls = "Select Class X or Class XII.";
     if (!ENROLLMENT_PATTERN.test(enrollment)) errors.enrollment = "Enter a valid enrollment number.";
     if (!isValidDob(dob)) errors.dob = "Enter a valid date of birth.";
     if (Object.keys(errors).length) return json({ ok: false, errors }, 400);
@@ -89,10 +91,10 @@ export async function POST(request) {
       return json({ ok: false, error: "Online enrollment cards will be available soon. Please check back later." }, 503);
     }
 
-    const card = await findEnrollmentCard({ enrollment, dob });
+    const card = await findEnrollmentCard({ enrollment, dob, cls });
     if (!card) {
       // one generic message for every mismatch, so details cannot be probed
-      return json({ ok: false, error: "No enrollment card found for the details entered. Please check them and try again." }, 404);
+      return json({ ok: false, error: `No Class ${cls} enrollment card found for the details entered. Please check the class, enrollment number and date of birth and try again.` }, 404);
     }
     return json({ ok: true, card });
   } catch {
