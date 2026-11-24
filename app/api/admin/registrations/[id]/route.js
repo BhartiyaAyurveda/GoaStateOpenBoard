@@ -50,7 +50,7 @@ export async function PATCH(request, { params }) {
 
   const body = await request.json();
   const allowed = [
-    "status", "roll_no", "enrollment_no", "session_label", "academic_session",
+    "status", "roll_no", "enrollment_no", "academic_session", // session_label holds the year-wise metadata JSON: not editable here
     "candidate_name", "father_name", "mother_name", "dob", "gender", "category",
     "phone", "email", "address", "education",
     "high_school_board", "high_school_year", "high_school_percent",

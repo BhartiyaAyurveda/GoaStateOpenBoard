@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   AlertTriangle,
 } from "lucide-react";
+import { displaySession } from "@/lib/student-year-utils";
 
 export const STATUS_LABELS = {
   pending:      { label: "Pending",      color: "bg-amber-50 text-amber-700 border-amber-200",      icon: Clock          },
@@ -125,7 +126,7 @@ export function DashboardProvider({ children }) {
     setSelectedStudent(student);
     setRollInput(student.roll_no || "");
     setEnrollInput(student.enrollment_no || "");
-    setSessionInput(student.session_label || "");
+    setSessionInput(displaySession(student));
     setStudentQueries([]);
     setEditForm(null);
     try {

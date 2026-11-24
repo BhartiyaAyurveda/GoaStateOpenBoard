@@ -5,6 +5,7 @@ import Link from "next/link";
 import { GraduationCap, Search, RefreshCw, UserPlus, CheckCircle2, Hash, ExternalLink, Eye, X, ChevronRight } from "lucide-react";
 import Select from "@/components/ui/Select";
 import { useDashboard } from "../DashboardContext";
+import { displaySession } from "@/lib/student-year-utils";
 
 export default function EnrolledStudentsPage() {
   const { enrolled, enrolledLoading, loadEnrolled, enrolledSearch, setEnrolledSearch, courses, openDetail } = useDashboard();
@@ -51,7 +52,7 @@ export default function EnrolledStudentsPage() {
     { key: "unassigned", label: "Awaiting roll no.", short: "Awaiting", sub: "Requires college assignment", count: withoutRollCount, Icon: Hash, tone: "bg-amber-50 text-amber-700", bar: "bg-amber-500", next: () => setRollFilter(rollFilter === "unassigned" ? "all" : "unassigned") },
   ];
 
-  const sessionOf = (s) => s.session_label || s.academic_session || "2026-27";
+  const sessionOf = (s) => displaySession(s) || "2026-27";
 
   return (
     <div className="min-w-0 space-y-5">

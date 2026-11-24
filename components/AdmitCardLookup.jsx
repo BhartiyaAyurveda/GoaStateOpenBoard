@@ -7,7 +7,11 @@ import { ENROLLMENT_PATTERN } from "@/lib/result-options";
 import DatePicker from "@/components/ui/DatePicker";
 import AdmitCardTemplate from "@/components/admin/AdmitCardTemplate";
 
-const EMPTY = { enrollment: "", dob: "" };
+const EMPTY = { cls: "X", enrollment: "", dob: "" };
+const CLASS_TABS = [
+  { value: "X", label: "Class X", sub: "Secondary" },
+  { value: "XII", label: "Class XII", sub: "Senior Secondary" },
+];
 
 const controlCls = (err) =>
   `h-[48px] w-full rounded-md border bg-[#fbfdff] pl-11 pr-3 text-[14.5px] font-medium text-ink outline-none transition placeholder:text-[#8a97b3] hover:border-[#7fa0d6] focus:border-brand focus:bg-white focus:ring-4 focus:ring-brand/15 ${
@@ -217,8 +221,18 @@ export default function AdmitCardLookup() {
     if (errors[key]) setErrors((er) => ({ ...er, [key]: undefined }));
   };
 
+  // Class X and Class XII are checked separately: switching class clears the entered details
+  const chooseClass = (cls) => {
+    if (cls === values.cls) return;
+    setValues({ ...EMPTY, cls });
+    setErrors({});
+    setStatus("idle");
+    setMessage("");
+    loadCaptcha();
+  };
+
   const reset = () => {
-    setValues(EMPTY);
+    setValues((v) => ({ ...EMPTY, cls: v.cls }));
     setErrors({});
     setStatus("idle");
     setMessage("");
@@ -243,6 +257,7 @@ export default function AdmitCardLookup() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          cls: values.cls,
           enrollment: values.enrollment.trim().toUpperCase(),
           dob: values.dob,
           captchaToken: captcha.token,
@@ -290,6 +305,30 @@ export default function AdmitCardLookup() {
 
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-5 p-5 sm:p-7">
+      <div role="tablist" aria-label="Select class" className="grid grid-cols-2 gap-2 rounded-lg bg-[#eef4fc] p-1.5">
+        {CLASS_TABS.map((t) => {
+          const active = values.cls === t.value;
+          return (
+            <button
+              key={t.value}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => chooseClass(t.value)}
+              className={`min-w-0 rounded-md px-2 py-2.5 text-center transition sm:px-3 ${
+                active ? "bg-navy text-white shadow-md" : "text-ink hover:bg-white"
+              }`}
+            >
+              <span className="block whitespace-nowrap text-[15px] font-extrabold leading-tight sm:text-[16px]">
+                {t.label}
+                <span className="hidden sm:inline"> Admit Card</span>
+              </span>
+              <span className={`block text-[12px] font-semibold leading-tight sm:text-[12.5px] ${active ? "text-white/80" : "text-[#5b6b8c]"}`}>{t.sub}</span>
+            </button>
+          );
+        })}
+      </div>
+
       <p className="flex items-center gap-2 rounded-md border border-[#c9daf2] bg-[#eef4fc] px-3 py-2 text-[13.5px] font-semibold text-[#44557a]">
         <span className="text-[15px] font-bold text-[#e0242b]">*</span> Enter your Enrollment Number and Date of Birth exactly as given
         in your admission form.
@@ -377,19 +416,19 @@ export default function AdmitCardLookup() {
         </p>
       )}
 
-      <div className="flex flex-wrap items-center gap-3 border-t border-dashed border-[#9db7e0] pt-5">
+      <div className="flex items-center gap-3 border-t border-dashed border-[#9db7e0] pt-5">
         <button
           type="submit"
           disabled={status === "loading"}
-          className="inline-flex h-[46px] min-w-[170px] items-center justify-center gap-2 rounded-md bg-gradient-to-b from-[#2b6ae6] to-[#1048bd] px-7 text-[14.5px] font-bold text-white shadow-md shadow-blue-900/25 transition hover:brightness-110 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-70"
+          className="inline-flex h-[46px] min-w-0 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-md bg-gradient-to-b from-[#2b6ae6] to-[#1048bd] px-4 text-[14.5px] sm:min-w-[170px] sm:flex-none sm:px-7 font-bold text-white shadow-md shadow-blue-900/25 transition hover:brightness-110 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-70"
         >
           {status === "loading" ? <Loader2 size={17} className="animate-spin" /> : <Search size={17} />}
-          {status === "loading" ? "Searching..." : "Get Admit Card"}
+          {status === "loading" ? "Searching..." : `Get Class ${values.cls} Admit Card`}
         </button>
         <button
           type="button"
           onClick={reset}
-          className="h-[46px] rounded-md border border-[#9db7e0] bg-white px-7 text-[14.5px] font-bold text-ink transition hover:bg-[#f2f7fe]"
+          className="h-[46px] shrink-0 rounded-md border border-[#9db7e0] bg-white px-5 text-[14.5px] sm:px-7 font-bold text-ink transition hover:bg-[#f2f7fe]"
         >
           Reset
         </button>

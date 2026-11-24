@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Search, RefreshCw, Eye, CheckCircle2, MessageSquare, ClipboardList, X, Send, ChevronRight } from "lucide-react";
 import { useDashboard, STATUS_LABELS } from "../DashboardContext";
+import { displaySession } from "@/lib/student-year-utils";
 
 const fmtDate = (d) => (d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—");
 
@@ -194,7 +195,7 @@ export default function PendingApprovalsPage() {
                         </td>
                         <td className="px-4 py-3.5">
                           <p className="font-semibold leading-snug text-[#082a63]">{s.courses?.course_name || "—"}</p>
-                          <p className="text-[13.5px] text-[#3d5688]">{s.session_label || "Session 2026-27"}</p>
+                          <p className="text-[13.5px] text-[#3d5688]">{displaySession(s) || "Session 2026-27"}</p>
                         </td>
                         <td className="whitespace-nowrap px-4 py-3.5 font-mono text-[14px] text-[#082a63]">{s.phone || "—"}</td>
                         <td className="whitespace-nowrap px-4 py-3.5">

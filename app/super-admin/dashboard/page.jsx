@@ -69,6 +69,7 @@ import Modal from "@/components/ui/Modal";
 import Select from "@/components/ui/Select";
 import DatePicker from "@/components/ui/DatePicker";
 import { useConfirm } from "@/components/ui/ConfirmDialog";
+import { displaySession } from "@/lib/student-year-utils";
 
 // Labelled input with a leading icon (used by the Register College modal)
 function CollegeField({ icon: Icon, label, req, value, onChange, placeholder, type = "text", autoComplete = "off", inputMode, maxLength, action, className = "", inputClassName = "" }) {
@@ -2656,7 +2657,7 @@ export default function SuperAdminDashboardPage() {
                           ["Email", selectedApp.email],
                           ["Course", selectedApp.courses?.course_name],
                           ["College", selectedApp.colleges?.college_name],
-                          ["Session", selectedApp.session_label || selectedApp.academic_session],
+                          ["Session", displaySession(selectedApp)],
                           ["State", selectedApp.state],
                           ["City", selectedApp.city],
                         ].map(([label, val]) => val ? (

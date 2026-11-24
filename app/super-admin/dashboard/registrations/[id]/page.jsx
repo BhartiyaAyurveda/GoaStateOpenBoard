@@ -4,6 +4,8 @@ import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { Pencil, Save, CheckCircle2, XCircle, AlertTriangle, GraduationCap, MessageSquarePlus, Eye, User, Copy, Check, ClipboardCheck, Circle } from "lucide-react";
 import AdminPageShell from "@/components/admin/AdminPageShell";
+import StudentSubjectsPicker from "@/components/admin/StudentSubjectsPicker";
+import { displaySession } from "@/lib/student-year-utils";
 import Modal from "@/components/ui/Modal";
 import Select from "@/components/ui/Select";
 import DatePicker from "@/components/ui/DatePicker";
@@ -148,7 +150,7 @@ export default function RegistrationDetailPage({ params }) {
       phone: reg.phone || "",
       email: reg.email || "",
       address: reg.address || "",
-      session_label: reg.session_label || reg.academic_session || "",
+      session_label: displaySession(reg),
       enrollment_no: reg.enrollment_no || "",
       roll_no: reg.roll_no || "",
     });
@@ -164,8 +166,10 @@ export default function RegistrationDetailPage({ params }) {
       const res = await fetch(`/api/admin/registrations/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
+        // session_label also holds the year-wise exam/result metadata (JSON): never overwrite it from the edit form,
+        // the text typed here is the academic session only
         body: JSON.stringify({
-          ...editForm,
+          ...Object.fromEntries(Object.entries(editForm).filter(([k]) => k !== "session_label")),
           academic_session: editForm.session_label,
         }),
       });
@@ -340,7 +344,7 @@ export default function RegistrationDetailPage({ params }) {
           <dl className="grid grid-cols-2 divide-x divide-y divide-[#eaf2fd] border-t border-[#d3e1f5] bg-[#f8fafc] sm:grid-cols-4 sm:divide-y-0">
             {[
               ["Course", reg.courses?.course_name || reg.course_name],
-              ["Session", reg.session_label || reg.academic_session],
+              ["Session", displaySession(reg)],
               ["College", reg.colleges?.college_name],
               ["Category", reg.category?.toUpperCase()],
             ].map(([k, v]) => (
@@ -358,7 +362,7 @@ export default function RegistrationDetailPage({ params }) {
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
           {/* Left: details */}
           <div className="min-w-0 space-y-5 lg:col-span-2">
-            <Section n="1" title="Personal & contact information" right={<span className="shrink-0 rounded-full bg-[#eaf2fd] px-2.5 py-0.5 font-mono text-[12.5px] font-bold text-[#1245b8]">{reg.session_label || reg.academic_session || "—"}</span>}>
+            <Section n="1" title="Personal & contact information" right={<span className="shrink-0 rounded-full bg-[#eaf2fd] px-2.5 py-0.5 font-mono text-[12.5px] font-bold text-[#1245b8]">{displaySession(reg) || "—"}</span>}>
               <div className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2 xl:grid-cols-3">
                 <Info label="Candidate name / नांव" value={reg.candidate_name} />
                 <Info label="Father's name / बापायचें नांव" value={reg.father_name} />
@@ -382,10 +386,12 @@ export default function RegistrationDetailPage({ params }) {
                 {reg.language_name && <Info label="Language option" value={reg.language_name} />}
                 <div className="rounded-xl border border-[#d3e1f5] bg-[#eaf2fd] px-4 py-2.5">
                   <span className="block text-[13px] font-semibold text-[#6b7ea3]">Academic session</span>
-                  <span className="text-[16px] font-bold text-[#1245b8]">{reg.session_label || reg.academic_session || "—"}</span>
+                  <span className="text-[16px] font-bold text-[#1245b8]">{displaySession(reg) || "—"}</span>
                 </div>
               </div>
             </Section>
+
+            {reg.status === "approved" && reg.course_id && <StudentSubjectsPicker registrationId={reg.id} />}
 
             <Section n="3" title="Educational qualifications / शैक्षणीक पात्रता" flush>
               {eduRows.length === 0 ? (

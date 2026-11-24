@@ -29,6 +29,7 @@ import { DashboardProvider, useDashboard, STATUS_LABELS } from "./DashboardConte
 import ResetPageZoom from "@/components/ResetPageZoom";
 import Modal from "@/components/ui/Modal";
 import Select from "@/components/ui/Select";
+import { displaySession } from "@/lib/student-year-utils";
 
 function DashboardLayoutContent({ children }) {
   const pathname = usePathname();
@@ -314,7 +315,7 @@ function DashboardLayoutContent({ children }) {
                         {[
                           ["Roll no.", s.roll_no],
                           ["Enrollment no.", s.enrollment_no],
-                          ["Session", s.academic_session || s.session_label],
+                          ["Session", displaySession(s)],
                         ].map(([label, value]) => (
                           <div key={label} className="min-w-0">
                             <p className="mb-1 text-[13px] font-bold text-[#3d5688]">{label}</p>

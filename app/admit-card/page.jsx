@@ -16,6 +16,7 @@ export const metadata = {
 };
 
 const instructions = [
+  "Select your class: Class X and Class XII admit cards are downloaded separately.",
   "Enter your Enrollment Number exactly as printed on your Enrollment Card.",
   "Enter your Date of Birth as given in your admission form.",
   "Click \"Get Admit Card\", then print it or save it as PDF.",
